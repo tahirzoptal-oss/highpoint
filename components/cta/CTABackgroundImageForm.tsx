@@ -24,7 +24,7 @@ export function CTABackgroundImageForm() {
         </div>
       )}
 
-      <div className="relative z-10 mx-auto grid max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_500px] lg:items-center lg:px-8">
+      <div className="relative z-10 mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_500px] lg:items-center lg:px-8">
         <div className="text-white">
           <p className="text-sm font-black uppercase tracking-[0.3em] text-accent-light">
             Free Roofing Quote

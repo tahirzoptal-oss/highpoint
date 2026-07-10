@@ -25,7 +25,7 @@ export function WhyChooseUsAccordion() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in srgb, var(--color-accent) 16%, transparent),transparent_30%)]" />
 
       <div
-        className={`relative z-10 mx-auto grid max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
+        className={`relative z-10 mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
           projectImage ? "lg:grid-cols-[0.95fr_1.05fr]" : ""
         }`}
       >

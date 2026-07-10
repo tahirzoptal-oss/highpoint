@@ -18,7 +18,7 @@ export function ServicesModernIconBoxAccordion() {
 
         {/* A2 split choreography: halves slide from their own sides in the
          * directional packs, the accordion half trailing 120ms. */}
-        <div className="grid lg:grid-cols-[420px_1fr] gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-10">
 
           <Reveal
             direction={halfDirection("left")}

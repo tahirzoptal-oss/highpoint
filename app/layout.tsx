@@ -58,6 +58,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      className="overflow-x-clip"
       data-theme-mode={brandDNA.themeMode}
       data-motion={brandDNA.motion}
       data-treatment={brandDNA.treatment || undefined}
@@ -98,7 +99,7 @@ export default function RootLayout({
         <JsonLd data={getLocalBusinessSchema()} />
         <JsonLd data={getWebsiteSchema()} />
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased pb-16 md:pb-0">
+      <body className="min-h-screen overflow-x-clip bg-background text-foreground antialiased pb-16 md:pb-0">
         <Header variant={layout.header} />
         <main>{children}</main>
         <Footer variant={layout.footer} />

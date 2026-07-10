@@ -18,7 +18,7 @@ export function ServicesPillsAccordion() {
   return (
     <section className="section-y bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className={`grid gap-12 items-stretch ${pillsImage ? "lg:grid-cols-2" : ""}`}>
+        <div className={`grid grid-cols-1 gap-12 items-stretch ${pillsImage ? "lg:grid-cols-2" : ""}`}>
 
           <div>
             <span className="text-accent font-bold uppercase tracking-[0.2em] text-sm">

@@ -75,7 +75,7 @@ export function ServiceAreasSplit() {
         {mapUrl ? (
           /* A2 split choreography: halves slide from their own sides in the
            * directional packs, the text half trailing 120ms. */
-          <div className="grid gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+          <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <Reveal direction={halfDirection("left")} className="reveal-follow">
               {intro}
 

@@ -70,7 +70,7 @@ export function RecentWorkSlider() {
          * this dark band because SectionHeading's accent eyebrow text is banned
          * on dark surfaces; the accent-light eyebrow + eyebrow-mark keep the
          * same family anatomy with dark-safe paint. */}
-        <div className="mb-12 grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
+        <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
           <div>
             <p className="eyebrow mb-3 flex items-center gap-2.5 text-[13px] text-accent-light">
               <span aria-hidden="true" className="eyebrow-mark" />
@@ -110,7 +110,7 @@ export function RecentWorkSlider() {
         </div>
 
         <div
-          className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]"
+          className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_0.85fr]"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >

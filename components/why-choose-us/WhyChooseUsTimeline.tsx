@@ -30,7 +30,7 @@ export function WhyChooseUsTimeline() {
                 key={item.title}
                 index={index}
                 /* B3 depth: token two-layer shadow + asymmetric hover lift. */
-                className="hover-card relative grid gap-5 rounded-2xl border border-black/10 bg-[var(--color-surface-light)] p-6 transition hover:border-accent hover:bg-white md:grid-cols-[90px_1fr]"
+                className="hover-card relative grid grid-cols-1 gap-5 rounded-2xl border border-black/10 bg-[var(--color-surface-light)] p-6 transition hover:border-accent hover:bg-white md:grid-cols-[90px_1fr]"
               >
                 <div className="flex items-center gap-4 md:block">
                   <IconChip name="circle-check" surface="light" size={48} />

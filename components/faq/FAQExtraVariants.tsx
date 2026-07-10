@@ -117,7 +117,7 @@ export function FAQImageSplit() {
        * ~496px min-content width into the grid track and forces horizontal
        * page scroll on mobile (the single-column track cannot shrink below
        * an item's automatic minimum size). */}
-      <div className="mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:px-8">
         <Reveal direction={halfDirection("left")} className="relative min-w-0">
           <Photo
             src={photo}
@@ -171,7 +171,7 @@ export function FAQTwoColumnCTA() {
         />
 
         {/* A2 grid choreography: row-major card stagger. */}
-        <div className="grid gap-5 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           {faqs.slice(0, 6).map((faq, index) => (
             <Reveal
               key={faq.question}
@@ -218,7 +218,7 @@ export function FAQContactCTA() {
       {/* A2 split choreography: halves slide from their own sides in the
        * directional packs, the contact rail trailing 120ms; rows walk
        * top-down on the 60ms tight stagger. */}
-      <div className="mx-auto grid max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_360px] lg:px-8">
         <Reveal direction={halfDirection("left")}>
           <SectionHeading
             scale="utility"

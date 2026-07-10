@@ -27,7 +27,7 @@ export function AboutSplitImageContent({
       className={`bg-white section-y ${receiveSeam ? "overlap-receive-seam" : ""}`}
     >
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
           aboutImage ? "lg:grid-cols-2 lg:items-center" : ""
         }`}
       >
@@ -58,7 +58,7 @@ export function AboutSplitImageContent({
             </p>
           ))}
 
-          <div className="mt-8 grid gap-5 sm:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
               <IconChip name="shield-check" surface="light" />
               <h3 className="mt-3 font-black text-primary-dark">

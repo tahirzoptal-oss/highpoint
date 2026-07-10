@@ -17,7 +17,7 @@ export function AboutTruckAuthority() {
   return (
     <section className="relative overflow-hidden bg-white section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
           featureImage ? "lg:grid-cols-[0.9fr_1.1fr]" : ""
         }`}
       >
@@ -45,7 +45,7 @@ export function AboutTruckAuthority() {
             </p>
           ))}
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-2xl border border-black/10 bg-[var(--color-surface-light)] p-5">
               <Star className="mb-4 size-6 fill-star text-star" />
               <div className="text-3xl font-black text-primary-dark">

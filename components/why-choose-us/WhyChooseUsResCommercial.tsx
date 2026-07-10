@@ -64,7 +64,7 @@ export function WhyChooseUsResCommercial() {
           title={`Homes and businesses across ${siteConfig.city}`}
           subtitle="The same crew and the same standards, tuned to what your property needs."
         />
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Column label="Residential" blurb="Your home, protected." dark={false} />
           <Column
             label="Commercial"

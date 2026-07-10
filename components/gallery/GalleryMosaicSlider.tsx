@@ -83,7 +83,7 @@ export function GalleryMosaicSlider() {
         />
 
         <div
-          className="grid gap-4 lg:grid-cols-[0.72fr_1.35fr_0.72fr]"
+          className="grid grid-cols-1 gap-4 lg:grid-cols-[0.72fr_1.35fr_0.72fr]"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
         >

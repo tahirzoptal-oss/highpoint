@@ -6,7 +6,7 @@ import { renderAccent } from "@/lib/accent"
 export function CTAConnectedForm() {
   return (
     <section className="bg-[var(--color-surface-light)] section-y">
-      <div className="mx-auto grid max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_520px] lg:items-center lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_520px] lg:items-center lg:px-8">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.3em] text-accent">
             Get Started
@@ -22,7 +22,7 @@ export function CTAConnectedForm() {
             Schedule a free inspection and get clear answers from a local roofing team.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {["Free inspections", "Fast response", "Licensed & insured", "Warranty-backed work"].map((item) => (
               <div key={item} className="flex items-center gap-3 font-bold text-primary-dark">
                 <CheckCircle className="size-5 text-accent" />

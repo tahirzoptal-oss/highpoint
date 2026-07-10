@@ -157,7 +157,7 @@ export function SpecialOffersCrescendo() {
   return (
     <section className="band-crescendo section-y">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 lg:grid-cols-[1.6fr_auto]">
+        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.6fr_auto]">
           <div>
             {so?.eyebrow && (
               <p className="text-sm font-bold uppercase tracking-[0.18em] opacity-80">
@@ -207,7 +207,7 @@ export function SpecialOffersCrescendo() {
            * SMALL icon square in the top-left next to the card heading, and the
            * body below (replaces the old row of large 128px standalone tiles). */
           <div
-            className={`mt-12 grid gap-6 sm:grid-cols-2 ${
+            className={`mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 ${
               tiles.length >= 3 ? "lg:grid-cols-3" : ""
             }`}
           >

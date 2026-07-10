@@ -26,7 +26,7 @@ export function CTACompactForm() {
       )}
 
       <div className="relative z-10 mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1fr_480px] lg:items-center">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_480px] lg:items-center">
           <div className="text-white">
             <p className="text-sm font-black uppercase tracking-[0.3em] text-accent-light">
               Free Roof Inspection
@@ -43,7 +43,7 @@ export function CTACompactForm() {
               from a local roofing team you can trust.
             </p>
 
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="flex items-center gap-3">
                 <ShieldCheck className="size-5 text-white" />
                 <span>Licensed & Insured</span>

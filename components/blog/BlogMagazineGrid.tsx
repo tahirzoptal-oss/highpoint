@@ -28,7 +28,7 @@ export function BlogMagazineGrid() {
 
         {/* A2 split choreography: the featured card and the side rail slide
          * from their own sides in the directional packs, the rail trailing. */}
-        <div className="grid gap-8 lg:grid-cols-[1fr_.75fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_.75fr]">
           <Reveal
             as="article"
             direction={halfDirection("left")}

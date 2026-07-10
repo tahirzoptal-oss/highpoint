@@ -41,7 +41,7 @@ export function WhyChooseUsSplit() {
       )}
 
       <div
-        className={`relative z-10 mx-auto grid max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
+        className={`relative z-10 mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
           projectImage ? "lg:grid-cols-[0.9fr_1.1fr]" : ""
         }`}
       >

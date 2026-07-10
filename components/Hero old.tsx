@@ -28,7 +28,7 @@ export function Hero({
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {showForm ? (
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-start">
             <div>
               {badge && (
                 <span className="inline-block text-xs font-semibold uppercase tracking-[0.15em] text-accent bg-accent/10 border border-accent/20 rounded-full px-4 py-1.5 mb-6">

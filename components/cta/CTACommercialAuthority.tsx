@@ -33,7 +33,7 @@ export function CTACommercialAuthority() {
         />
       )}
 
-      <div className="relative mx-auto grid max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_520px] lg:items-center lg:px-8">
+      <div className="relative mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_520px] lg:items-center lg:px-8">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-white">
             <Building2 className="size-5" />
@@ -50,7 +50,7 @@ export function CTACommercialAuthority() {
             Get a professional inspection, clear scope and project-ready estimate from our roofing team.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {["Flat roofing systems", "Multi-family properties", "Repair & replacement", "Clear written scopes"].map((item) => (
               <div key={item} className="flex items-center gap-3 font-bold text-white/85">
                 <CheckCircle className="size-5 text-white" />

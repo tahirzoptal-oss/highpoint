@@ -63,7 +63,7 @@ export function GalleryEdgeFilmstrip() {
          * this dark band because SectionHeading's accent eyebrow text is banned
          * on dark surfaces; the accent-light eyebrow + eyebrow-mark keep the
          * same family anatomy with dark-safe paint. */}
-        <div className="mb-12 grid gap-6 text-left md:mb-14 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-12">
+        <div className="mb-12 grid grid-cols-1 gap-6 text-left md:mb-14 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-12">
           <div>
             <p className="eyebrow mb-3 flex items-center gap-2.5 text-[13px] text-accent-light">
               <span aria-hidden="true" className="eyebrow-mark" />

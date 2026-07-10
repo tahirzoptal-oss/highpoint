@@ -28,7 +28,7 @@ export function FAQSplitAccordion() {
 
   return (
     <section className="relative bg-white section-y">
-      <div className="relative z-10 mx-auto grid max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:px-8">
+      <div className="relative z-10 mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:grid-cols-[0.78fr_1.22fr] lg:px-8">
         {/* The dark panel carries its own background and padding, so the
          * heading is always contained; it can never slice at a band edge.
          * A2 split choreography: halves slide from their own sides in the

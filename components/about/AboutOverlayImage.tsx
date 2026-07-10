@@ -46,7 +46,7 @@ export function AboutOverlayImage() {
                 </p>
               ))}
 
-              <div className="mt-8 grid gap-5 sm:grid-cols-4">
+              <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-4">
                 <div>
                   <IconChip name="shield-check" surface="dark" className="mx-auto" />
                   <h3 className="mt-3 text-sm font-black uppercase">

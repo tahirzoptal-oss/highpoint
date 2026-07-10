@@ -71,7 +71,7 @@ export function ServicesCardInCard() {
           subtitle={`Whether you need a repair, a full roof replacement, storm restoration, siding or gutters, ${siteConfig.shortName} gives you one trusted team for the whole project.`}
         />
 
-        <div className="grid gap-x-6 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-6 gap-y-10 md:grid-cols-2 xl:grid-cols-3">
           {services.map((service, index) => {
             const image = cardImage(index)
 

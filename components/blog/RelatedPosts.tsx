@@ -15,7 +15,7 @@ export function RelatedPosts({ currentSlug }: { currentSlug: string }) {
     <section className="section-y bg-card">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <h2 className="mb-8 text-2xl md:text-3xl font-black font-heading text-foreground">Keep reading</h2>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {related.map((p, i) => {
             const href = p.href ?? `/blog/${slugOf(p)}`
             const thumb = postThumb(p, i)

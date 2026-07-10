@@ -81,7 +81,7 @@ export function ProcessSplitAccordion() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in srgb, var(--color-accent) 15%, transparent),transparent_30%)]" />
 
       <div className="relative z-10 mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+        <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
           <div>
             <p className="eyebrow flex items-center gap-2.5 text-[13px] text-accent-light">
               <span aria-hidden="true" className="eyebrow-mark" />
@@ -100,7 +100,7 @@ export function ProcessSplitAccordion() {
 
         {/* A2 split choreography: halves slide from their own sides in the
          * directional packs, the accordion half trailing 120ms. */}
-        <div className={`grid gap-8 ${hasImages ? "lg:grid-cols-[0.95fr_1.05fr]" : ""}`}>
+        <div className={`grid grid-cols-1 gap-8 ${hasImages ? "lg:grid-cols-[0.95fr_1.05fr]" : ""}`}>
           {hasImages && activeStep.image && (
             <Reveal
               direction={halfDirection("left")}

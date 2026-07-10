@@ -96,7 +96,7 @@ export function Photo({
 
   return (
     <div
-      className={`photo-frame relative${bladeClass}${frameClass} ${className}`}
+      className={`photo-frame relative${fill ? " w-full" : ""}${bladeClass}${frameClass} ${className}`}
       style={effectiveAspect ? { aspectRatio: String(ratio) } : undefined}
     >
       {fill ? (

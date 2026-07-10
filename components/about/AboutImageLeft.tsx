@@ -20,7 +20,7 @@ export function AboutImageLeft() {
   return (
     <section className="bg-[var(--color-surface-light)] section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
           aboutImage ? "lg:grid-cols-2 lg:items-center" : ""
         }`}
       >

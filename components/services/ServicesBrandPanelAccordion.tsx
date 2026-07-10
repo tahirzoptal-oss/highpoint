@@ -42,7 +42,7 @@ export function ServicesBrandPanelAccordion() {
   return (
     <section className="bg-[var(--color-surface-light)] section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] overflow-hidden rounded-2xl bg-white shadow-2xl ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] overflow-hidden rounded-2xl bg-white shadow-2xl ${
           hasPanel ? "lg:grid-cols-[0.82fr_1.18fr]" : ""
         }`}
       >

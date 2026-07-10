@@ -69,7 +69,7 @@ export function SectionHeading({
 
   if (layout === "split") {
     return (
-      <div className="mb-12 grid gap-6 text-left md:mb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-12">
+      <div className="mb-12 grid grid-cols-1 gap-6 text-left md:mb-16 md:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] md:items-end md:gap-12">
         <div>
           {eyebrowEl}
           {titleEl}

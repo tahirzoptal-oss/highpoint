@@ -22,7 +22,7 @@ export function ServicesCategoryColumns() {
          * proof stats on the right. The service cards span the full width below,
          * so nothing is squeezed into a side column. */}
         <Reveal className="rounded-[var(--radius-2xl)] bg-[var(--color-surface-dark)] p-8 text-white lg:p-10">
-          <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
             <div>
               <p className="eyebrow mb-3 flex items-center gap-2.5 text-[13px] text-white/80">
                 <span aria-hidden="true" className="eyebrow-mark" />
@@ -65,7 +65,7 @@ export function ServicesCategoryColumns() {
         {/* Full-width service grid: each service is its OWN card (small icon in
          * the top-left next to the title, full description below), no category
          * grouping and no truncation. */}
-        <Reveal className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <Reveal className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {services.map((service) => (
             <Link
               key={service.href}

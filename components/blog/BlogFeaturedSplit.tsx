@@ -44,7 +44,7 @@ export function BlogFeaturedSplit() {
 
         {/* A2 split choreography: the featured card and the side rail slide
          * from their own sides in the directional packs, the rail trailing. */}
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)]">
           <Reveal direction={halfDirection("left")} className="h-full">
           {featuredThumb ? (
             <article className="relative h-full">

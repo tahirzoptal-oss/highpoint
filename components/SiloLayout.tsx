@@ -14,7 +14,7 @@ import { ContactForm } from "@/components/ContactForm"
 export function SiloLayout({ children }: { children: ReactNode }) {
   return (
     <section className="py-16">
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:px-8">
         <div className="min-w-0">{children}</div>
         <aside className="lg:sticky lg:top-36 lg:self-start">
           <ContactForm variant="default" />

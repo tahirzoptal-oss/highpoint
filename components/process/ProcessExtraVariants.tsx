@@ -81,7 +81,7 @@ export function ProcessHorizontalTimeline() {
           scale="feature"
         />
 
-        <div className={`relative grid gap-8 ${GRID_COLS[steps.length] ?? "md:grid-cols-5"}`}>
+        <div className={`relative grid grid-cols-1 gap-8 ${GRID_COLS[steps.length] ?? "md:grid-cols-5"}`}>
           {centerInset && (
             <div
               className="absolute top-6 hidden h-px bg-accent md:block"
@@ -144,7 +144,7 @@ export function ProcessZigZagImages() {
           scale="feature"
         />
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {steps.map((step, index) => {
             const stepImage = imageFor(index)
 
@@ -154,7 +154,7 @@ export function ProcessZigZagImages() {
                 key={step.title}
                 index={index}
                 /* B3 depth: token two-layer shadow + asymmetric hover lift. */
-                className={`hover-card grid overflow-hidden rounded-2xl bg-white ${
+                className={`hover-card grid grid-cols-1 overflow-hidden rounded-2xl bg-white ${
                   hasImages ? "md:grid-cols-2" : ""
                 } ${index % 2 === 1 ? "md:[&>div:first-child]:order-2" : ""}`}
               >
@@ -207,7 +207,7 @@ export function ProcessNumberCards() {
           scale="feature"
         />
 
-        <div className={`grid gap-5 ${GRID_COLS[steps.length] ?? "md:grid-cols-5"}`}>
+        <div className={`grid grid-cols-1 gap-5 ${GRID_COLS[steps.length] ?? "md:grid-cols-5"}`}>
           {steps.map((step, index) => {
             /* B4: exactly one card per repeated row flips its polarity (index
              * 0). The flipped card is always dark, so .card-on-dark separates
@@ -269,7 +269,7 @@ export function ProcessImageSplit() {
   return (
     <section className="bg-[var(--color-surface-light)] section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
           featureImage ? "lg:grid-cols-[0.9fr_1.1fr] lg:items-center" : ""
         }`}
       >
@@ -347,7 +347,7 @@ export function ProcessCircular() {
 
   return (
     <section className="bg-white section-y">
-      <div className="mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:px-8">
         {/* A2 split choreography: halves slide from their own sides in the
          * directional packs, the ring half trailing behind the text. */}
         <Reveal direction={halfDirection("left")}>
@@ -433,7 +433,7 @@ export function ProcessVerticalFlow() {
 
   return (
     <section className="bg-[var(--color-surface-light)] section-y">
-      <div className="mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:items-center lg:px-8">
         {/* A2 split choreography: halves slide from their own sides in the
          * directional packs, the steps rail trailing 120ms. */}
         <Reveal direction={halfDirection("left")}>

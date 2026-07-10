@@ -10,7 +10,7 @@ export function AboutAccentBarContent() {
     <section className="bg-white section-y">
       {/* A2 split choreography: the stat rail and the content sheet slide
        * from their own sides in the directional packs, content trailing. */}
-      <div className="mx-auto grid max-w-[var(--container-max)] px-4 sm:px-6 lg:grid-cols-[220px_1fr] lg:px-8">
+      <div className="mx-auto grid grid-cols-1 max-w-[var(--container-max)] px-4 sm:px-6 lg:grid-cols-[220px_1fr] lg:px-8">
         <Reveal direction={halfDirection("left")}>
         <aside className="h-full rounded-2xl bg-primary-dark p-8 text-white">
           <div className="space-y-10 text-center">

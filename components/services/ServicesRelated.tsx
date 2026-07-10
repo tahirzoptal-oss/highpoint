@@ -24,7 +24,7 @@ export function ServicesRelated({ currentSlug }: { currentSlug: string }) {
         <h2 className="mb-8 text-2xl md:text-3xl font-black font-heading text-foreground">
           Explore more of what we do
         </h2>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {related.map((s) => (
             <ServiceCard
               key={s.href}

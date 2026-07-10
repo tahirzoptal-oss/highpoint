@@ -20,7 +20,7 @@ export function ServicesCompactList() {
       <div className="mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
         {/* A2 split choreography: halves slide from their own sides in the
          * directional packs, the category list trailing 120ms. */}
-        <div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr]">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.72fr_1.28fr]">
           <Reveal direction={halfDirection("left")}>
             <SectionHeading
               centered={false}
@@ -74,7 +74,7 @@ export function ServicesCompactList() {
                     </span>
                   </div>
 
-                  <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2">
                     {categoryServices.map((service) => (
                       <Link
                         key={service.href}

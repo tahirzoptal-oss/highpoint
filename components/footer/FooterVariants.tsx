@@ -76,7 +76,7 @@ function FooterBottom() {
 
 function FooterColumns({ showCta = false }: { showCta?: boolean }) {
   return (
-    <div className="grid gap-10 lg:grid-cols-[1.1fr_0.75fr_0.9fr_1fr]">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.1fr_0.75fr_0.9fr_1fr]">
       <div>
         <FooterLogo className="text-3xl" knockout />
 
@@ -163,7 +163,7 @@ export function FooterAuthority() {
       <div className="relative z-10 mx-auto max-w-[var(--container-max)] px-4 section-y sm:px-6 lg:px-8">
         <FooterColumns />
 
-        <div className="mt-12 grid gap-6 rounded-2xl border border-white/10 bg-white/5 p-6 md:grid-cols-[0.8fr_1.2fr_0.8fr] md:items-center">
+        <div className="mt-12 grid grid-cols-1 gap-6 rounded-2xl border border-white/10 bg-white/5 p-6 md:grid-cols-[0.8fr_1.2fr_0.8fr] md:items-center">
           <div className="text-sm font-black uppercase tracking-widest text-white/55">
             Follow Us
           </div>
@@ -225,7 +225,7 @@ export function FooterFamily() {
           </Button>
         </div>
 
-        <div className="grid gap-8 border-y border-black/10 py-10 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 border-y border-black/10 py-10 md:grid-cols-3">
           <div>
             <h3 className="font-black uppercase">Company</h3>
             <ul className="mt-4 space-y-2">
@@ -274,7 +274,7 @@ export function FooterPremium() {
   return (
     <footer className="bg-[var(--color-surface-light)] text-primary-dark">
       <div className="mx-auto max-w-[var(--container-max)] px-4 section-y sm:px-6 lg:px-8">
-        <div className="grid gap-10 rounded-2xl bg-primary-dark p-10 text-white lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+        <div className="grid grid-cols-1 gap-10 rounded-2xl bg-primary-dark p-10 text-white lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.3em] text-accent-light">
               Ready To Start?
@@ -291,7 +291,7 @@ export function FooterPremium() {
           </div>
         </div>
 
-        <div className="mt-12 grid gap-10 md:grid-cols-4">
+        <div className="mt-12 grid grid-cols-1 gap-10 md:grid-cols-4">
           <div>
             <FooterLogo className="text-3xl" />
             <p className="mt-4 text-primary-dark/70">{siteConfig.tagline}</p>
@@ -351,7 +351,7 @@ export function FooterStorm() {
       </div>
 
       <div className="mx-auto max-w-[var(--container-max)] px-4 section-y sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1fr_1fr]">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1fr_1fr]">
           <div>
             <FooterLogo className="text-3xl" knockout />
             <p className="mt-4 text-white/60">

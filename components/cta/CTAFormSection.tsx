@@ -39,7 +39,7 @@ export function CTAFormSection() {
         />
       )}
 
-      <div className="relative z-10 mx-auto grid max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-8">
+      <div className="relative z-10 mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:px-8">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.3em] text-accent-light">
             Free Estimate
@@ -55,7 +55,7 @@ export function CTAFormSection() {
             Whether you need a repair, replacement, or storm restoration, our team is ready to help with honest recommendations and quality workmanship.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {benefits.map((item) => (
               <div
                 key={item}

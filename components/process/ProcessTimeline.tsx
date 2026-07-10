@@ -35,7 +35,7 @@ export function ProcessTimeline() {
           <div className="absolute left-0 right-0 top-16 hidden h-px bg-gradient-to-r from-transparent via-accent to-transparent lg:block" />
 
           {/* A2 grid choreography: left-to-right step-card stagger. */}
-          <div className="grid gap-6 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
             {steps.map((step, index) => (
               <Reveal
                 key={step.title}

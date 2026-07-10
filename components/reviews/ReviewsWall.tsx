@@ -95,7 +95,7 @@ export function ReviewsWall() {
         {/* #13: items-start so each card sizes to its own content instead of the
          * grid stretching short reviews to the tallest card's height, which left
          * a dead gap under the quote. */}
-        <div className="mt-14 grid items-start gap-8 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 items-start gap-8 lg:grid-cols-3">
           {reviews.map((review, index) => (
             <TestimonialCard
               key={index}

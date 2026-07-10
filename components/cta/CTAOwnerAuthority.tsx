@@ -18,7 +18,7 @@ export function CTAOwnerAuthority() {
   return (
     <section className="relative overflow-hidden bg-white section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-10 px-4 sm:px-6 lg:px-8 ${
           visualImage ? "lg:grid-cols-[0.9fr_1.1fr] lg:items-center" : ""
         }`}
       >
@@ -68,7 +68,7 @@ export function CTAOwnerAuthority() {
             Get honest answers, clear recommendations and a roofing team that stands behind the work.
           </p>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {["Free Roof Inspection", "Owner-Led Service", "Licensed & Insured", "Warranty Backed"].map((item) => (
               <div key={item} className="flex items-center gap-3 rounded-2xl border border-black/10 bg-[var(--color-surface-light)] p-4">
                 <CheckCircle className="size-5 text-accent" />

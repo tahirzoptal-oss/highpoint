@@ -54,7 +54,7 @@ export function SpecialOffersCards() {
         <div className={OVER_GALLERY ? HANG_CLASS : undefined}>
           {offers.length > 0 && (
             <div
-              className={`mx-auto grid gap-6 ${
+              className={`mx-auto grid grid-cols-1 gap-6 ${
                 offers.length === 1
                   ? "max-w-md"
                   : offers.length === 2

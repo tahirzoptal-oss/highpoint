@@ -20,7 +20,7 @@ export function ServicesAccordionImageSplit() {
   return (
     <section className="bg-white section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
           splitImage ? "lg:grid-cols-[0.9fr_1.1fr]" : ""
         }`}
       >

@@ -29,7 +29,7 @@ export function ServiceAreasDarkMap() {
       )}
 
       <div className="relative mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
-        <div className="mb-12 grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
+        <div className="mb-12 grid grid-cols-1 gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
           <div>
             <p className="eyebrow flex items-center gap-2.5 text-[13px] text-accent-light">
               <span aria-hidden="true" className="eyebrow-mark" />
@@ -51,7 +51,7 @@ export function ServiceAreasDarkMap() {
           /* A2 split choreography: each half slides from its own side in the
            * directional packs, the content half trailing 120ms; calm packs
            * fade up. */
-          <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.1fr_0.9fr]">
             <Reveal
               direction={halfDirection("left")}
               /* B6 F3c map block (sharp packs only): the octagon blade mask cuts

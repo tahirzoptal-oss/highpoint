@@ -280,7 +280,7 @@ export function ContactForm({
     return (
       <div id="estimate-form">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             <div>
               <input
                 {...register("name")}
@@ -325,7 +325,7 @@ export function ContactForm({
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-[1fr_1.4fr_.85fr]">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1.4fr_.85fr]">
             <select
               {...register("service")}
               defaultValue=""

@@ -30,7 +30,7 @@ export function BlogFeatured() {
 
         {/* A2 split choreography: the featured card and the side rail slide
          * from their own sides in the directional packs, the rail trailing. */}
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <Reveal
             as="article"
             direction={halfDirection("left")}
@@ -94,7 +94,7 @@ export function BlogFeatured() {
                   key={post.href ?? post.title}
                   href={post.href ?? "/blog"}
                   /* B3 depth: token two-layer shadow + asymmetric hover lift. */
-                  className={`hover-card group grid gap-5 rounded-2xl border border-black/10 bg-white p-5 transition hover:border-accent ${
+                  className={`hover-card group grid grid-cols-1 gap-5 rounded-2xl border border-black/10 bg-white p-5 transition hover:border-accent ${
                     thumb ? "sm:grid-cols-[170px_1fr]" : ""
                   }`}
                 >

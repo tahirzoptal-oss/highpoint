@@ -24,7 +24,7 @@ export function AboutContentLeft({
       className={`bg-white section-y ${receiveSeam ? "overlap-receive-seam" : ""}`}
     >
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:px-8 ${
           aboutImage ? "lg:grid-cols-2 lg:items-center" : ""
         }`}
       >

@@ -72,7 +72,7 @@ export function WhyChooseUsIconGridImage() {
      * small screens (same clip the split and bento variants rely on). */
     <section className="overflow-hidden bg-white section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
           image ? "lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]" : ""
         }`}
       >
@@ -139,7 +139,7 @@ export function WhyChooseUsAccordionImageLeft() {
   return (
     <section className="bg-[var(--color-surface-light)] section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
           image ? "lg:grid-cols-[.95fr_1.05fr]" : ""
         }`}
       >
@@ -228,7 +228,7 @@ export function WhyChooseUsTimelineImageRight() {
      * small screens (same clip the split and bento variants rely on). */
     <section className="overflow-hidden bg-white section-y">
       <div
-        className={`mx-auto grid max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
+        className={`mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-12 px-4 sm:px-6 lg:items-center lg:px-8 ${
           image ? "lg:grid-cols-[1fr_.9fr]" : ""
         }`}
       >
@@ -362,7 +362,7 @@ export function WhyChooseUsImageOverlayDark() {
 
   return (
     <section
-      className={`grid bg-primary-dark text-white ${
+      className={`grid grid-cols-1 bg-primary-dark text-white ${
         image ? "lg:grid-cols-[.85fr_1.15fr]" : ""
       }`}
     >

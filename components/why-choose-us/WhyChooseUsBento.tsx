@@ -116,7 +116,7 @@ export function WhyChooseUsBento() {
         />
 
         {/* A2 grid choreography: row-major tile stagger across the bento. */}
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {/* B4 one-inverted-card: the anchor tile is the single polarity flip
            * in this grid. .card-flip remaps the card/foreground/muted tokens
            * wholesale (nested text inverts through text-foreground/text-muted,

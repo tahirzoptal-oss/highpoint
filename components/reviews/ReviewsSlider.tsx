@@ -53,7 +53,7 @@ export function ReviewsSlider() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,color-mix(in srgb, var(--color-accent) 18%, transparent),transparent_32%)]" />
 
       <div className="relative z-10 mx-auto max-w-[var(--container-max)] px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-center">
           <div>
             {/* Dark band: heading map (feature scale) applied via the
              * data-scale token directly. SectionHeading emits light-band

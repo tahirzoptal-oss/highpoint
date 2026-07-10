@@ -35,7 +35,7 @@ export function AboutFounderAuthority({
       }`}
     >
       <div
-        className={`relative z-10 mx-auto grid max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
+        className={`relative z-10 mx-auto grid grid-cols-1 max-w-[var(--container-max)] gap-14 px-4 sm:px-6 lg:px-8 ${
           featureImage ? "lg:grid-cols-[1.05fr_0.95fr]" : ""
         }`}
       >
@@ -75,7 +75,7 @@ export function AboutFounderAuthority({
             ))}
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
             {[
               "Owner-led communication",
               "Clear estimates without pressure",
