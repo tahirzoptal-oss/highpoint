@@ -1,0 +1,291 @@
+export const siteConfig = {
+  name: "Capstone Contracting Solutions",
+  shortName: "Capstone",
+  website: "https://example.com",
+  primaryKeyword: "Roofing Contractor Kansas City MO",
+  metaDescription: "Capstone Contracting Solutions is Kansas City's trusted roofing contractor for roof repair, replacement and storm damage restoration.",
+  tagline: "The last contractor you'll ever need",
+  phone: "(816) 721-1111",
+  phoneRaw: "8167211111",
+  email: "info@roofsbycapstone.com",
+  city: "Kansas City",
+  region: "Missouri",
+
+socialLinks: {
+  google: "#",
+  facebook: "#",
+  instagram: "#",
+  linkedin: "#",
+},
+  license: "Licensed MO Contractor",
+  address: {
+    street: "915 NW High View Dr",
+    city: "Grain Valley",
+    state: "MO",
+    zip: "64029",
+    full: "915 NW High View Dr, Grain Valley, MO 64029",
+  },
+  hero: {
+    badge: "Kansas City, MO 5-Star Rated Roofing Contractor",
+    headline: "Kansas City's #1 Trusted Roofing Contractor",
+    subheadline: "Capstone Contracting Solutions protects your home with honest inspections, quality materials and craftsmanship that lasts.",
+    bullets: ["Licensed and insured", "Same-day roof inspections", "Warranty-backed workmanship"],
+    backgroundImage: "/images/hero/roofing-home.jpg",
+  },
+layout: {
+  order: [
+    "hero",
+    "trustLogos",
+    "reviews",
+    "marqueeTrust",
+    "whyChooseUs",
+    "about",
+    "services",
+    "marqueeLicense",
+    "gallery",
+    "process",
+    "faq",
+    "marqueeEstimate",
+    "blog",
+    "cta",
+    "serviceAreas",
+
+  ],
+
+  hero: "project-showcase",
+  reviews: "slider",
+  whyChooseUs: "split",
+  about: "truck-authority",
+  services: "category-cards",
+  gallery: "center-focus",
+  process: "split-accordion",
+  faq: "centered-accordion",
+  cta: "form-section",
+  serviceAreas: "split",
+} as const,
+brandDNA: {
+designPack: "owner-authority-v2",
+  themeMode: "dark",
+  voice: "premium",
+  serviceStyle: "visual",
+  proofStyle: "reviews",
+  ownerVisible: false,
+} as const,
+owners: [
+  { name: "Bekka Saettone", title: "CEO & Operations Director", image: "/images/team/bekka-saettone.png" },
+  { name: "Eric Saettone", title: "Director of Sales & Production", image: "/images/team/eric-saettone.jpg" },
+],
+  reviews: {
+    googleRating: 5.0,
+    googleCount: 124,
+    facebookRating: 5.0,
+    facebookCount: 86,
+    googleUrl: "#",
+    facebookUrl: "#",
+    items: [
+      { platform: "Google", rating: 5, quote: "Capstone was professional from start to finish and walked us through every step.", reviewer: "Sarah M.", location: "Kansas City, MO" },
+      { platform: "Google", rating: 5, quote: "Honest, fair and quality work. They explained every option without pressure.", reviewer: "James R.", location: "Lee's Summit, MO" },
+      { platform: "Facebook", rating: 5, quote: "No surprises, no pressure. Our new roof looks amazing.", reviewer: "Michelle T.", location: "Blue Springs, MO" },
+    ],
+  },
+  services: [
+  {
+    title: "Roof Replacement",
+    description: "Full roof replacement with clear options, strong materials and warranty-backed installation.",
+    href: "/services/roof-replacement",
+    icon: "Home",
+    category: "Residential",
+  },
+  {
+    title: "Roof Repair",
+    description: "Fast diagnostics and honest repairs for leaks, storm damage and aging roof systems.",
+    href: "/services/roof-repair",
+    icon: "Wrench",
+    category: "Residential",
+  },
+  {
+    title: "Storm Damage",
+    description: "Detailed documentation and restoration support after hail, wind and severe weather.",
+    href: "/services/storm-damage",
+    icon: "CloudLightning",
+    category: "Storm & Exterior",
+  },
+  {
+    title: "Siding",
+    description: "Durable siding installation and replacement to improve protection and curb appeal.",
+    href: "/services/siding",
+    icon: "PanelTop",
+    category: "Storm & Exterior",
+  },
+  {
+    title: "Gutters",
+    description: "Reliable gutter systems that move water away from your roof, siding and foundation.",
+    href: "/services/gutters",
+    icon: "Droplets",
+    category: "Storm & Exterior",
+  },
+  {
+    title: "Insurance Claims",
+    description: "Storm damage documentation and support for smoother insurance claim handling.",
+    href: "/services/insurance-claims",
+    icon: "FileCheck",
+    category: "Storm & Exterior",
+  },
+],
+   whyChooseUs: [
+  {
+    title: "Owner-Led Projects",
+    description: "You work directly with the people responsible for the result, not a random sales rep.",
+  },
+  {
+    title: "Clear, Fast Estimates",
+    description: "We inspect, document and explain your options without pressure or confusion.",
+  },
+  {
+    title: "Warranty-Backed Work",
+    description: "Your roof is installed to manufacturer standards and protected for long-term peace of mind.",
+  },
+  {
+    title: "Local Roofing Experts",
+    description: "We understand Kansas City homes, storm patterns, materials and local roofing requirements.",
+  },
+  {
+    title: "Clean Jobsite Process",
+    description: "We protect your property, clean up carefully and leave your home looking better than before.",
+  },
+  {
+    title: "Storm Damage Support",
+    description: "We document damage clearly and help you understand the repair or replacement process.",
+  },
+],
+
+  trustLogos: [
+    { name: "Google Reviews", image: "/images/logos/google-reviews.png" },
+    { name: "Facebook Reviews", image: "/images/logos/facebook-reviews.png" },
+    { name: "Licensed & Insured", image: "/images/logos/licensed-insured.png" },
+    { name: "BBB", image: "/images/logos/bbb.png" },
+    { name: "GAF", image: "/images/logos/gaf.png" },
+    { name: "Owens Corning", image: "/images/logos/owens-corning.png" },
+  ],
+  faqs: [
+  {
+    question: "Do you offer free roof inspections?",
+    answer:
+      "Yes. We offer free, no-obligation roof inspections so you can understand the condition of your roof before making a decision.",
+  },
+  {
+    question: "How fast can you provide an estimate?",
+    answer:
+      "Most estimates can be provided quickly after inspection. We document what we find, explain your options, and give you a clear written estimate.",
+  },
+  {
+    question: "Do you help with storm damage?",
+    answer:
+      "Yes. We inspect storm damage, document problem areas, and explain repair or replacement options clearly.",
+  },
+  {
+    question: "Are you licensed and insured?",
+    answer:
+      "Yes. Capstone Contracting Solutions is licensed and insured, and our work is backed by strong workmanship standards.",
+  },
+  {
+    question: "Do you offer roof repair and full replacement?",
+    answer:
+      "Yes. We handle roof repairs, roof replacements, storm restoration, siding, gutters, and related exterior services.",
+  },
+  {
+    question: "Do you offer financing?",
+    answer:
+      "Financing options may be available depending on the project. Contact our team and we can walk you through available options.",
+  },
+],
+blogPosts: [
+  {
+    title: "How To Know When Your Roof Needs Replacement",
+    excerpt: "Learn the common warning signs homeowners should watch for before small roof issues become expensive problems.",
+    href: "/blog/how-to-know-when-your-roof-needs-replacement",
+    category: "Roof Replacement",
+    image: "/images/hero/project3.jpg",
+  },
+  {
+    title: "What To Do After Storm Damage",
+    excerpt: "A simple guide to documenting storm damage, scheduling an inspection, and understanding your repair options.",
+    href: "/blog/what-to-do-after-storm-damage",
+    category: "Storm Damage",
+    image: "/images/hero/action1.webp",
+  },
+  {
+    title: "Roof Repair vs Roof Replacement",
+    excerpt: "Understand when a repair is enough and when a full replacement may be the smarter long-term option.",
+    href: "/blog/roof-repair-vs-roof-replacement",
+    category: "Roof Repair",
+    image: "/images/hero/action2.webp",
+  },
+  {
+    title: "Why Gutters Matter For Roof Protection",
+    excerpt: "Gutters help move water away from your roof, siding and foundation. Here is why they matter.",
+    href: "/blog/why-gutters-matter-for-roof-protection",
+    category: "Gutters",
+    image: "/images/hero/action3.webp",
+  },
+]
+} as const
+
+export type ReviewItem = (typeof siteConfig.reviews.items)[number]
+export type WhyChooseUsItem = (typeof siteConfig.whyChooseUs)[number]
+
+export const navigation = [
+  { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
+  { label: "Gallery", href: "/gallery" },
+  { label: "Reviews", href: "/reviews" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
+]
+export const services = siteConfig.services
+
+export const serviceAreas = {
+  kansasCity: [
+    "Kansas City",
+    "Grain Valley",
+    "Lee's Summit",
+    "Blue Springs",
+    "Independence",
+    "Overland Park",
+    "Olathe",
+    "Liberty",
+    "Raytown",
+    "Gladstone",
+  ],
+  stLouis: [
+    "St. Louis",
+    "St. Charles",
+    "Chesterfield",
+    "Florissant",
+    "Ballwin",
+    "Kirkwood",
+    "Maryland Heights",
+    "O'Fallon",
+    "Wentzville",
+    "Fenton",
+  ],
+}
+export const trustBadges = [
+  {
+    label: "Google Reviews",
+    value: "5.0 Rating",
+  },
+  {
+    label: "Licensed & Insured",
+    value: "Missouri Contractor",
+  },
+  {
+    label: "Warranty Backed",
+    value: "Workmanship Guarantee",
+  },
+  {
+    label: "Storm Restoration",
+    value: "Insurance Assistance",
+  },
+]
+

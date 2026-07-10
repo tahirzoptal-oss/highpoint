@@ -1,0 +1,125 @@
+/**
+ * brand-dna.ts, per-client brand identity.
+ *
+ * This is the ONLY file that sets a client's visual identity (palette + fonts +
+ * theme mode) and core business facts. Components must read identity from here
+ * (or from site-config, which spreads these), and must use theme tokens for
+ * colour (bg-accent, bg-surface-dark, text-foreground, font-heading), never
+ * hardcoded hex or font-family names.
+ *
+ * The design DNA (which section VARIANTS render) lives separately in
+ * lib/design-dna.ts. brand-dna = paint + facts; design-dna = layout choices.
+ */
+
+export interface BrandPalette {
+  primary: string
+  primaryDark: string
+  primaryLight: string
+  accent: string
+  accentDark: string
+  accentLight: string
+  onAccent: string
+  background: string
+  foreground: string
+  muted: string
+  border: string
+  card: string
+  surface: string
+  surfaceLight: string
+  surfaceDark: string
+  ink: string
+}
+
+export interface BrandFonts {
+  heading: string
+  body: string
+  /** Google Fonts stylesheet href that loads heading + body families. */
+  googleHref: string
+}
+
+export interface BrandCompany {
+  name: string
+  shortName: string
+  phone: string
+  phoneRaw: string
+  email: string
+  license: string
+  city: string
+  region: string
+  addressFull: string
+}
+
+export interface BrandDNA {
+  themeMode: "light" | "dark"
+  palette: BrandPalette
+  fonts: BrandFonts
+  company: BrandCompany
+}
+
+export const brandDNA: BrandDNA = {
+  themeMode: "dark",
+  palette: {
+    primary: "#1a2332",
+    primaryDark: "#0f1520",
+    primaryLight: "#2a3a4e",
+    accent: "#c9a96e",
+    accentDark: "#b08c4a",
+    accentLight: "#e0c98f",
+    onAccent: "#0f1520",
+    background: "#0f1520",
+    foreground: "#f1f5f9",
+    muted: "#94a3b8",
+    border: "#1e293b",
+    card: "#1a2332",
+    surface: "#1e293b",
+    surfaceLight: "#f7f7f7",
+    surfaceDark: "#081225",
+    ink: "#050b16",
+  },
+  fonts: {
+    heading: '"Montserrat", system-ui, sans-serif',
+    body: '"Inter", system-ui, sans-serif',
+    googleHref:
+      "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800;900&display=swap",
+  },
+  company: {
+    name: "Capstone Contracting Solutions",
+    shortName: "Capstone",
+    phone: "(816) 721-1111",
+    phoneRaw: "8167211111",
+    email: "info@roofsbycapstone.com",
+    license: "Licensed MO Contractor",
+    city: "Kansas City",
+    region: "Missouri",
+    addressFull: "915 NW High View Dr, Grain Valley, MO 64029",
+  },
+}
+
+/**
+ * Build the inline CSS custom-property map applied to <html>. Inline custom
+ * properties on the root element beat any :root rule from a stylesheet, so a
+ * per-client palette always wins without a build step.
+ */
+export function buildThemeVars(b: BrandDNA = brandDNA): Record<string, string> {
+  const p = b.palette
+  return {
+    "--color-primary": p.primary,
+    "--color-primary-dark": p.primaryDark,
+    "--color-primary-light": p.primaryLight,
+    "--color-accent": p.accent,
+    "--color-accent-dark": p.accentDark,
+    "--color-accent-light": p.accentLight,
+    "--color-on-accent": p.onAccent,
+    "--color-background": p.background,
+    "--color-foreground": p.foreground,
+    "--color-muted": p.muted,
+    "--color-border": p.border,
+    "--color-card": p.card,
+    "--color-surface": p.surface,
+    "--color-surface-light": p.surfaceLight,
+    "--color-surface-dark": p.surfaceDark,
+    "--color-ink": p.ink,
+    "--brand-font-heading": b.fonts.heading,
+    "--brand-font-body": b.fonts.body,
+  }
+}

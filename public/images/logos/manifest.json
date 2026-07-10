@@ -1,0 +1,29 @@
+{
+  "logo": [
+    {
+      "filename": "logo.png",
+      "source": "https://static.wixstatic.com/media/32a5ce_9c8812e573404bef9284dd8af78b41cd~mv2.png",
+      "source_page": "https://www.highpointrenovation.com/",
+      "dimensions": "1050x600",
+      "format": "png",
+      "transparent_background": true,
+      "variant": "primary",
+      "description": "Primary full-color High Point Renovation & Roofing wordmark (navy + grey) with roofline mark. Original uploaded Wix asset (transform stripped for full resolution).",
+      "notes": "Selected as primary over the solid-black monochrome variant (Wix id 0b91fbc16ad94ec5bfb84d1703a5e96a, same lockup) which is a footer/watermark version and was intentionally NOT used as primary."
+    }
+  ],
+  "rejected_candidates": [
+    {
+      "wix_id": "0b91fbc16ad94ec5bfb84d1703a5e96a",
+      "reason": "Solid black monochrome version of the same wordmark (footer/watermark variant). Not the primary full-color header logo."
+    },
+    {
+      "wix_id": "f02acd0a9cc346a99080134ecb7aa651",
+      "reason": "IKO 'Proven Performance' manufacturer product logo, not the client's brand."
+    },
+    {
+      "wix_id": "954d61292dc44213b841f00c121666a3",
+      "reason": "Owens Corning manufacturer product logo, not the client's brand."
+    }
+  ]
+}

@@ -1,0 +1,1592 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Brand token defaults (fallback). The real per-client values are set as inline
+ * custom properties on <html> by app/layout.tsx from lib/brand-dna.ts, which
+ * win the cascade. Components must use these tokens (bg-accent, bg-surface-dark,
+ * text-foreground, font-heading, etc.), never hardcoded hex or font names.
+ * ------------------------------------------------------------------------- */
+:root {
+  --color-primary: #1a2332;
+  --color-primary-dark: #0f1520;
+  --color-primary-light: #2a3a4e;
+
+  --color-accent: #c9a96e;
+  --color-accent-dark: #b08c4a;
+  --color-accent-light: #e0c98f;
+  /* Accent for COPY on light bands: the accent darkened until it meets WCAG AA
+   * on the lightest content surface (clamped per client at build time). The
+   * text-accent utility resolves through this token (see the override below
+   * the theme block), so a light brand accent (gold, amber) keeps its paint
+   * for fills but always reads as text. */
+  --color-accent-text: #7e6a45;
+  --color-on-accent: #0f1520;
+
+  --color-background: #0f1520;
+  --color-foreground: #f1f5f9;
+  --color-muted: #94a3b8;
+  --color-border: #1e293b;
+  --color-card: #1a2332;
+  --color-surface: #1e293b;
+
+  /* Alternating section bands */
+  --color-surface-light: #dfe5ef;
+  --color-surface-dark: #081225;
+  --color-ink: #050b16;
+
+  --color-danger: #ef4444;
+  --color-success: #22c55e;
+
+  /* Rating-star gold. Fixed across clients; for rating stars ONLY, never UI. */
+  --color-star: #f2b30e;
+
+  --brand-font-heading: "Montserrat", system-ui, sans-serif;
+  --brand-font-body: "Inter", system-ui, sans-serif;
+
+  /* Corner-radius scale (rounded default). The real per-client value is set
+   * inline on <html> by buildThemeVars from brand-dna.cornerStyle, which wins
+   * the cascade. One decision drives every rounded-* utility on the site;
+   * rounded-full stays a fixed value so circles never change. */
+  --radius: 0.5rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+  --radius-3xl: 1.5rem;
+
+  /* Media radius: one step below the card radius so photos read as inset media,
+   * not as cards. Collapses to 0 with the sharp scale, holding the one-corner rule. */
+  --photo-radius: var(--radius-md);
+
+  /* Button label casing, consumed by .btn. A pack/client may override inline. */
+  --btn-case: uppercase;
+
+  /* Rhythm tokens (fallback = standard). The real per-client values are set
+   * inline on <html> by buildThemeVars from brand-dna.rhythm, which wins the
+   * cascade. These drive section spacing, container width, and heading feel so
+   * two clients differ structurally, not just in paint. */
+  --section-py: 4.5rem;
+  --section-py-lg: 7rem;
+  --container-max: 1280px;
+  --heading-weight: 800;
+  --heading-case: uppercase;
+  --heading-tracking: 0.01em;
+  --h2-size: clamp(2.1rem, 3.6vw, 3rem);
+  --h2-leading: 1.05;
+  --eyebrow-weight: 800;
+  --eyebrow-case: uppercase;
+  --eyebrow-tracking: 0.3em;
+
+  /* B08: tracking-inversion + sub-head bridge. --track-display derives from the
+   * per-client --heading-tracking so an uppercase client stays positive after
+   * the subtraction; micro labels widen; the subtitle reads as a medium dek. */
+  --track-display: calc(var(--heading-tracking, 0.01em) - 0.03em);
+  --track-label: 0.1em;
+  --track-body: 0em;
+  --weight-subhead: 600;
+
+  /* B24: one derived accent shade used ONLY as button hardware, never a second
+   * accent role, so a page never shows two reds. */
+  --accent-shadow: color-mix(in srgb, var(--color-accent) 74%, #000000);
+  /* B25: body measure, a section-padding pulse, and a canvas tinted a hair
+   * toward the accent so the off-white reads chosen, not default. */
+  --measure: 70ch;
+  --space-pulse: var(--section-py, 4.5rem);
+  --color-canvas: color-mix(in srgb, var(--color-background, #ffffff) 94%, var(--color-accent));
+
+  /* Three-step heading scale (spec 2.1). Applied by SectionHeading via
+   * [data-scale]; kills the one-volume monotone. Desktop targets: display
+   * 64-72px (hero H1), feature 44-48px (storytelling H2s), utility 36-40px
+   * (functional H2s: FAQ, blog, service areas). clamp() keeps mobile sane
+   * (44 / 36 / 32px floors, matching the measured mobile ramp). */
+  --h1-display: clamp(2.75rem, 5.5vw, 4.5rem);
+  --h2-feature: clamp(2.25rem, 4vw, 3rem);
+  --h2-utility: clamp(2rem, 3vw, 2.5rem);
+
+  /* StatNumeral scale (spec 2.2): md 48-56px, lg 56-64px, ghost 140-160px
+   * decorative background numeral. Weight varies per pack via the
+   * data-hardware overrides below (same pack token pattern as the button).
+   * lg cap lowered to 64px so a display-scale value never overruns its column;
+   * the contact size below is the phone-safe read. */
+  --stat-md: clamp(3rem, 4.5vw, 3.5rem);
+  --stat-lg: clamp(3.5rem, 5.5vw, 4rem);
+  /* Contact numeral (a formatted US phone like "(720) 927-9055"): a 14-glyph
+   * string is far wider than a 3-4 digit count, so it needs its own tighter
+   * clamp to sit on ONE line inside a narrow form card. Paired with
+   * whitespace-nowrap on the numeral span so the number never breaks mid-digit
+   * on desktop or mobile. */
+  --stat-contact: clamp(1.75rem, 6vw, 2.5rem);
+  --stat-ghost: clamp(6rem, 12vw, 10rem);
+  --stat-weight: 700;
+
+  /* Overlap system (spec 2.5): seam-breaking pull distance (40-60px band)
+   * and photo-corner badge offset (30-50px band). */
+  --overlap-pull: 3rem;
+  --overlap-badge: 2rem;
+
+  /* Motion tokens. The 2B ruling brings scroll reveals BACK (the V mockup
+   * corpus outranks the live-reference census); the reveal engine below is
+   * gated behind html.motion-ready so no-JS content is never hidden. Hover
+   * polish stays (lift 200-220ms, colors 120-150ms) plus one marquee and the
+   * status pulse. House easing = easeOutExpo family. */
+  --motion-duration-fast: 150ms;
+  --motion-duration-base: 220ms;
+  --motion-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Reveal engine defaults (2B A1). Per-pack profiles override these via the
+   * html[data-motion] rules below the reveal block. */
+  --reveal-distance: 24px;
+  --reveal-duration: 600ms;
+  --stagger-step: 80ms;
+
+  /* Icon tile sizes (2B D2/E2): 72px step tile, 128px crescendo tile (the
+   * default three-in-a-row crescendo anatomy), 140px storm stacked variant.
+   * 48px feature chip is inline-sized by IconChip (the smallest tier). */
+  --tile-feature: 48px;
+  --tile-step: 72px;
+  --tile-crescendo: 128px;
+  --tile-crescendo-stack: 140px;
+
+  /* Card depth tokens (2B B3). Two-layer ambient + direct shadow, main-factory
+   * scale. LIGHT bands only; dark bands separate by tonal step (no shadow), the
+   * .hover-card dark rule below enforces it. */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 14px 30px rgba(15, 23, 42, 0.12);
+  --shadow-card-hover: 0 1px 2px rgba(15, 23, 42, 0.06), 0 26px 52px rgba(15, 23, 42, 0.18);
+
+  /* Photo-across-seam overshoot (2B F2): the photo overshoots its band by
+   * 80-96px into the neighbour; the receiving band compensates via
+   * .overlap-receive-seam. */
+  --overlap-across-seam: 5.5rem;
+}
+
+@theme inline {
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-light: var(--color-primary-light);
+  --color-accent: var(--color-accent);
+  --color-accent-dark: var(--color-accent-dark);
+  --color-accent-light: var(--color-accent-light);
+  --color-on-accent: var(--color-on-accent);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-foreground);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-card: var(--color-card);
+  --color-surface: var(--color-surface);
+  --color-surface-light: var(--color-surface-light);
+  --color-surface-dark: var(--color-surface-dark);
+  --color-ink: var(--color-ink);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+  --color-star: var(--color-star);
+  --font-heading: var(--brand-font-heading);
+  --font-body: var(--brand-font-body);
+}
+
+/* text-accent readability clamp. Accent as TEXT resolves through
+ * --color-accent-text (the accent darkened per client until it meets WCAG AA
+ * on the lightest content band), while bg-accent / border-accent keep the raw
+ * brand accent. Unlayered on purpose: an unlayered declaration beats the
+ * generated utility inside @layer utilities without !important. text-accent
+ * only ever sits on light surfaces (design rule 2), so one clamp covers it. */
+.text-accent {
+  color: var(--color-accent-text, var(--color-accent));
+}
+
+/* Polarity-flipping surface band (ReviewsMarquee, GalleryMosaicSlider): these
+ * sections paint bg-[var(--color-surface)], which is a LIGHT band on a light
+ * theme but a DARK band on a dark theme. On a dark theme the eyebrow's
+ * text-accent (the light-band-clamped --color-accent-text) and the muted
+ * subtitle (base --color-muted, clamped for light bands by the build tool) both
+ * land on a dark surface and fail AA. On dark themes only, remap both to their
+ * on-dark equivalents: the light accent for the eyebrow/accent word and a white
+ * alpha for muted copy. Light themes are untouched (the assumption above holds).
+ * Marker class only; no layout or CLS. */
+html[data-theme-mode="dark"] .surface-band {
+  --color-muted: rgba(255, 255, 255, 0.7);
+}
+html[data-theme-mode="dark"] .surface-band .text-accent {
+  color: var(--color-accent-light);
+}
+
+/* B16: on dark bands, small accent text and thin accent strokes value-shift to a
+ * quieter accent (accent-light mixed toward a cool light grey) so a near-pure
+ * saturated hue stops buzzing on near-black. The full-fill accent (buttons, the
+ * crescendo band) keeps its chroma; this only touches eyebrows + thin marks. */
+:root {
+  --color-accent-quiet: color-mix(in srgb, var(--color-accent-light) 72%, #eef2f7);
+}
+html[data-theme-mode="dark"] .surface-band .eyebrow {
+  color: var(--color-accent-quiet);
+}
+html[data-theme-mode="dark"] .surface-band .eyebrow-mark {
+  background: var(--color-accent-quiet);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--brand-font-body), system-ui, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--brand-font-heading), system-ui, sans-serif;
+}
+
+/* Section headings obey the client's rhythm (weight / case / tracking) so the
+ * hardcoded font-black uppercase no longer makes every client shout identically.
+ * Scoped to .section-y so the hero's deliberately heavy above-the-fold h1 keeps
+ * its impact. The class+type specificity (0,1,1) beats Tailwind's font-black /
+ * uppercase utilities (0,1,0), so no !important is needed. */
+.section-y :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: var(--heading-weight);
+  text-transform: var(--heading-case);
+  letter-spacing: var(--heading-tracking);
+}
+
+/* Display scale for the main section heading (h2), per rhythm, so there is real
+ * size contrast against body and subheads (not "one size repeated"). Scoped to h2
+ * so the h3/h4 hierarchy below it is preserved. Beats hardcoded text-4xl/5xl. */
+.section-y h2 {
+  font-size: var(--h2-size);
+  line-height: var(--h2-leading);
+}
+
+/* Section vertical rhythm. Per-client base + lg from rhythm tokens. Replaces the
+ * hardcoded py-24 that was identical for every client. */
+.section-y {
+  padding-top: var(--section-py);
+  padding-bottom: var(--section-py);
+}
+@media (min-width: 1024px) {
+  .section-y {
+    padding-top: var(--section-py-lg);
+    padding-bottom: var(--section-py-lg);
+  }
+}
+
+/* Section depth pass (2026-07-06). The bands were near-identical flats, so
+ * section-to-section depth was invisible on a scroll. Token-derived, contrast-
+ * neutral cues: a hairline seam + soft top-edge shadow on every band (bands read
+ * as stacked planes), and a top-lit sheen + soft accent bloom on the dark accent
+ * bands (they stop being flat slabs). The hero is never a .section-y, so it is
+ * exempt; the accent crescendo band stays a flat saturated field. */
+.section-y {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+  box-shadow: inset 0 16px 26px -22px color-mix(in srgb, var(--color-ink) 62%, transparent);
+}
+/* Dark accent bands: a light hairline seam (an ink one is invisible on dark) +
+ * a top-lit sheen and one soft accent bloom top-left. background-image layers
+ * OVER the band's bg-color, so the solid fill and white-on-dark contrast hold. */
+[class*="color-surface-dark"].section-y,
+[class*="primary-dark"].section-y {
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  background-image:
+    radial-gradient(120% 90% at 12% 0%,
+      color-mix(in srgb, var(--color-accent) 14%, transparent), transparent 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 46%);
+}
+/* The accent crescendo band stays a flat full-bleed accent field. */
+.band-crescendo.section-y {
+  border-top: 0;
+  box-shadow: none;
+  background-image: none;
+}
+
+/* Eyebrow label treatment, driven per client by rhythm tokens. */
+.eyebrow {
+  font-weight: var(--eyebrow-weight);
+  text-transform: var(--eyebrow-case);
+  letter-spacing: var(--eyebrow-tracking);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Pulse animation for phone dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.5); }
+}
+.animate-pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* Gradient text utility (accent-driven) */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes logo-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-logo-marquee {
+  animation: logo-marquee 28s linear infinite;
+}
+
+@keyframes review-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-33.333%); }
+}
+.animate-review-marquee {
+  animation: review-marquee 40s linear infinite;
+}
+.animate-review-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+
+/* ---------------------------------------------------------------------------
+ * Reveal engine (2B A1/A2), driven by brand-dna.motion via <html data-motion>
+ * and components/Reveal.tsx (the shared IntersectionObserver).
+ *
+ * Gating (the LCP + no-JS guarantee): elements hide ONLY when BOTH hold:
+ *   1. <html> carries .motion-ready (added by Reveal's mount, after every
+ *      already-on-screen element has been marked .is-visible, so nothing
+ *      blinks), AND
+ *   2. data-motion is a known animating profile (subtle/expressive/luxury).
+ * Without JS, before hydration, under data-motion="none", or under
+ * prefers-reduced-motion (media block at the bottom of this file), content is
+ * fully visible. Hero, Header, TopBar, MobileCTABar and the first band after
+ * the hero are NEVER wrapped in Reveal (dispatcher rule, not CSS).
+ *
+ * Transform/opacity only, zero CLS by construction.
+ * ------------------------------------------------------------------------- */
+html.motion-ready:is([data-motion="subtle"], [data-motion="expressive"], [data-motion="luxury"]) .reveal {
+  opacity: 0;
+  transform: translateY(var(--reveal-distance));
+  transition:
+    opacity var(--reveal-duration) var(--motion-ease),
+    transform var(--reveal-duration) var(--motion-ease);
+  transition-delay: calc(var(--stagger-i, 0) * var(--stagger-step) + var(--reveal-extra-delay, 0ms));
+  will-change: opacity, transform;
+}
+
+/* Directional variants (A2): axis-aligned slide-ins for split sections and
+ * alternating bands. Fixed 32px per the corpus measurement. */
+html.motion-ready:is([data-motion="subtle"], [data-motion="expressive"], [data-motion="luxury"]) .reveal.reveal-left {
+  transform: translateX(-32px);
+}
+html.motion-ready:is([data-motion="subtle"], [data-motion="expressive"], [data-motion="luxury"]) .reveal.reveal-right {
+  transform: translateX(32px);
+}
+
+/* Revealed state. !important so it beats every hidden variant above. */
+html.motion-ready .reveal.is-visible {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Per-pack motion profiles (A1): subtle 18px/600ms, expressive 32px/750ms,
+ * luxury 12px/700ms (quiet drift, not a hop). Base default is 24px/600ms. */
+html[data-motion="subtle"] {
+  --reveal-distance: 18px;
+  --reveal-duration: 600ms;
+}
+html[data-motion="expressive"] {
+  --reveal-distance: 32px;
+  --reveal-duration: 750ms;
+}
+html[data-motion="luxury"] {
+  --reveal-distance: 12px;
+  --reveal-duration: 700ms;
+}
+
+/* Sibling stagger (A1): put .reveal-stagger on the parent (grid/row track);
+ * direct children pick up 80ms steps, capped at index 4 so the 5th+ siblings
+ * share the 320ms delay and long grids never feel sluggish. An inline
+ * --stagger-i (from Reveal's index prop) overrides these. */
+.reveal-stagger > :nth-child(1) { --stagger-i: 0; }
+.reveal-stagger > :nth-child(2) { --stagger-i: 1; }
+.reveal-stagger > :nth-child(3) { --stagger-i: 2; }
+.reveal-stagger > :nth-child(4) { --stagger-i: 3; }
+.reveal-stagger > :nth-child(n + 5) { --stagger-i: 4; }
+
+/* Tight stagger (A2): accordions and FAQ rows walk top-down at 60ms. */
+.reveal-stagger-tight {
+  --stagger-step: 60ms;
+}
+
+/* Split-section choreography (A2): the photo half slides from its own side
+ * (reveal-left/right), the text half from the other side with .reveal-follow
+ * adding the 120ms trail. */
+.reveal-follow {
+  --reveal-extra-delay: 120ms;
+}
+
+/* Photo treatment grade (driven by design-dna.image_treatment via <html
+ * data-treatment>). A subtle, deterministic grade over hero/gallery media so the
+ * photographic mood matches the chosen treatment. Harmless when the class is absent. */
+html[data-treatment="editorial-premium"] .graded-media { filter: contrast(1.06) saturate(0.92) brightness(0.98); }
+html[data-treatment="bold-saturated"] .graded-media { filter: contrast(1.12) saturate(1.18); }
+html[data-treatment="clean-natural"] .graded-media { filter: contrast(1.02) saturate(1.02); }
+html[data-treatment="moody-dramatic"] .graded-media { filter: contrast(1.14) saturate(0.9) brightness(0.92); }
+html[data-treatment="warm-inviting"] .graded-media { filter: contrast(1.04) saturate(1.08) sepia(0.06); }
+
+/* ---------------------------------------------------------------------------
+ * Base component hardware (Button / Photo / IconChip).
+ * Anatomy lives in components/Button.tsx etc.; the per-pack button hardware is
+ * keyed off html[data-hardware], set by app/layout.tsx from the design pack.
+ * ------------------------------------------------------------------------- */
+
+/* Shared button casing, driven by the per-client token. */
+.btn {
+  text-transform: var(--btn-case);
+}
+
+/* Photo frame: tokenized media radius + hairline border. Photos never naked. */
+.photo-frame {
+  border-radius: var(--photo-radius);
+  border: 1px solid color-mix(in srgb, var(--color-primary-dark) 12%, transparent);
+  overflow: hidden;
+}
+
+/* Shaped scrims for text-over-photo. Flat full-photo overlays are banned; these
+ * are weighted gradients derived from the client's primary-dark, never black. */
+.scrim-left {
+  background: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-primary-dark) 82%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary-dark) 46%, transparent) 32%,
+    transparent 60%
+  );
+}
+.scrim-bottom {
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--color-primary-dark) 78%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary-dark) 34%, transparent) 34%,
+    transparent 64%
+  );
+}
+.scrim-wedge {
+  background: linear-gradient(
+    52deg,
+    color-mix(in srgb, var(--color-primary-dark) 88%, transparent) 0%,
+    color-mix(in srgb, var(--color-primary-dark) 88%, transparent) 25%,
+    transparent 53%
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * Button hardware v2 (2B B1). Five kinds keyed off html[data-hardware]:
+ * letterpress | ingot | coin | gel | plate. Markup contract unchanged: the
+ * ONE anatomy in Button.tsx, everything below is CSS. The `translate: none`
+ * in each hover state neutralizes the shared hover:-translate-y-0.5 utility
+ * (Tailwind v4 uses the native translate property) so press physics own the
+ * movement. --btn-plate swaps to a translucent on-accent slab for the
+ * inverse (white-on-accent) button.
+ * ------------------------------------------------------------------------- */
+
+/* Letterpress v2 (owner-authority, commercial-authority): the hover PRESSES
+ * TOWARD the plate (main-factory btn-gold choreography), active fully seats. */
+html[data-hardware="letterpress"] .btn-primary {
+  --btn-plate: var(--accent-shadow);
+  box-shadow: 4px 4px 0 0 var(--btn-plate);
+  transition: transform 150ms var(--motion-ease), box-shadow 150ms var(--motion-ease);
+}
+html[data-hardware="letterpress"] .btn-primary.btn-primary-inverse {
+  --btn-plate: color-mix(in srgb, var(--color-on-accent) 30%, transparent);
+}
+html[data-hardware="letterpress"] .btn-primary:hover {
+  translate: none;
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 var(--btn-plate);
+}
+html[data-hardware="letterpress"] .btn-primary:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 0 var(--btn-plate);
+}
+
+/* Plate (industrial-contractor, V6): duplicate slab offset 8px down-right;
+ * hover = snap halfway onto the plate, active = full seat. */
+html[data-hardware="plate"] .btn-primary {
+  --btn-plate: var(--color-accent-dark);
+  position: relative;
+  box-shadow: 8px 8px 0 0 var(--btn-plate);
+  transition: transform 150ms var(--motion-ease), box-shadow 150ms var(--motion-ease);
+}
+html[data-hardware="plate"] .btn-primary.btn-primary-inverse {
+  --btn-plate: color-mix(in srgb, var(--color-on-accent) 30%, transparent);
+}
+html[data-hardware="plate"] .btn-primary:hover {
+  translate: none;
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0 0 var(--btn-plate);
+}
+html[data-hardware="plate"] .btn-primary:active {
+  transform: translate(8px, 8px);
+  box-shadow: 0 0 0 0 var(--btn-plate);
+}
+
+/* Plate blade mode (ONLY under the sharp corner decision, per the one-corner
+ * rule). clip-path removes box-shadow rendering, so the slab becomes a
+ * clipped ::before layer translated 8px/8px and the face a clipped ::after;
+ * the button box itself stays UNCLIPPED so the offset slab remains visible.
+ * The button is its own stacking context (z-index: 0) with a transparent
+ * background, so the negative-z pseudos paint above nothing but below the
+ * label. Press physics carry over from the base rules: the button translates
+ * onto the slab while ::before compensates, so the slab visually stays put. */
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary {
+  z-index: 0;
+  background-color: transparent;
+  box-shadow: none;
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary:hover,
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary:active {
+  box-shadow: none;
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary::before,
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary::before {
+  z-index: -2;
+  background: var(--btn-plate);
+  transform: translate(8px, 8px);
+  transition: transform 150ms var(--motion-ease);
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary::after {
+  z-index: -1;
+  background: var(--color-accent);
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary.btn-primary-inverse::after {
+  background: #ffffff;
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary:hover::before {
+  transform: translate(4px, 4px);
+}
+html[data-corner="sharp"][data-hardware="plate"] .btn-primary:active::before {
+  transform: translate(0, 0);
+}
+
+/* Gel (storm-response): the V4 emboss recipe verbatim. Always a pill
+ * (rounded-full is a fixed value, allowed in both corner modes). */
+html[data-hardware="gel"] .btn-primary {
+  border-radius: 9999px;
+  box-shadow:
+    inset 0 2px 3px rgba(255, 255, 255, 0.45),
+    inset 0 -4px 6px rgba(0, 0, 0, 0.35),
+    0 6px 14px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  transition: transform 150ms var(--motion-ease), box-shadow 150ms var(--motion-ease), filter 150ms var(--motion-ease);
+}
+html[data-hardware="gel"] .btn-primary:hover {
+  translate: none;
+  transform: translateY(-1px);
+  filter: brightness(1.06);
+}
+html[data-hardware="gel"] .btn-primary:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.30),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.28),
+    0 3px 8px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Ingot v2 (family-owned, luxury-premium): metallic vertical gradient + 1px
+ * inner ring (via --ingot-ring so hover/active keep it) + the main-factory
+ * btn-gold glare ::after and press choreography. The button is its own
+ * stacking context with overflow hidden so the glare clips to the radius and
+ * sits above the gradient but below the label (negative z-index pseudo). */
+html[data-hardware="ingot"] .btn-primary {
+  --ingot-ring: 0 0 0 0 transparent;
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  box-shadow:
+    inset var(--ingot-ring),
+    0 4px 0 var(--color-accent-dark),
+    0 7px 16px rgba(0, 0, 0, 0.25);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  transition: transform 150ms var(--motion-ease), box-shadow 150ms var(--motion-ease);
+}
+html[data-hardware="ingot"] .btn-primary:not(.btn-primary-inverse) {
+  --ingot-ring: 0 0 0 1px color-mix(in srgb, var(--color-accent-light) 60%, transparent);
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-accent-light) 0%,
+    var(--color-accent) 55%,
+    var(--color-accent-dark) 100%
+  );
+}
+html[data-hardware="ingot"] .btn-primary:not(.btn-primary-inverse)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.32) 0%,
+    rgba(255, 255, 255, 0.16) 12%,
+    transparent 26%,
+    transparent 74%,
+    rgba(255, 255, 255, 0.16) 88%,
+    rgba(255, 255, 255, 0.28) 100%
+  );
+}
+html[data-hardware="ingot"] .btn-primary:hover {
+  translate: none;
+  transform: translateY(2px);
+  box-shadow:
+    inset var(--ingot-ring),
+    0 2px 0 var(--color-accent-dark),
+    0 4px 10px rgba(0, 0, 0, 0.22);
+}
+html[data-hardware="ingot"] .btn-primary:active {
+  transform: translateY(4px);
+  box-shadow:
+    inset var(--ingot-ring),
+    0 1px 0 var(--color-accent-dark),
+    0 2px 6px rgba(0, 0, 0, 0.20);
+}
+
+/* B23 metallic (brushed steel, NOT 2012 chrome): a flat vertical steel gradient
+ * with a 1px light bezel and the offset accent-shadow slab; the motorsport /
+ * tactical finish. Used by tactical-tech; available to any client via a
+ * data-hardware="metallic" override. */
+html[data-hardware="metallic"] {
+  --stat-weight: 700;
+}
+html[data-hardware="metallic"] .btn-primary {
+  position: relative;
+  z-index: 0;
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-accent-light) 68%, #dfe3e8) 0%,
+    var(--color-accent) 58%,
+    var(--accent-shadow) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    0 4px 0 var(--accent-shadow),
+    0 7px 16px rgba(0, 0, 0, 0.26);
+  transition: transform 150ms var(--motion-ease), filter 150ms var(--motion-ease);
+}
+html[data-hardware="metallic"] .btn-primary:hover {
+  translate: none;
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+html[data-hardware="metallic"] .btn-primary:active {
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    0 1px 0 var(--accent-shadow),
+    0 3px 8px rgba(0, 0, 0, 0.22);
+}
+
+/* Coin: the trailing arrow chip inside every Button becomes visible. Hidden
+ * for every other hardware except gel (V4/V5: white coin + accent chevron
+ * always visible on the gel pill), so the markup stays identical across packs. */
+.btn-coin {
+  display: none;
+}
+html[data-hardware="coin"] .btn .btn-coin,
+html[data-hardware="gel"] .btn .btn-coin {
+  display: inline-flex;
+}
+
+/* ---------------------------------------------------------------------------
+ * Phase 2 primitives: heading scale, eyebrow micro-mark, stat numerals,
+ * overlap utilities. Consumed by SectionHeading.tsx and StatNumeral.tsx.
+ * This block sits AFTER the .section-y rules on purpose: the [data-scale]
+ * and .overlap-receive declarations tie their specificity and must win in
+ * source order.
+ * ------------------------------------------------------------------------- */
+
+/* Three-step heading scale. Tight display leading per the reference corpus
+ * (0.95-1.1); weight/case/tracking still come from the rhythm tokens via
+ * .section-y so the client voice is untouched. */
+h1[data-scale="display"],
+h2[data-scale="display"] {
+  font-size: var(--h1-display);
+  line-height: 0.98;
+  letter-spacing: var(--track-display);
+}
+h1[data-scale="feature"],
+h2[data-scale="feature"] {
+  font-size: var(--h2-feature);
+  line-height: 1.04;
+  letter-spacing: var(--track-display);
+}
+h1[data-scale="utility"],
+h2[data-scale="utility"] {
+  font-size: var(--h2-utility);
+  line-height: 1.1;
+}
+
+/* Eyebrow micro-mark (spec 2.4): the 6px accent mark that makes eyebrows and
+ * buttons read as one family. Shape follows the button hardware: coin packs
+ * get the dot (echoing the arrow coin), letterpress and ingot packs get the
+ * short rule (echoing the plate edge). Accent FILL is dark-surface safe; only
+ * accent text is banned on dark. */
+.eyebrow-mark {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--color-accent);
+}
+html[data-hardware="letterpress"] .eyebrow-mark,
+html[data-hardware="ingot"] .eyebrow-mark,
+html[data-hardware="plate"] .eyebrow-mark {
+  width: 28px;
+  height: 3px;
+  border-radius: 0;
+}
+
+/* Stat numerals (spec 2.2). Weight per pack, keyed off the same
+ * html[data-hardware] attribute as the button hardware: heavy condensed
+ * poster numerals for letterpress packs, lighter elegant numerals for the
+ * ingot (heritage/luxury) packs, confident middle weight for coin packs. */
+html[data-hardware="letterpress"] {
+  --stat-weight: 800;
+}
+html[data-hardware="ingot"] {
+  --stat-weight: 400;
+}
+html[data-hardware="coin"] {
+  --stat-weight: 600;
+}
+/* B1 hardware remaps (ruling 2026-07-03): industrial-contractor letterpress
+ * to plate keeps its heavy poster numerals; storm-response coin to gel keeps
+ * its confident middle weight. */
+html[data-hardware="plate"] {
+  --stat-weight: 800;
+}
+html[data-hardware="gel"] {
+  --stat-weight: 600;
+}
+
+.stat-numeral {
+  font-family: var(--brand-font-heading), system-ui, sans-serif;
+  font-weight: var(--stat-weight);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  /* One-line numerals: a formatted phone or grouped number never breaks
+   * mid-digit. The size tokens keep it inside its column. Ghost is decorative
+   * and unaffected (single glyph run). */
+  white-space: nowrap;
+}
+.stat-md {
+  font-size: var(--stat-md);
+}
+.stat-lg {
+  font-size: var(--stat-lg);
+}
+/* Contact numeral: the phone-safe read (see --stat-contact). Tighter than lg
+ * so "(720) 927-9055" sits on one line in a narrow form card. */
+.stat-contact {
+  font-size: var(--stat-contact);
+}
+/* Ghost: 140-160px background numeral at 6-8% opacity (reference rule 17). */
+.stat-ghost {
+  font-size: var(--stat-ghost);
+  opacity: 0.07;
+}
+/* Label/sublabel default color, in @layer base ON PURPOSE so consumer
+ * utilities (e.g. [&_.stat-label]:text-white/55 on a dark tile) still win.
+ * An unlayered rule here would beat every layered utility and lock dark
+ * bands to muted text, breaking contrast invariant #2. */
+@layer base {
+  .stat-label,
+  .stat-sublabel {
+    color: var(--color-muted);
+    letter-spacing: var(--track-label);
+  }
+}
+
+/* B08: the section subtitle reads as a medium-weight dek between the black
+ * display heading and the body, not as plain body text. */
+.section-subhead {
+  font-weight: var(--weight-subhead);
+  letter-spacing: var(--track-body);
+}
+
+/* B25: cap running body copy near 70ch so long stories never sprawl. */
+.measure {
+  max-width: var(--measure);
+}
+
+/* B27: mute + tint every live OpenStreetMap embed so it reads as a designed,
+ * on-brand map instead of the garish default palette. Dark themes invert it to a
+ * dark-mode map. Applied site-wide by src, so no map component needs editing. */
+iframe[src*="openstreetmap"] {
+  filter: grayscale(0.55) contrast(0.92) brightness(1.02);
+}
+html[data-theme-mode="dark"] iframe[src*="openstreetmap"] {
+  filter: grayscale(0.7) invert(0.92) hue-rotate(180deg) brightness(0.95) contrast(0.9);
+}
+
+/* Overlap utilities (spec 2.5). Consumers gate these on the resolver's
+ * getOverlapMoments() flags; max 2 overlap moments per page.
+ *
+ * pull-into-next / receive are a PAIR: the pulled element ends its section
+ * 48px into the next band, and the receiving band adds compensating top
+ * padding so its own content never collides. */
+.overlap-pull-into-next {
+  position: relative;
+  z-index: 10;
+  margin-bottom: calc(-1 * var(--overlap-pull));
+}
+.overlap-receive {
+  padding-top: calc(var(--section-py) + var(--overlap-pull));
+}
+@media (min-width: 1024px) {
+  .overlap-receive {
+    padding-top: calc(var(--section-py-lg) + var(--overlap-pull));
+  }
+}
+/* Absolute stat badge over a photo corner (parent must be relative). */
+.overlap-badge-corner {
+  position: absolute;
+  right: calc(-1 * var(--overlap-badge));
+  bottom: calc(-1 * var(--overlap-badge));
+  z-index: 10;
+}
+/* Offer card riding up over the gallery band edge. */
+.overlap-card-over-gallery {
+  position: relative;
+  z-index: 10;
+  margin-top: calc(-1 * var(--overlap-pull));
+}
+
+/* ---------------------------------------------------------------------------
+ * Phase 2B primitives: crescendo band (D2), icon tiles (D2/E2), duotone
+ * glyph plumbing (E1). Consumed by the SpecialOffers crescendo variant,
+ * IconChip, and the bespoke icon set (components/icons/Icon*.tsx).
+ * ------------------------------------------------------------------------- */
+
+/* Crescendo band (D2): the page's ONE full-bleed saturated accent surface
+ * (rule 1.8 unchanged). Flat accent field; the band ink is the on-accent
+ * token, NOT hardcoded white, so the band holds WCAG AA for every client
+ * accent (on_accent() gives white on dark accents and near-black on light
+ * and mid accents; white on a mid-orange accent is 2.68:1 and fails). The
+ * accent-word knockout span (.text-accent from lib/accent.tsx) remaps to the
+ * same on-accent ink because accent-on-accent is invisible; this is the
+ * V2/V5 financing-band anatomy. NEVER patterned (BandPattern is banned here)
+ * and never the hero. Applies to non-locked copy only; the 6 CRO phrases
+ * render verbatim and unstyled. */
+.band-crescendo {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.band-crescendo :is(h2, h3, p) .text-accent {
+  /* Knockout word: a highlight CHIP, not a color swap. On a light/warm accent
+   * (e.g. orange) both white and a second ink fail to contrast with the AA-safe
+   * on-accent ink, so a color swap is a dead no-op there. A near-black chip with
+   * white text reads on ANY accent band. Scoped to the headings so the inverted
+   * CTA (an <a> carrying .text-accent) keeps its own AA-clamped label ink. */
+  background: var(--color-ink);
+  color: #fff;
+  padding: 0.04em 0.26em;
+  border-radius: var(--radius-sm, 0.3rem);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Giant icon tiles (D2/E2). Square containers on the radius token; sizes
+ * from the --tile-* tokens (72 step / 128 crescendo / 140 storm stacked).
+ * Fill/ink comes from the chip-ink-* context classes below or the consumer. */
+.icon-tile {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: var(--radius-lg);
+}
+.icon-tile-step {
+  width: var(--tile-step);
+  height: var(--tile-step);
+}
+.icon-tile-crescendo {
+  width: var(--tile-crescendo);
+  height: var(--tile-crescendo);
+}
+.icon-tile-crescendo-stack {
+  width: var(--tile-crescendo-stack);
+  height: var(--tile-crescendo-stack);
+}
+
+/* Check-bullet circle standard (E2): a solid circle + a contrast check, the
+ * corpus list-bullet. Circles are META here (checkmark bullets), so the E2
+ * circle-for-meta lint allows them. 24-28px. On light bands = accent circle +
+ * white check; on dark bands the consumer adds .on-dark = white circle + ink
+ * check. */
+.check-bullet {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.check-bullet.on-dark {
+  background: #ffffff;
+  color: var(--color-primary-dark);
+}
+
+/* Duotone glyph plumbing (E1). Every bespoke glyph
+ * (components/icons/Icon<Name>.tsx) renders exactly two fill layers:
+ *   path.duo (behind)  -> fill: var(--icon-duo)
+ *   path.ink (on top)  -> fill: currentColor
+ * The chip context sets both inks:
+ *   light chip         -> ink primary-dark + duo accent
+ *   dark / accent chip -> ink white + duo white/35
+ * The fallback keeps a bare glyph safe on dark surfaces (white ink is the
+ * consumer's currentColor there; duo defaults to white/35). The duo layer
+ * never carries meaning alone (AA-safe by construction). */
+.icon-duotone .duo {
+  fill: var(--icon-duo, rgba(255, 255, 255, 0.35));
+}
+.icon-duotone .ink {
+  fill: currentColor;
+}
+.chip-ink-light {
+  color: var(--color-primary-dark);
+  --icon-duo: var(--color-accent);
+}
+.chip-ink-dark,
+.chip-ink-accent {
+  color: #ffffff;
+  --icon-duo: rgba(255, 255, 255, 0.35);
+}
+
+/* ---------------------------------------------------------------------------
+ * Phase 2B WAVE 2 shared layer. The primitives the Wave 2 composition items
+ * (B3 card depth, B4 polarity flip, A4 accordion, A5 carousel arrows, B6 blade
+ * grammar, F1 bleed row, F2 across-seam, F6 floating hero) build on. Pure CSS
+ * keyed off tokens + data-attributes; nothing forks per theme, everything is
+ * transform/opacity/shadow only, no CLS by construction. The reduced-motion
+ * block below still wins in source order.
+ * ------------------------------------------------------------------------- */
+
+/* --- B3: card depth + hover lift ----------------------------------------- */
+/* Ambient card on LIGHT bands: two-layer shadow, asymmetric hover lift
+ * (200ms in, 400ms out, main-factory Wave 2). Consumers add .hover-card to a
+ * card that sits on a light band. */
+.hover-card {
+  box-shadow: var(--shadow-card);
+  transition:
+    transform 200ms var(--motion-ease),
+    box-shadow 200ms var(--motion-ease);
+}
+.hover-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+}
+.hover-card:not(:hover) {
+  /* Asymmetric exit: settles back slower than it lifts. */
+  transition-duration: 400ms;
+}
+/* Dark-band rule (B3, lint-backed in taste-gate): a card on a dark surface
+ * separates by ONE luminance step, never a shadow. Consumers put .hover-card
+ * .card-on-dark on the card (or the dark-band variant sets it); the tonal step
+ * is a color-mix off the client surface token so it holds for every client. */
+.hover-card.card-on-dark,
+.card-on-dark {
+  background: color-mix(in srgb, var(--color-surface-dark) 86%, white);
+  box-shadow: none;
+}
+.hover-card.card-on-dark:hover {
+  box-shadow: none;
+  transform: translateY(-3px);
+}
+
+/* --- B4: polarity-flip active card --------------------------------------- */
+/* Exactly ONE card per repeated row inverts its full token scheme (index 0 /
+ * the active card). .card-flip remaps the surface + text + muted + card tokens
+ * AND the chip duo contract wholesale, so every nested element (buttons, chips,
+ * medallions, source pills) inverts through tokens. The contrast gate re-runs
+ * over the flipped element, so AA holds by construction. Flipped card is
+ * always DARK, so it never carries a light-band shadow (the .card-on-dark rule
+ * class of separation applies); consumers add .card-on-dark alongside on light
+ * bands. */
+/* B07: circular seal/stamp overlay. Static (never spinning), per-pack themed,
+ * accent ring, never a second hue. Only rendered on seal-eligible packs via
+ * packSeal(). The centre glyph stays ink; gold appears ONLY on the luxury ring
+ * outline (a metallic tell), never as a fill, so gold-for-ratings holds. */
+.seal-stamp {
+  width: clamp(60px, 6.5vw, 92px);
+  height: clamp(60px, 6.5vw, 92px);
+}
+.seal-stamp .seal-disc {
+  fill: var(--color-card, #ffffff);
+}
+.seal-stamp .seal-outline {
+  stroke: var(--color-accent);
+  stroke-width: 2;
+}
+.seal-stamp .seal-text {
+  font-family: var(--brand-font-heading), system-ui, sans-serif;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  fill: var(--color-primary-dark);
+}
+.seal-stamp .seal-glyph {
+  color: var(--color-accent);
+}
+html[data-pack="luxury-premium"] .seal-stamp .seal-outline {
+  stroke: var(--color-star);
+}
+html[data-pack="luxury-premium"] .seal-stamp .seal-glyph {
+  color: var(--color-primary-dark);
+}
+html[data-pack="storm-response"] .seal-stamp .seal-disc {
+  fill: var(--color-primary-dark);
+}
+html[data-pack="storm-response"] .seal-stamp .seal-text {
+  fill: #ffffff;
+}
+
+/* B05: first-item-active. One item per repeating set reads active, an inset
+ * accent ring plus a faint tint (colour only, radius-agnostic so it follows the
+ * sharp notch), and the chip's hover end-state as a resting state. */
+.lead-frame {
+  box-shadow: inset 0 0 0 2px var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 6%, var(--color-card, #ffffff));
+}
+.lead-chip {
+  border-color: var(--color-accent);
+  background: #ffffff;
+}
+
+.card-flip {
+  --color-card: var(--color-surface-dark);
+  --color-foreground: #ffffff;
+  --color-muted: rgba(255, 255, 255, 0.7);
+  --color-border: rgba(255, 255, 255, 0.16);
+  background: var(--color-surface-dark);
+  color: #ffffff;
+  /* Nested IconChip: force the dark-chip duo contract (white ink + white/35
+   * duo + solid accent fill) regardless of the chip's own surface prop. */
+  --icon-duo: rgba(255, 255, 255, 0.35);
+}
+.card-flip :is(.stat-label, .stat-sublabel) {
+  color: rgba(255, 255, 255, 0.7);
+}
+/* Nested IconChip inversion (E2 flip hook): force the dark chip contract
+ * (solid accent fill + white ink + white/35 duo) whatever the chip's own
+ * surface prop was, so the whole card inverts through tokens. */
+.card-flip .icon-chip {
+  background: var(--color-accent) !important;
+  color: #ffffff;
+  --icon-duo: rgba(255, 255, 255, 0.35);
+}
+
+/* --- A4: accordion height motion + active header ------------------------- */
+/* CSS-only height animation via grid-template-rows 0fr -> 1fr. The panel
+ * wrapper is .accordion-panel (grid); its single child is .accordion-panel-inner
+ * (overflow hidden, min-height 0). Open state = .is-open on the panel (JS
+ * toggles the class + aria-expanded on the header). Gated behind motion-ready
+ * so no-JS content is fully open/visible; reduced-motion zeroes the duration
+ * via the global block. */
+.accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+}
+html.motion-ready .accordion-panel {
+  transition: grid-template-rows 260ms var(--motion-ease);
+}
+.accordion-panel.is-open {
+  grid-template-rows: 1fr;
+}
+.accordion-panel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+/* No-JS / motion-off safety: without motion-ready every panel renders OPEN so
+ * the answer copy is always crawlable and visible. */
+html:not(.motion-ready) .accordion-panel {
+  grid-template-rows: 1fr;
+}
+/* No-JS active-header consistency (#15): pre-hydration every panel is open (the
+ * rule above), but only the initially-active item carries .is-open / .card-flip
+ * from the server render, so the other headers read CLOSED while their answer
+ * shows. Give EVERY header the open/active treatment in the no-JS state so an
+ * open panel never sits under a closed-looking header. Mirrors the two active
+ * paths below: plate fills with accent + white; every other pack flips polarity
+ * via the same .card-flip token remap. Background/color only, so no CLS. Once
+ * motion-ready lands, JS drives one-open-at-a-time and this no longer applies. */
+html:not(.motion-ready):not([data-hardware="plate"]) .accordion-header {
+  --color-card: var(--color-surface-dark);
+  --color-foreground: #ffffff;
+  --color-muted: rgba(255, 255, 255, 0.7);
+  --color-border: rgba(255, 255, 255, 0.16);
+  --icon-duo: rgba(255, 255, 255, 0.35);
+  background: var(--color-surface-dark);
+  color: #ffffff;
+}
+html:not(.motion-ready)[data-hardware="plate"] .accordion-header {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+/* Neutralize any accent-tinted glyph on the now-dark no-JS header (the simple
+ * variant renders its closed "+" as text-accent, which would be red-on-dark
+ * here). Force it to white so the contrast invariant holds pre-hydration. */
+html:not(.motion-ready) .accordion-header .accordion-chevron {
+  color: #ffffff;
+}
+/* Chevron: 180deg rotate on open, 220ms. */
+.accordion-chevron {
+  transition: transform 220ms var(--motion-ease);
+}
+.accordion-item.is-open .accordion-chevron,
+.accordion-panel.is-open ~ * .accordion-chevron {
+  transform: rotate(180deg);
+}
+/* Active header treatment per pack: industrial (plate hardware) fills the
+ * header with the accent and whitens the label (accent FILL on dark is allowed,
+ * accent TEXT is not). Every other pack flips polarity (open header inverts to
+ * the opposite scheme via .card-flip token remap on the header). Consumers set
+ * .accordion-header and toggle .is-open on the enclosing .accordion-item. */
+.accordion-item.is-open .accordion-header {
+  transition: background-color 220ms var(--motion-ease), color 220ms var(--motion-ease);
+}
+html[data-hardware="plate"] .accordion-item.is-open .accordion-header {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+html[data-hardware="plate"] .accordion-item.is-open .accordion-header .accordion-chevron {
+  color: #ffffff;
+}
+
+/* --- A5: carousel arrow hardware ----------------------------------------- */
+/* Paired circular controls (44-56px), reusing the Button coin geometry read:
+ * prev = outline circle (transparent fill, ink arrow on light / white outline
+ * on dark), next = solid accent circle with on-accent arrow. Hover nudges the
+ * arrow translateX 4px (direction-aware). Circles are meta elements, so the
+ * E2 circle lint allows them. */
+.carousel-arrow {
+  display: inline-grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  /* Shared coin depth (#19): both arrows carry the same soft drop so prev and
+   * next read as one pair of hardware, not a solid button beside a hairline.
+   * Shadow-only, no size change, so no CLS. */
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.14);
+  transition: background-color 150ms var(--motion-ease), border-color 150ms var(--motion-ease), color 150ms var(--motion-ease), box-shadow 150ms var(--motion-ease);
+}
+.carousel-arrow > * {
+  transition: transform 150ms var(--motion-ease);
+}
+.carousel-arrow:disabled {
+  opacity: 0.4;
+  cursor: default;
+  box-shadow: none;
+}
+/* prev = outline coin. Thicker, higher-contrast ring so it holds the same
+ * hardware weight as the solid next coin instead of reading as a hairline. On
+ * dark bands the consumer adds .on-dark. */
+.carousel-arrow-prev {
+  border: 1.5px solid color-mix(in srgb, var(--color-ink) 45%, transparent);
+  background: transparent;
+  color: var(--color-primary-dark);
+}
+.carousel-arrow-prev.on-dark {
+  /* Full-opacity white ring so the outline reads on a dark band (was 0.5). */
+  border-color: #ffffff;
+  background: transparent;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.carousel-arrow-prev:not(:disabled):hover {
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.2);
+}
+.carousel-arrow-prev.on-dark:not(:disabled):hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.45);
+}
+.carousel-arrow-prev:not(:disabled):hover > * {
+  transform: translateX(-4px);
+}
+/* next = solid accent coin with the on-accent arrow ink. Shares the coin depth
+ * above; a slightly deeper accent-tinted drop on hover matches the prev lift. */
+.carousel-arrow-next {
+  border: 1.5px solid transparent;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+.carousel-arrow-next:not(:disabled):hover {
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+.carousel-arrow-next:not(:disabled):hover > * {
+  transform: translateX(4px);
+}
+
+/* --- B6: blade-cut grammar (SHARP corner packs ONLY) --------------------- */
+/* Scope lock: every blade utility renders ONLY under html[data-corner="sharp"]
+ * and then sitewide, holding the one-corner rule. Rounded packs never see any
+ * of it. clip-path removes box-shadow rendering, so blade cards carry a
+ * hairline border (light) or the tonal step (dark) instead of a shadow. */
+
+/* Octagon frame: cut the TL + BR corners at clamp(80px, 8vw, 140px); the other
+ * two corners stay square. Applied to hero-adjacent photos + the map block via
+ * Photo's bladeFrame prop. No-op outside sharp mode. */
+html[data-corner="sharp"] .blade-frame {
+  clip-path: polygon(
+    clamp(80px, 8vw, 140px) 0,
+    100% 0,
+    100% calc(100% - clamp(80px, 8vw, 140px)),
+    calc(100% - clamp(80px, 8vw, 140px)) 100%,
+    0 100%,
+    0 0
+  );
+}
+/* Detached corner brackets: two L-shapes 12px OUTSIDE the frame at the two
+ * uncut corners (TR + BL), 48px legs, 2px accent borders, decorative. The frame
+ * host must be position: relative. Consumer budget: max 2 bracketed frames per
+ * page (a consumer concern, not enforced here). No-op outside sharp mode. */
+html[data-corner="sharp"] .corner-brackets {
+  position: relative;
+  /* The host is usually a .photo-frame (overflow: hidden), which would clip the
+   * brackets drawn 12px OUTSIDE the frame. Let them escape here; the .blade-frame
+   * clip-path still shapes the image independently of overflow. */
+  overflow: visible;
+}
+html[data-corner="sharp"] .corner-brackets::before,
+html[data-corner="sharp"] .corner-brackets::after {
+  content: "";
+  position: absolute;
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--color-accent);
+  pointer-events: none;
+}
+/* TR bracket: borders on top + right, 12px above and right of the frame. */
+html[data-corner="sharp"] .corner-brackets::before {
+  top: -12px;
+  right: -12px;
+  border-left: none;
+  border-bottom: none;
+}
+/* BL bracket: borders on bottom + left, 12px below and left of the frame. */
+html[data-corner="sharp"] .corner-brackets::after {
+  bottom: -12px;
+  left: -12px;
+  border-right: none;
+  border-top: none;
+}
+
+/* B11: per-pack signature photo frames beyond blade/bracket. frame-slab is the
+ * hard offset-block depth cue (a solid colour nudged behind the photo, drawn by
+ * box-shadow so overflow never clips it); frame-circle is the circular mask for
+ * genuinely square feature media. Applied via the Photo `frame` prop, chosen per
+ * pack by packFrame(). One frame per feature photo; never on gallery/blog. */
+.frame-slab {
+  box-shadow: 16px 16px 0 0 var(--color-primary-dark);
+}
+.frame-circle {
+  border-radius: 9999px;
+}
+
+/* Notched card: TL + BR cuts at 20px (testimonial + service cards). clip-path
+ * kills the shadow, so on LIGHT bands add a hairline border; on DARK bands the
+ * tonal step (.card-on-dark) does the separation. No-op outside sharp mode. */
+html[data-corner="sharp"] .blade-card {
+  clip-path: polygon(
+    20px 0,
+    100% 0,
+    100% calc(100% - 20px),
+    calc(100% - 20px) 100%,
+    0 100%,
+    0 20px
+  );
+  box-shadow: none;
+}
+html[data-corner="sharp"] .blade-card:not(.card-on-dark) {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+/* Notched row: TL cut at 14px, matching the plate button blade so the page
+ * shares one cut vocabulary (FAQ + services accordion rows). The A4 active
+ * accent flip is unchanged. No-op outside sharp mode. */
+html[data-corner="sharp"] .blade-row {
+  clip-path: polygon(
+    14px 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 14px
+  );
+  /* clip-path already drops the shadow render; set it none explicitly for
+   * symmetry with .blade-card (rows ship shadow-sm on light bands). */
+  box-shadow: none;
+}
+
+/* --- F1: edge-bleed filmstrip -------------------------------------------- */
+/* Breaks the container to full viewport width, horizontal scroll-snap track,
+ * hidden scrollbar, edge slivers via padding. Below the fold + lazy photos =
+ * zero LCP impact; fixed aspect boxes = zero CLS. The page body never scrolls
+ * horizontally: the row itself is the only x-scroller. */
+.bleed-row {
+  width: 100vw;
+  margin-inline: calc(50% - 50vw);
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* Edge slivers: the first and last cards peek at rest. Tuned to ~75px so a
+   * sliver of the neighbour shows without a full second card. */
+  padding-inline: clamp(20px, 8vw, 120px);
+}
+.bleed-row::-webkit-scrollbar {
+  display: none;
+}
+.bleed-row > * {
+  scroll-snap-align: center;
+  flex-shrink: 0;
+}
+
+/* --- F2: photo-across-seam ----------------------------------------------- */
+/* The section's photo overshoots its band boundary by 80-96px into the
+ * neighbour and reads as a foreground object welding two bands. Registered as a
+ * PACK_OVERLAPS option (design-dna.ts); the receiving band adds compensating
+ * padding via .overlap-receive-seam. Static negative margin + fixed aspect =
+ * zero CLS. */
+.overlap-photo-across-seam {
+  position: relative;
+  z-index: 10;
+  margin-bottom: calc(-1 * var(--overlap-across-seam));
+}
+.overlap-receive-seam {
+  padding-top: calc(var(--section-py) + var(--overlap-across-seam));
+}
+@media (min-width: 1024px) {
+  .overlap-receive-seam {
+    padding-top: calc(var(--section-py-lg) + var(--overlap-across-seam));
+  }
+}
+
+/* --- F6: storm floating hero architecture -------------------------------- */
+/* LIGHT-HEADER LOCK HOLDS: the pill nav ships as a WHITE pill (navy links, red
+ * filled CTA), never the V4/V5 dark pill. Storm-response signature only. */
+
+/* Floating pill nav: white rounded-full bar, offset 16px from the top, sticky,
+ * soft shadow. Mobile (< 1024px) collapses to the standard header + MobileCtaBar
+ * (the consumer renders the pill only at >= 1024px). */
+.pill-nav {
+  position: sticky;
+  top: 16px;
+  z-index: 50;
+  max-width: 1200px;
+  margin-inline: auto;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  border-radius: 9999px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1);
+}
+
+/* Rounded hero shell: the hero photo sits inside an inset rounded container
+ * instead of full-bleed. TopBar stays above, full width, unchanged. The hero
+ * image inside stays the priority LCP element (never motion-wrapped). */
+.hero-shell {
+  margin-inline: clamp(16px, 3vw, 24px);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+/* Estimate bar: the hero form dock overlaps the hero shell's bottom edge by
+ * 48px, white card, soft shadow. Uses the existing overlap mechanics retuned
+ * for the inset shell; the form markup does not change (all six locked phrases
+ * render exactly as today). */
+.hero-estimate-bar {
+  position: relative;
+  z-index: 10;
+  margin-top: -48px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+}
+
+/* --- B2: coin flood hover (modern-corporate) ----------------------------- */
+/* Wave 2 leaves the coin flood spec to Wave 3; the coin visibility rule and
+ * geometry already ship above. No new selectors here. */
+
+/* ---------------------------------------------------------------------------
+ * Phase 2B WAVE 3 primitives (score-targeted). Pure CSS keyed off tokens;
+ * nothing forks per theme. Consumed by the hero (D4 trust capsule), the
+ * TestimonialCard (E3 medallion + pull-quote), and B5 frame-break micro-
+ * overlaps (avatar-break, photo-pill). All static geometry, zero CLS.
+ * ------------------------------------------------------------------------- */
+
+/* --- D4: hero trust capsule ---------------------------------------------- */
+/* Translucent dark capsule over the hero photo holding a platform roundel +
+ * gold stars + rating. color-mix keeps the ink 60% opaque so the photo reads
+ * through; the backdrop-blur is progressive-enhancement (degrades gracefully
+ * where unsupported, the capsule stays legible on its own fill). rounded-full
+ * is a fixed value, allowed in both corner modes (it is a pill, not a card).
+ * White text throughout (over-photo dark surface = the contrast invariant's
+ * white-on-dark rule; never text-accent here). Renders only when siteConfig
+ * carries real ratings (the consumer's zero-data guard). */
+.trust-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-ink) 60%, transparent);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+@supports (backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px)) {
+  .trust-capsule {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+  }
+}
+/* Star row inside the capsule: fixed rating gold (never UI accent). */
+.trust-capsule-stars {
+  display: inline-flex;
+  color: var(--color-star);
+}
+
+/* --- E3: quote medallion + pull-quote ------------------------------------ */
+/* Medallion: a 56-64px SOLID circle carrying a white double-quote glyph, the
+ * corpus testimonial mark (bottom of the card). Circles are META here (a quote
+ * mark), so the E2 circle-for-meta lint allows it. Ink circle on white cards;
+ * inside a .card-flip (the B4 polarity-flipped card) it swaps to the accent
+ * fill, both AA-safe with the white glyph. The medallion glyph is decorative;
+ * the review text carries the meaning. */
+.quote-medallion {
+  display: grid;
+  place-items: center;
+  width: clamp(56px, 5vw, 64px);
+  height: clamp(56px, 5vw, 64px);
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--color-primary-dark);
+  color: #ffffff;
+}
+.card-flip .quote-medallion {
+  background: var(--color-accent);
+  color: #ffffff;
+}
+/* Pull-quote: large display-scale review type, the "visceral social proof"
+ * fix. Feature scale (44-48px desktop, clamped for mobile) on the heading face
+ * with high line-height so a long quote breathes. Color inherits from the
+ * consumer (foreground on light, white on a flipped/dark card), so no accent
+ * text ever lands on a dark surface. */
+.pull-quote {
+  font-family: var(--brand-font-heading), system-ui, sans-serif;
+  font-size: var(--h2-feature);
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: -0.01em;
+}
+/* #9: length-aware step-down. The bridge already caps the featured review, but a
+ * borderline-long one still risks a tall wall at feature scale. The consumer
+ * picks a size step off the quote's character count so a longer review renders
+ * at a smaller face (utility, then the h3 body scale) instead of growing the
+ * band. Pure font-size swap, no layout shift. */
+.pull-quote-md {
+  font-size: var(--h2-utility);
+  line-height: 1.34;
+}
+.pull-quote-sm {
+  font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+  line-height: 1.4;
+}
+
+/* --- B5: frame-break micro-overlaps -------------------------------------- */
+/* Micro-depth, EXEMPT from the max-2 section-seam budget (that budget governs
+ * band seams, not intra-card layering). Both are static positioning, zero CLS. */
+
+/* Avatar breaking the card top edge by half its height (industrial + storm
+ * testimonial variants). --avatar-size defaults to 96px; a consumer overrides
+ * it inline to match its avatar. The avatar element stays rounded-full itself
+ * (set by the consumer); this class only pulls it up over the card top. The
+ * host card needs enough top padding to seat the lower half. */
+.avatar-break {
+  --avatar-size: 96px;
+  margin-top: calc(-1 * (var(--avatar-size) / 2));
+}
+/* Platform roundel pinned at the avatar's bottom-right (V6: badge overlapping
+ * the avatar). The avatar host must be position: relative; the roundel stays a
+ * circle in both corner modes. */
+.avatar-roundel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+/* Photo pill: an absolute rounded ink pill with a white caption, pinned 20px
+ * inside a photo corner (blog dates, gallery locations). The photo host must be
+ * position: relative (the .photo-frame already is). rounded-full pill, white
+ * text = over-photo dark-surface safe. Top-right by default; a consumer swaps
+ * corners with the utility classes below. */
+.photo-pill {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--color-ink) 82%, transparent);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.photo-pill-bl {
+  top: auto;
+  right: auto;
+  bottom: 20px;
+  left: 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Reveal engine fully off: everything visible, nothing translated. */
+  html.motion-ready .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  /* Accordion: no height tween; open panels render at full height instantly. */
+  html.motion-ready .accordion-panel.is-open {
+    grid-template-rows: 1fr;
+  }
+}

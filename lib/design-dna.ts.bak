@@ -1,0 +1,305 @@
+/**
+ * design-dna.ts, the Design DNA engine.
+ *
+ * Design DNA decides WHICH section variant renders. It is separate from brand
+ * DNA (paint + facts). The conversion structure (section order, CRO, content)
+ * is fixed; only the visual variant of each section changes here.
+ *
+ * Three layers, applied in order by resolveLayout():
+ *   1. pack default     , the chosen DESIGN_PACK's preset
+ *   2. anti-duplicate   , seeded perturbation of the "variable" sections so two
+ *                          clients on the same pack do not render identically
+ *   3. per-section mix  , explicit overrides win over everything (true mixing)
+ *
+ * VARIANT_POOLS list ONLY the variants each dispatcher actually renders, so the
+ * engine never selects an unwired variant that would silently fall to default.
+ */
+
+export type SectionKey =
+  | "header"
+  | "footer"
+  | "hero"
+  | "reviews"
+  | "whyChooseUs"
+  | "about"
+  | "services"
+  | "gallery"
+  | "process"
+  | "faq"
+  | "cta"
+  | "serviceAreas"
+  | "blog"
+
+export type DesignPack =
+  | "owner-authority"
+  | "commercial-authority"
+  | "family-owned"
+  | "industrial-contractor"
+  | "luxury-premium"
+  | "storm-response"
+  | "modern-corporate"
+
+export type Preset = Record<SectionKey, string>
+
+/** Wired variants per section (must match each dispatcher's switch cases). */
+export const VARIANT_POOLS: Record<SectionKey, readonly string[]> = {
+  header: ["authority", "commercial", "center-authority", "storm-response", "kca-roofing"],
+  footer: ["authority", "commercial", "family", "premium", "storm"],
+  hero: [
+    "project-showcase",
+    "owner-authority",
+    "commercial-authority",
+    "team-authority",
+    "connected-form",
+    "dark-owner-truck",
+    "bright-owner",
+    "sunset-owner-truck",
+  ],
+  reviews: ["slider", "marquee"],
+  whyChooseUs: [
+    "split",
+    "accordion",
+    "timeline",
+    "icon-grid-image",
+    "accordion-image-left",
+    "timeline-image-right",
+    "benefits-background",
+    "image-overlay-dark",
+    "feature-box-overlay",
+  ],
+  about: [
+    "founder-authority",
+    "owner-journey",
+    "truck-authority",
+    "content-left",
+    "image-left",
+    "overlap-card",
+    "split-image-content",
+    "image-left-clean",
+    "overlay-image",
+    "accent-bar-content",
+  ],
+  services: [
+    "category-columns",
+    "listing-grid",
+    "compact-list",
+    "category-cards",
+    "accordion-image-split",
+    "brand-panel-accordion",
+    "pills-image-accordion",
+    "modern-iconbox-accordion",
+  ],
+  gallery: ["masonry", "full-width-slider", "featured-project", "grid-slider", "carousel"],
+  process: [
+    "timeline",
+    "split-accordion",
+    "horizontal-timeline",
+    "zigzag-images",
+    "number-cards",
+    "image-split",
+    "circular",
+    "vertical-flow",
+  ],
+  faq: ["accordion", "side-info", "centered", "image-split", "two-column-cta", "contact-cta"],
+  cta: [
+    "split-form",
+    "owner-authority",
+    "compact-form",
+    "connected-form",
+    "background-image-form",
+    "commercial-authority",
+  ],
+  serviceAreas: ["split", "city-grid", "map-right", "dark-map"],
+  blog: ["slider", "featured", "dark-cards", "featured-split", "magazine-grid"],
+}
+
+/** The 7 canonical design packs (reconciled to the proposal). Every value below
+ * is a wired variant present in VARIANT_POOLS. */
+export const DESIGN_PACKS: Record<DesignPack, Preset> = {
+  "owner-authority": {
+    header: "authority",
+    footer: "authority",
+    hero: "owner-authority",
+    reviews: "slider",
+    whyChooseUs: "icon-grid-image",
+    about: "truck-authority",
+    services: "category-cards",
+    gallery: "featured-project",
+    process: "image-split",
+    faq: "contact-cta",
+    cta: "owner-authority",
+    serviceAreas: "split",
+    blog: "featured-split",
+  },
+  "commercial-authority": {
+    header: "commercial",
+    footer: "commercial",
+    hero: "commercial-authority",
+    reviews: "marquee",
+    whyChooseUs: "timeline-image-right",
+    about: "founder-authority",
+    services: "brand-panel-accordion",
+    gallery: "grid-slider",
+    process: "horizontal-timeline",
+    faq: "image-split",
+    cta: "commercial-authority",
+    serviceAreas: "map-right",
+    blog: "magazine-grid",
+  },
+  "family-owned": {
+    header: "center-authority",
+    footer: "family",
+    hero: "owner-authority",
+    reviews: "slider",
+    whyChooseUs: "accordion-image-left",
+    about: "owner-journey",
+    services: "pills-image-accordion",
+    gallery: "carousel",
+    process: "vertical-flow",
+    faq: "side-info",
+    cta: "owner-authority",
+    serviceAreas: "split",
+    blog: "featured",
+  },
+  "industrial-contractor": {
+    header: "commercial",
+    footer: "commercial",
+    hero: "commercial-authority",
+    reviews: "marquee",
+    whyChooseUs: "image-overlay-dark",
+    about: "image-left",
+    services: "modern-iconbox-accordion",
+    gallery: "masonry",
+    process: "number-cards",
+    faq: "image-split",
+    cta: "commercial-authority",
+    serviceAreas: "dark-map",
+    blog: "dark-cards",
+  },
+  "luxury-premium": {
+    header: "kca-roofing",
+    footer: "premium",
+    hero: "project-showcase",
+    reviews: "marquee",
+    whyChooseUs: "feature-box-overlay",
+    about: "overlay-image",
+    services: "listing-grid",
+    gallery: "masonry",
+    process: "circular",
+    faq: "centered",
+    cta: "background-image-form",
+    serviceAreas: "dark-map",
+    blog: "dark-cards",
+  },
+  "storm-response": {
+    header: "storm-response",
+    footer: "storm",
+    hero: "connected-form",
+    reviews: "slider",
+    whyChooseUs: "benefits-background",
+    about: "image-left-clean",
+    services: "modern-iconbox-accordion",
+    gallery: "full-width-slider",
+    process: "number-cards",
+    faq: "accordion",
+    cta: "compact-form",
+    serviceAreas: "city-grid",
+    blog: "slider",
+  },
+  "modern-corporate": {
+    header: "kca-roofing",
+    footer: "premium",
+    hero: "project-showcase",
+    reviews: "marquee",
+    whyChooseUs: "icon-grid-image",
+    about: "split-image-content",
+    services: "category-columns",
+    gallery: "grid-slider",
+    process: "horizontal-timeline",
+    faq: "two-column-cta",
+    cta: "background-image-form",
+    serviceAreas: "map-right",
+    blog: "magazine-grid",
+  },
+}
+
+/** Sections that carry the pack's identity. Never auto-perturbed, so a pack
+ * stays recognisable. */
+export const ANCHOR_SECTIONS: SectionKey[] = ["header", "footer", "hero", "cta"]
+
+/** Sections safe to auto-vary for anti-duplicate variety. */
+export const VARIABLE_SECTIONS: SectionKey[] = [
+  "reviews",
+  "whyChooseUs",
+  "about",
+  "services",
+  "gallery",
+  "process",
+  "faq",
+  "serviceAreas",
+  "blog",
+]
+
+export interface DesignDNA {
+  /** The chosen design pack. */
+  pack: DesignPack
+  /** Explicit per-section overrides (true per-section mixing). Win over all. */
+  sections?: Partial<Record<SectionKey, string>>
+  /** Anti-duplicate seed (e.g. the client slug). Perturbs the variable sections. */
+  seed?: string
+  /** Override which sections auto-vary (defaults to VARIABLE_SECTIONS). */
+  vary?: SectionKey[]
+}
+
+/** Small deterministic string hash (FNV-1a). Same seed -> same layout. */
+function hashStr(s: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return h >>> 0
+}
+
+function pick(pool: readonly string[], seed: string): string {
+  return pool[hashStr(seed) % pool.length]
+}
+
+/**
+ * Resolve a DesignDNA config to a concrete per-section variant preset.
+ * Order: pack default -> seeded anti-duplicate perturbation -> explicit overrides.
+ */
+export function resolveLayout(dna: DesignDNA): Preset {
+  const base: Preset = { ...DESIGN_PACKS[dna.pack] }
+
+  // 2. Anti-duplicate: deterministically vary the non-anchor sections by seed.
+  if (dna.seed) {
+    const varySet = dna.vary ?? VARIABLE_SECTIONS
+    for (const sec of varySet) {
+      if (ANCHOR_SECTIONS.includes(sec)) continue
+      base[sec] = pick(VARIANT_POOLS[sec], `${dna.seed}:${sec}`)
+    }
+  }
+
+  // 3. Explicit per-section overrides always win.
+  if (dna.sections) {
+    for (const key of Object.keys(dna.sections) as SectionKey[]) {
+      const v = dna.sections[key]
+      if (v && (VARIANT_POOLS[key] as readonly string[]).includes(v)) {
+        base[key] = v
+      }
+    }
+  }
+
+  return base
+}
+
+/**
+ * The current client's Design DNA. Per-client builds replace this object.
+ * Default = Capstone smoke-test (owner-led roofing company).
+ */
+export const designDNA: DesignDNA = {
+  pack: "owner-authority",
+  seed: "capstone-contracting-solutions",
+  sections: {},
+}

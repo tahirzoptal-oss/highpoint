@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <!-- V6 dark texture (2B C2): low-poly triangulated facet mesh (the V6 FAQ
+       backdrop). 1px strokes at stroke-opacity 0.05, a handful of faces filled
+       at 0.03, all in currentColor. Boundary vertices repeat at matching
+       positions on opposite edges (top/bottom x: 420/880/1260, left/right
+       y: 320/640) so the tile reads continuous when repeated. -->
+  <g fill="currentColor" fill-opacity="0.03" stroke="none">
+    <polygon points="620,150 1000,260 900,540" />
+    <polygon points="180,520 540,430 340,720" />
+    <polygon points="1240,460 1460,560 1420,800" />
+    <polygon points="760,760 1120,720 880,900" />
+  </g>
+  <g fill="none" stroke="currentColor" stroke-opacity="0.05" stroke-width="1">
+    <path d="M0 0 L250 220 M420 0 L250 220 M420 0 L620 150 M880 0 L620 150 M880 0 L1000 260 M1260 0 L1000 260 M1260 0 L1380 180 M1600 0 L1380 180" />
+    <path d="M0 320 L250 220 M0 320 L180 520 M0 640 L180 520 M0 640 L340 720 M0 900 L340 720" />
+    <path d="M1600 320 L1380 180 M1600 320 L1460 560 M1600 640 L1460 560 M1600 640 L1420 800 M1600 900 L1420 800" />
+    <path d="M250 220 L620 150 M620 150 L1000 260 M1000 260 L1380 180" />
+    <path d="M250 220 L540 430 M620 150 L540 430 M620 150 L900 540 M1000 260 L900 540 M1000 260 L1240 460 M1380 180 L1240 460 M1380 180 L1460 560" />
+    <path d="M180 520 L540 430 M540 430 L900 540 M900 540 L1240 460 M1240 460 L1460 560" />
+    <path d="M180 520 L340 720 M540 430 L340 720 M540 430 L760 760 M900 540 L760 760 M900 540 L1120 720 M1240 460 L1120 720 M1460 560 L1420 800" />
+    <path d="M340 720 L760 760 M760 760 L1120 720 M1120 720 L1420 800" />
+    <path d="M340 720 L420 900 M760 760 L420 900 M760 760 L880 900 M1120 720 L880 900 M1120 720 L1260 900 M1420 800 L1260 900" />
+  </g>
+</svg>
