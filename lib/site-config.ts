@@ -412,16 +412,16 @@ export const siteConfig = {
   ],
   "trustLogos": [
     {
-      "name": "Google Reviews",
-      "image": "/images/google-logo.svg"
+      "name": "Certified installer",
+      "image": "/images/badges/32a5ce_954d61292dc44213b841f00c121666a3~mv2.avif"
     },
     {
-      "name": "Facebook Reviews",
-      "image": "/images/facebook-logo.svg"
+      "name": "Certified installer",
+      "image": "/images/badges/32a5ce_f02acd0a9cc346a99080134ecb7aa651~mv2.avif"
     },
     {
-      "name": "BBB",
-      "image": "/images/bbb-logo.svg"
+      "name": "IKO ROOFPRO Select",
+      "image": "/images/badges/iko-roofpro-select.webp"
     }
   ],
   "faqs": [
