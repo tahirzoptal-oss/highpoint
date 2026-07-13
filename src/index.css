@@ -1,0 +1,881 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Palette CSS variables. inject-theme.mjs (vite prebuild hook) rewrites the
+ * :root block from src/config/brand-dna.js before every build. Values are
+ * rgb triplets (no rgb() wrapper) so Tailwind's `rgb(var(--X) / <alpha-value>)`
+ * pattern can apply utility opacities.
+ *
+ * Default values shown here are the template's brand. Per-client builds replace
+ * them at prebuild time.
+ */
+:root {
+  --primary: 24 60 120;
+  --primary-dark: 16 40 79;
+  --primary-slate: 24 60 120;
+  --accent: 212 154 46;
+  --accent-light: 221 189 129;
+  --accent-dark: 125 89 21;
+  --neutral: 92 100 115;
+  --neutral-dim: 92 100 115;
+  --silver: 201 206 214;
+  --ink: 27 36 54;
+  --on-accent: 255 255 255;
+}
+/* Optional dark-mode overrides applied via <html data-theme-mode="dark">.
+ * inject-theme.mjs sets the attribute from brandDNA.theme_mode; light mode
+ * is the unchanged baseline. Only define overrides that should differ in
+ * dark mode (e.g. swap primary <-> primary_slate for higher contrast). */
+:root[data-theme-mode="dark"] {
+  --primary: 2 6 23;
+  --primary-dark: 0 0 0;
+  --primary-slate: 15 23 42;
+  /* half-photo section-fade colors = the rendered bg-navy / bg-navy-slate */
+  --fade-navy: 2 6 23;
+  --fade-navy-slate: 15 23 42;
+}
+/* Light theme: bg-navy renders #FFFFFF and bg-navy-slate renders #F5F7FA
+   (see the theme-mode=light overrides below), so the photo fades match those. */
+:root[data-theme-mode="light"] {
+  --fade-navy: 255 255 255;
+  --fade-navy-slate: 245 247 250;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Wave 1 (2026-05-16 research bake): variable-font optical sizing baseline.
+ * Lets Oswald + body font render correctly at every size without manually
+ * picking weights. Negligible runtime cost, visible polish improvement. */
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: clip;
+  font-optical-sizing: auto;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+/* Wave 1: tabular-nums utility for ratings, phone numbers, prices, dates.
+ * Apply with class="font-tabular" or directly via .font-tabular on numeric
+ * elements so digits align column-style instead of proportionally. */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Wave 1: prefers-reduced-motion global guard.
+ * Honors user system preference for vestibular comfort + WCAG 2.2.
+ * Disables every animation + transition + scroll-behavior. Tested across
+ * all template motion (hover springs, scroll reveals, page transitions). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Wave 2 (research bake): scroll-driven entrance fade.
+ * Used by <FadeOnEnter> wrapper. Element starts hidden+offset and animates
+ * to visible+in-place when IntersectionObserver fires .is-in-view class.
+ * 600ms premium-out curve per Section 7 of research file. */
+.fade-on-enter {
+  opacity: 0;
+  transform: translateY(24px);
+  transition-property: opacity, transform;
+  transition-duration: 600ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.fade-on-enter.is-in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Wave 2: per-word scroll-reveal for Hero H1 (one premium moment per page).
+ * Used by <ScrollRevealHeadline>. Each span.srh-word starts at opacity 0.2
+ * and animates to 1 with a per-word stagger driven by inline transitionDelay.
+ * The reveal triggers on .is-revealed class added by IntersectionObserver. */
+.scroll-reveal-headline .srh-word {
+  display: inline-block;
+  opacity: 0.2;
+  transition-property: opacity, transform;
+  transition-duration: 700ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(8px);
+  will-change: opacity, transform;
+}
+.scroll-reveal-headline.is-revealed .srh-word {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Wave 2: spring-style hover lift for buttons + cards.
+ * Apply with class="hover-lift" on the element. 200ms enter / 400ms exit
+ * (asymmetric per Section 7 premium pattern). Lift 2px + tighten shadow. */
+.hover-lift {
+  transition-property: transform, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+.hover-lift:active {
+  transform: translateY(0);
+  transition-duration: 80ms;
+}
+
+/* Wave 2: card hover with shadow elevation.
+ * Use class="hover-card" for cards that should lift + shadow on hover. */
+.hover-card {
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.hover-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 24px 48px rgba(0,0,0,0.12);
+}
+.hover-card:not(:hover) {
+  transition-duration: 400ms;
+}
+
+/* Wave 3 (research bake): route-mount transition.
+ * Applied by <RouteTransition> in App.jsx on every route change.
+ * Section 7 Tactic M5: 200ms fade + 8px translate, premium-out easing. */
+.route-mount {
+  animation: routeMountIn 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes routeMountIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   Wave 4 (research bake): composition + grid utilities
+   Source: 2026-05-16-web-design-research-deep-dive.md
+   Sections 20-23, 28-29
+   ============================================================ */
+
+/* Asymmetric split utilities (60/40 or 70/30) instead of symmetric 50/50.
+ * Section 21: "Asymmetric splits preferred over 50/50".
+ * Apply to a CSS grid parent; children automatically size into the split. */
+.split-60-40 { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 768px) { .split-60-40 { grid-template-columns: 60fr 40fr; gap: 3rem; } }
+
+.split-70-30 { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 768px) { .split-70-30 { grid-template-columns: 70fr 30fr; gap: 3rem; } }
+
+.split-40-60 { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 768px) { .split-40-60 { grid-template-columns: 40fr 60fr; gap: 3rem; } }
+
+.split-30-70 { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+@media (min-width: 768px) { .split-30-70 { grid-template-columns: 30fr 70fr; gap: 3rem; } }
+
+/* Card aspect ratio utilities. Section 23: lock per-card-type ratios so
+ * mixed-source images (Apify, Gemini, client-uploaded) all crop to the same
+ * shape inside their grid. Apply to a wrapper around <img class="object-cover"> */
+.aspect-card-16-9 { aspect-ratio: 16 / 9; overflow: hidden; }
+.aspect-card-4-3  { aspect-ratio: 4 / 3;  overflow: hidden; }
+.aspect-card-3-2  { aspect-ratio: 3 / 2;  overflow: hidden; }
+.aspect-card-1-1  { aspect-ratio: 1 / 1;  overflow: hidden; }
+.aspect-card-4-5  { aspect-ratio: 4 / 5;  overflow: hidden; }   /* portrait */
+.aspect-card-3-4  { aspect-ratio: 3 / 4;  overflow: hidden; }
+.aspect-hero-21-9 { aspect-ratio: 21 / 9; overflow: hidden; }   /* cinematic hero */
+
+/* Hairline divider utility (Section 27: dividers as punctuation).
+ * 1px rule between sub-blocks within a section. Use sparingly. */
+.divider-hairline {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  margin: 0;
+}
+[data-theme-mode="dark"] .divider-hairline {
+  background: rgba(255, 255, 255, 0.10);
+}
+
+/* Section pacing baseline (Section 28): macro spacing token.
+ * Apply to <section> elements via class="section-rhythm" to get
+ * 96px gap on desktop, 64px on mobile. */
+.section-rhythm {
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+}
+@media (min-width: 1024px) {
+  .section-rhythm { padding-top: 6rem; padding-bottom: 6rem; }
+}
+.section-rhythm-lg {
+  padding-top: 5rem;
+  padding-bottom: 5rem;
+}
+@media (min-width: 1024px) {
+  .section-rhythm-lg { padding-top: 8rem; padding-bottom: 8rem; }
+}
+
+/* ============================================================
+   Wave 5 (research bake): visual design polish
+   Source: 2026-05-16-web-design-research-deep-dive.md Sec 27, 30
+   ============================================================ */
+
+/* Skeleton shimmer · used by <Skeleton*> components.
+ * 1.5s loop, gentle gradient sweep. Honors prefers-reduced-motion. */
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.08) 50%,
+    rgba(0, 0, 0, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+}
+[data-theme-mode="dark"] .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+}
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Empty state · used by <EmptyState> component.
+ * Centered illustration + headline + description + single CTA.
+ * Subtle, never trumpets that the data is missing. */
+.empty-state {
+  max-width: 480px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+.empty-state-illus {
+  display: inline-flex;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 1.25rem;
+  color: rgb(var(--accent));
+}
+.empty-state-headline {
+  font-family: 'Oswald', 'Impact', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: rgb(var(--ink));
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+.empty-state-desc {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: rgb(var(--neutral-dim));
+  margin-bottom: 1.5rem;
+}
+.empty-state-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  color: rgb(var(--accent));
+  text-transform: uppercase;
+  transition: gap 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.empty-state-cta:hover {
+  gap: 0.75rem;
+}
+
+/* Section eyebrow block · used by <SectionEyebrow> component.
+ * Locks the eyebrow + accent line + H2 vertical rhythm. */
+.section-eyebrow-block {
+  margin-bottom: 1.5rem;
+}
+.section-eyebrow-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgb(var(--accent));
+  margin-bottom: 0.5rem;
+}
+[data-theme-mode="light"] .section-eyebrow-label {
+  color: color-mix(in srgb, rgb(var(--accent-dark)) 70%, rgb(var(--accent)) 30%);
+}
+.section-eyebrow-heading {
+  font-family: 'Oswald', 'Impact', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.875rem, 4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  color: rgb(var(--ink));
+  text-transform: uppercase;
+  margin: 0;
+}
+[data-theme-mode="dark"] .section-eyebrow-heading {
+  color: #fff;
+}
+
+/* ============================================================
+   Wave 6 (research bake): asymmetric layout hooks
+   Source: 2026-05-16-web-design-research-deep-dive.md Sec 22
+   ============================================================ */
+
+/* Stat hero composition · used by WhyChooseUs when shape="stat-hero".
+ * Single oversized number on the left, supporting bullets on the right.
+ * Replaces 6-tile symmetric grid for clients who opt in via brand-dna. */
+.composition-stat-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+@media (min-width: 1024px) {
+  .composition-stat-hero {
+    grid-template-columns: 40fr 60fr;
+    gap: 4rem;
+  }
+}
+.composition-stat-hero .stat-num {
+  font-family: 'Oswald', 'Impact', sans-serif;
+  font-weight: 800;
+  font-size: clamp(4rem, 12vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+  color: rgb(var(--accent));
+  display: block;
+}
+
+/* Alternating image-text pairs · used by Services when shape="alternating".
+ * Each .alt-pair-row is a CSS grid 60/40 (or 40/60 if .alt-pair-reverse).
+ * Use inside a parent that loops services into rows. */
+.alt-pair-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+@media (min-width: 768px) {
+  .alt-pair-row { grid-template-columns: 60fr 40fr; gap: 3rem; }
+  .alt-pair-row.alt-pair-reverse > :first-child { order: 2; }
+  .alt-pair-row.alt-pair-reverse > :last-child  { order: 1; }
+}
+
+/* Asymmetric footer grid · used by Footer when shape="asymmetric-cols".
+ * Logo column wider, link columns narrower. Replaces 4-equal-column footer. */
+.footer-asymmetric {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+@media (min-width: 1024px) {
+  .footer-asymmetric {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  font-family: 'Montserrat', sans-serif;
+  background: #fff;
+}
+
+#root {
+  width: 100%;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Oswald', Impact, sans-serif;
+  margin: 0;
+}
+
+/* Metallic silver text — applied to white headings on dark sections, and the .heading-metallic utility */
+h1.text-white,
+h2.text-white,
+h3.text-white,
+.heading-metallic {
+  background: linear-gradient(160deg, #ffffff 0%, #f9fafb 15%, #dde1e7 42%, #f6f7f9 68%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+p { margin: 0; }
+
+/* Carousel */
+.carousel-scroll::-webkit-scrollbar { display: none; }
+.carousel-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ── Gold/Accent CTA Button with static metallic glare ──
+   Uses per-client --accent / --accent-light / --accent-dark CSS variables
+   so the button takes the brand's actual accent color (copper for Becker,
+   classic gold for Capstone). The accent stops are derived in
+   tools/derive-accent-stops.py from the base accent color so the metallic
+   gradient still has light->base->dark->light progression. */
+.btn-gold {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    160deg,
+    rgb(var(--accent-light)) 0%,
+    rgb(var(--accent)) 35%,
+    rgb(var(--accent-dark)) 62%,
+    rgb(var(--accent-light)) 100%
+  );
+  /* Rule 65: text color = --on-accent (computed by inject-theme.mjs based on
+     accent luminance). White text on yellow-accent brands renders at 1.00:1
+     (invisible); dark text on royal-blue brands renders at 1.21:1 (also
+     bad). --on-accent picks whichever side has higher contrast against the
+     brand accent. Per-client overrides (e.g. a brand that wants forced-white
+     CTA labels) belong in that client's src/custom.css, NOT here: hardcoding a
+     color in the shared template makes light-accent CTAs invisible. */
+  color: rgb(var(--on-accent));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 5px 0 rgb(var(--accent-dark)), 0 7px 16px rgba(0,0,0,0.35);
+  transform: translateY(0);
+  /* Wave 2 (research bake): explicit transition-property (no transition:all)
+   * + premium-out easing curve + asymmetric enter/exit duration. */
+  transition-property: transform, box-shadow;
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.btn-gold::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0.32) 0%,
+    rgba(255, 255, 255, 0.16) 12%,
+    transparent 26%,
+    transparent 74%,
+    rgba(255, 255, 255, 0.16) 88%,
+    rgba(255, 255, 255, 0.28) 100%
+  );
+  pointer-events: none;
+}
+.btn-gold:hover {
+  box-shadow: 0 3px 0 rgb(var(--accent-dark)), 0 4px 10px rgba(0,0,0,0.28);
+  transform: translateY(2px);
+}
+.btn-gold:active {
+  box-shadow: 0 1px 0 rgb(var(--accent-dark)), 0 2px 6px rgba(0,0,0,0.22);
+  transform: translateY(4px);
+}
+
+/* ── Outline Secondary Button ── */
+.btn-outline {
+  border: 1px solid #C0C6CF;
+  color: white;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+.btn-outline:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.btn-outline:active {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ── Thin accent lines ── */
+.line-gold {
+  display: block;
+  height: 2px;
+  background: rgb(var(--accent));
+}
+
+.line-silver {
+  display: block;
+  height: 1px;
+  background: #C0C6CF;
+  opacity: 0.4;
+}
+
+/* ── Card depth / lift ──
+ * Wave 2 (research bake): two-layer shadows (ambient + direct) per Vercel
+ * design guideline + Section 5 of research file. 200ms enter / 400ms exit
+ * (asymmetric premium pattern). Explicit transition-property (no transition: all). */
+.card-elevated {
+  box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 12px 24px rgba(15,23,42,0.08);
+  border: 1px solid rgba(15,23,42,0.04);
+  transition-property: transform, box-shadow, border-color;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.card-elevated:hover {
+  box-shadow: 0 1px 2px rgba(15,23,42,0.06), 0 24px 48px rgba(15,23,42,0.14);
+  transform: translateY(-3px);
+  transition-duration: 200ms;
+}
+
+/* ── Dark card depth (Wave 2 refresh) ── */
+.card-elevated-dark {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.20), 0 16px 32px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.04);
+  transition-property: transform, box-shadow;
+  transition-duration: 400ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, box-shadow;
+}
+.card-elevated-dark:hover {
+  box-shadow: 0 1px 2px rgba(0,0,0,0.20), 0 28px 56px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+  transform: translateY(-3px);
+  transition-duration: 200ms;
+}
+
+/* ── Background dot texture ── */
+.bg-dots {
+  background-image: radial-gradient(rgba(15,23,42,0.06) 1.5px, transparent 1.5px);
+  background-size: 28px 28px;
+}
+
+/* ── Subtle grid texture (dark sections) ── */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* =====================================================================
+ * LIGHT THEME OVERRIDES
+ * Applied when <html data-theme-mode="light"> is set (the default per
+ * brandDNA.theme_mode).  Capstone's components hardcode `bg-navy`, `text-white`,
+ * `text-cool` etc. for a dark-first aesthetic. Light theme inverts: navy
+ * surfaces become white, white text becomes navy, muted text becomes slate.
+ * Gold accents stay gold in both themes.
+ *
+ * Section accent bands that should STAY dark even in light theme can opt out
+ * by adding the `theme-keep-dark` class to the parent element.
+ * ===================================================================== */
+[data-theme-mode="light"] :where(.bg-navy, .bg-navy-dark, .bg-navy-slate):not(.theme-keep-dark) {
+  background-color: #FFFFFF;
+}
+[data-theme-mode="light"] :where(.bg-navy-slate):not(.theme-keep-dark) {
+  background-color: #F5F7FA;
+}
+[data-theme-mode="light"] :where(.bg-navy-dark):not(.theme-keep-dark) {
+  background-color: #EDF1F7;
+}
+
+/* Body/heading text that was white-on-dark becomes navy-on-light. */
+[data-theme-mode="light"] :where(.bg-navy, .bg-navy-dark, .bg-navy-slate):not(.theme-keep-dark) .text-white {
+  color: rgb(var(--primary));
+}
+/* Catch-all for text-white on light surfaces (cards, sections).
+   Excludes any element inside a .theme-keep-dark section (hero photo overlay,
+   gold form panel, etc.) so white text on intentionally-dark surfaces stays white. */
+[data-theme-mode="light"] .text-white:not(.theme-keep-white) {
+  color: rgb(var(--primary));
+}
+[data-theme-mode="light"] .theme-keep-dark .text-white,
+[data-theme-mode="light"] .theme-keep-dark h1.text-white,
+[data-theme-mode="light"] .theme-keep-dark h2.text-white,
+[data-theme-mode="light"] .theme-keep-dark h3.text-white,
+[data-theme-mode="light"] .theme-keep-dark .heading-metallic {
+  color: #FFFFFF !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+}
+[data-theme-mode="light"] .theme-keep-dark .text-cool {
+  color: rgb(var(--neutral)) !important;
+}
+/* Cool / steel text become darker slate for readability on white. */
+[data-theme-mode="light"] .text-cool:not(.theme-keep-light) {
+  color: #475569;
+}
+[data-theme-mode="light"] .text-steel:not(.theme-keep-light) {
+  color: #334155;
+}
+
+/* Borders that were light-on-dark become dark-on-light. */
+[data-theme-mode="light"] .border-steel\/25:not(.theme-keep-dark),
+[data-theme-mode="light"] .border-cool\/25:not(.theme-keep-dark),
+[data-theme-mode="light"] .border-cool\/40:not(.theme-keep-dark),
+[data-theme-mode="light"] .border-steel\/40:not(.theme-keep-dark) {
+  border-color: rgba(15, 23, 42, 0.15);
+}
+
+/* Cards that were dark-elevated become light-elevated. */
+[data-theme-mode="light"] .card-elevated-dark:not(.theme-keep-dark) {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+/* CRITICAL: H1/H2/H3 with text-white have a metallic SILVER gradient applied via
+   `background-clip: text` + `text-fill-color: transparent`. On white surfaces
+   this becomes invisible. Disable the metallic effect in light mode and render
+   solid navy text instead. */
+[data-theme-mode="light"] h1.text-white,
+[data-theme-mode="light"] h2.text-white,
+[data-theme-mode="light"] h3.text-white,
+[data-theme-mode="light"] h4.text-white,
+[data-theme-mode="light"] h5.text-white,
+[data-theme-mode="light"] h6.text-white,
+[data-theme-mode="light"] .heading-metallic {
+  background: none !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: rgb(var(--primary)) !important;
+  color: rgb(var(--primary)) !important;
+}
+
+/* Rule 65 (dark theme contrast): the metallic silver gradient that paints
+   h1.text-white / .heading-metallic for hero photo overlays renders as
+   grey on dark surfaces (#050811 etc.). Disable the gradient in dark
+   mode and paint solid white instead. Passes WCAG AA 4.5:1 at 19.5:1
+   vs the gradient grey midtones around ~5:1 which read as washed-out. */
+[data-theme-mode="dark"] h1.text-white,
+[data-theme-mode="dark"] h2.text-white,
+[data-theme-mode="dark"] h3.text-white,
+[data-theme-mode="dark"] h4.text-white,
+[data-theme-mode="dark"] h5.text-white,
+[data-theme-mode="dark"] h6.text-white,
+[data-theme-mode="dark"] .heading-metallic,
+[data-theme-mode="dark"] .stats-card-value {
+  background: none !important;
+  background-clip: unset !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: #FFFFFF !important;
+  color: #FFFFFF !important;
+}
+/* Rule 65 (dark theme contrast — body text + accent text):
+   In light mode the slate utilities (text-cool, text-steel, text-navy)
+   work because they sit on white. In dark mode they vanish against the
+   near-black surface. Flip them to lighter slates that pass WCAG AA
+   4.5:1 vs the dark theme primary bg.
+
+   text-gold gets the per-client accent_light variant (passes contrast
+   without losing brand identity). .btn-gold itself uses accent gradient
+   for its BACKGROUND, not text — keep that intact. */
+[data-theme-mode="dark"] :where(.text-cool, .text-cool-200) {
+  color: #C8D0E0;
+}
+[data-theme-mode="dark"] .text-steel {
+  color: #94A3B8;
+}
+[data-theme-mode="dark"] .text-navy {
+  color: #C8D0E0;
+}
+[data-theme-mode="dark"] .text-gold:not(.btn-gold):not(.btn-gold *) {
+  color: color-mix(in srgb, rgb(var(--accent)) 28%, white 72%);
+}
+/* Rule 65 (light theme contrast — text-gold on white surface):
+   When the brand accent is high-luminance (yellow, cream, pale gold),
+   text-gold renders at ~1.3:1 against white — invisible. The fix mirrors
+   the dark-mode override but mixes toward BLACK so the text reads on a
+   white surface while preserving the brand-accent hue. For dark accents
+   (royal blue, navy, brand-red) this still darkens slightly but stays
+   recognizably brand-aligned. inject-theme.mjs always emits --accent-dark
+   which is the deeply-darkened brand variant — using accent-dark blended
+   with --accent keeps brand identity intact across the palette. */
+[data-theme-mode="light"] .text-gold:not(.btn-gold):not(.btn-gold *) {
+  color: color-mix(in srgb, rgb(var(--accent-dark)) 70%, rgb(var(--accent)) 30%);
+}
+
+/* Low-alpha white labels (text-white/35, /40, /50, /55) drop below 4.5:1
+   against #050811 dark theme. Bump the minimum to 70% so micro-copy
+   stays legible. Visible difference is small but contrast jumps from
+   ~3.0:1 to ~6.5:1. */
+[data-theme-mode="dark"] :where([class*="text-white/35"], [class*="text-white/40"], [class*="text-white/50"], [class*="text-white/55"], [class*="text-white/60"]) {
+  color: rgba(255, 255, 255, 0.70);
+}
+/* Light-theme counterpart: low-alpha whites on a white surface vanish at
+   ~1.4:1 (form captions, footer micro-copy). Flip them to navy-65% which
+   reads at ~7:1 on white. Same selector list as the dark-mode override.
+   Excludes any element inside a `.theme-keep-dark` subtree (hero form
+   panel, dark glass cards) so white-alpha text stays white where the
+   surface is intentionally dark. */
+[data-theme-mode="light"] :where([class*="text-white/35"], [class*="text-white/40"], [class*="text-white/50"], [class*="text-white/55"], [class*="text-white/60"]):not(.theme-keep-dark *):not(.theme-keep-dark) {
+  color: rgba(15, 23, 42, 0.65);
+}
+
+
+
+
+/* Outline button text was white-on-dark. In light theme, navy text + navy border. */
+[data-theme-mode="light"] .btn-outline {
+  border: 1px solid rgba(15, 23, 42, 0.3);
+  color: rgb(var(--primary));
+}
+[data-theme-mode="light"] .btn-outline:hover {
+  background: rgba(15, 23, 42, 0.05);
+}
+
+/* Vision/Mission cards on Founder section had hardcoded gradient bg in JSX
+   (style={{ background: 'linear-gradient(135deg, #1E293B 0%, #172030 100%)' }}).
+   We can't override inline styles via plain CSS without !important. The
+   override here only catches Tailwind class users; manual JSX inline-style
+   gradient cards remain dark in light mode (worth a future refactor). */
+
+/* The bg-grid texture inverts: light grid lines on dark become dark on light. */
+[data-theme-mode="light"] .bg-grid {
+  background-image:
+    linear-gradient(rgba(15,23,42,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,0.04) 1px, transparent 1px);
+}
+
+/* Gold buttons keep white text in both themes (gold is too dark for navy text). */
+[data-theme-mode="light"] :where(.bg-gold, [class*="bg-gradient"][style*="C6A75E"]) .text-white,
+[data-theme-mode="light"] .btn-primary .text-white {
+  color: #FFFFFF;
+}
+
+/* ── Diagonal stripe accent ── */
+.bg-stripe {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 18px,
+    rgba(255,255,255,0.015) 18px,
+    rgba(255,255,255,0.015) 19px
+  );
+}
+
+/* ── Hero height ── */
+.hero-section {
+  min-height: 100vh;
+}
+@media (min-width: 1024px) {
+  .hero-section {
+    min-height: clamp(460px, 72vh, 680px);
+  }
+}
+
+/* ── Static LCP hero picture. Lives in body (not inside React tree) so the
+   image is in the HTML before React mounts. Height MUST track .hero-section
+   above — without the desktop clamp the picture renders at 100vh and bleeds
+   past the hero into the Reviews / Trust strip below. Critical-path version
+   of these styles ships inline in each client's index.html <style> block;
+   this rule is the post-CSS fallback. */
+#static-lcp-hero {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 1;
+  pointer-events: none;
+  contain: strict;
+  overflow: hidden;
+}
+#static-lcp-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 30%;
+}
+@media (min-width: 1024px) {
+  #static-lcp-hero {
+    height: clamp(460px, 72vh, 680px);
+  }
+}
+
+/* ── Form input focus ring ── */
+.form-input {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.form-input:focus {
+  border-color: rgb(var(--accent)) !important;
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.15);
+  outline: none;
+}
+
+/* Vision/Mission cards in Founder section. Light theme: white card with subtle navy border. */
+.vision-mission-card {
+  background: linear-gradient(135deg, #1E293B 0%, #172030 100%);
+  border: 1px solid rgb(var(--accent) / 0.2);
+  border-top: 2px solid rgb(var(--accent));
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+[data-theme-mode="light"] .vision-mission-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-top: 2px solid rgb(var(--accent));
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+}
+
+/* Stats card value (large number on About page stats strip). Dark mode:
+   metallic-silver gradient. Light mode: solid navy so it doesn't disappear
+   into the white card surface. */
+.stats-card-value {
+  background: linear-gradient(160deg, #ffffff 0%, #f9fafb 15%, #dde1e7 42%, #f6f7f9 68%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme-mode="light"] .stats-card-value {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: rgb(var(--primary)) !important;
+  background-clip: unset !important;
+  color: rgb(var(--primary)) !important;
+}
+
+/* Footer social icons. In dark mode the SVG uses currentColor=white. In
+   light mode it would otherwise be white-on-white (invisible) so paint
+   it navy. Hover lifts it to gold in either mode. */
+.footer-social-icon {
+  color: #FFFFFF;
+}
+.footer-social-icon:hover {
+  color: rgb(var(--accent));
+}
+[data-theme-mode="light"] .footer-social-icon {
+  color: rgb(var(--primary));
+  background-color: #F5F7FA !important;
+  border-color: rgba(15, 23, 42, 0.15) !important;
+}
+[data-theme-mode="light"] .footer-social-icon:hover {
+  color: rgb(var(--accent));
+  background-color: rgb(var(--accent) / 0.12) !important;
+  border-color: rgb(var(--accent) / 0.4) !important;
+}
+
+/* Form inputs. The Capstone template was dark-first, so .form-input had no
+   light-theme override. On the contact page (light mode) inputs were
+   white-on-white because their inline JSX style sets background to a
+   translucent white-on-dark pattern. Override here so light-mode pages get
+   visible borders + readable text without changing the dark-first JSX. */
+[data-theme-mode="light"] .form-input:not(.theme-keep-dark .form-input) {
+  background-color: #FAFBFC !important;
+  border: 1px solid rgba(15, 23, 42, 0.2) !important;
+  color: rgb(var(--primary)) !important;
+}
+[data-theme-mode="light"] .form-input:not(.theme-keep-dark .form-input)::placeholder {
+  color: #64748B !important;
+}
+/* Same for textareas and selects, which share the .form-input class */
+[data-theme-mode="light"] textarea.form-input:not(.theme-keep-dark .form-input),
+[data-theme-mode="light"] select.form-input:not(.theme-keep-dark .form-input) {
+  background-color: #FAFBFC !important;
+  border: 1px solid rgba(15, 23, 42, 0.2) !important;
+  color: rgb(var(--primary)) !important;
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}

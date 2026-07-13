@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
-  <!-- V6 dark texture (2B C2): two smooth curved arcs sweeping the tile
-       diagonal (the V6 Why Choose backdrop), 130-220px wide at their crest,
-       tapered tips, fill currentColor at 0.04. Fully inside the tile so the
-       repeat shows no seams. -->
-  <path d="M 140 840 C 420 600 880 380 1460 110 C 1080 480 620 760 140 840 Z" fill="currentColor" fill-opacity="0.04" />
-  <path d="M 430 870 C 760 720 1180 560 1560 340 C 1290 700 880 850 430 870 Z" fill="currentColor" fill-opacity="0.04" />
-</svg>
