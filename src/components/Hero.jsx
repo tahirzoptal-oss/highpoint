@@ -35,7 +35,7 @@ export default function Hero() {
             src="/hero-image.webp"
             alt={`${brandDNA.company.name}, ${brandDNA.address.city} roofing contractor`}
             className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 62%' }}
+            style={{ objectPosition: '50% 38%' }}
             loading="eager"
             fetchpriority="high"
             onError={(e) => { e.target.style.display = 'none'; }}
