@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import CTABanner from '../components/CTABanner';
 import Ticker from '../components/Ticker';
 import CornerOverlay from '../components/CornerOverlay';
+import QuoteForm from '../components/QuoteForm';
 import SEO from '../components/SEO';
 import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
@@ -20,7 +21,7 @@ const coverageHighlights = [
     title: 'Same-Day Response',
     text: 'We schedule inspections within 24 to 48 hours across our entire service area. Emergency calls get a same-day response.',
     icon: (
-      <svg className="w-6 h-6" style={{ color: '#0F172A' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-6 h-6" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
@@ -29,7 +30,7 @@ const coverageHighlights = [
     title: 'No Travel Fees',
     text: 'Inspections, estimates, and site visits anywhere in our service area are free. No surprise charges for driving to you.',
     icon: (
-      <svg className="w-6 h-6" style={{ color: '#0F172A' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-6 h-6" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
@@ -40,7 +41,7 @@ const coverageHighlights = [
       ? `${founderLabel} personally attends every inspection and project walkthrough, not a subcontractor or third-party rep.`
       : 'The owner personally attends every inspection and project walkthrough, not a subcontractor or third-party rep.',
     icon: (
-      <svg className="w-6 h-6" style={{ color: '#0F172A' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <svg className="w-6 h-6" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
       </svg>
     ),
@@ -103,16 +104,19 @@ export default function ServiceAreasPage() {
       {/* Map + Areas */}
       <section className="relative py-16 bg-grid bg-navy">
         <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-            {/* Left */}
-            <div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            {/* Left: content + map */}
+            <div className="lg:col-span-2">
               <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">OUR SERVICE AREA</p>
               <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-4">
                 WHERE WE WORK
               </h2>
               <span className="line-gold block w-12 mb-5" />
-              <p className="text-cool text-sm mb-8 leading-relaxed max-w-lg">
-                We serve homeowners across the greater {brandDNA.address.city} metropolitan area. If you're within roughly 50 miles of {brandDNA.address.city}, {brandDNA.address.state}, we're in your area. Not sure? Just call and we'll let you know.
+              <p className="text-cool text-sm mb-4 leading-relaxed max-w-2xl">
+                We serve homeowners across the Tri-Cities and the nearby towns of Eastern Washington. Not sure if you're covered? Just call and we'll let you know.
+              </p>
+              <p className="text-cool text-sm mb-8 leading-relaxed max-w-2xl">
+                High Point is a local contractor, not a storm-chasing crew that rolls into town after a big wind and disappears before winter. {founderLabel || 'The owner'} lives and works here, so you get a real name, a real number, and a reputation to protect on every job.
               </p>
 
               {/* Cities we serve, single grouped grid */}
@@ -137,7 +141,7 @@ export default function ServiceAreasPage() {
                     return (
                       <li key={city} className="flex items-center gap-2 text-cool text-xs">
                         {hasPage ? (
-                          <Link to={`/service-area/${citySlug}`} className="flex items-center gap-2 hover:text-gold transition-colors">
+                          <Link to={`/service-areas/${citySlug}`} className="flex items-center gap-2 hover:text-gold transition-colors">
                             {inner}
                           </Link>
                         ) : inner}
@@ -158,11 +162,9 @@ export default function ServiceAreasPage() {
                   and we'll confirm if you're in our service area.
                 </p>
               </div>
-            </div>
 
-            {/* Right: map */}
-            <div>
-              <div className="overflow-hidden sticky top-24" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)', height: 500, border: '1px solid rgba(100,116,139,0.25)' }}>
+              {/* Map */}
+              <div className="overflow-hidden mt-10" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)', height: 420, border: '1px solid rgba(100,116,139,0.25)' }}>
                 <iframe
                   title={`${brandDNA.company.name} Service Area`}
                   src={brandDNA.contact.mapsEmbedUrl}
@@ -171,6 +173,13 @@ export default function ServiceAreasPage() {
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
+              </div>
+            </div>
+
+            {/* Right: sticky quote form */}
+            <div>
+              <div className="lg:sticky lg:top-24">
+                <QuoteForm formId="areas" title="Get Your Free Estimate" />
               </div>
             </div>
           </div>

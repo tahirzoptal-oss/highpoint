@@ -2,7 +2,9 @@ import { useParams, Link, Navigate } from 'react-router-dom';
 import CTABanner from '../components/CTABanner';
 import Ticker from '../components/Ticker';
 import SEO from '../components/SEO';
-import { buildBreadcrumb } from '../lib/schema';
+import QuoteForm from '../components/QuoteForm';
+import FAQAccordion from '../components/FAQAccordion';
+import { buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
 // Slugify a city name the same way the route's getStaticPaths enumerates
@@ -84,20 +86,42 @@ export default function LocationDetailPage() {
   if (!richPage && !areaMatch) return <Navigate to="/service-areas" replace />;
 
   const cityName = richPage ? richPage.city : titleCaseCity(areaMatch);
-  const page = richPage || { city: cityName, headline: null, subheadline: null, body: '', adjacent_cities: [] };
+  const page = richPage || { city: cityName, headline: null, subheadline: null, body: '', faq: [], adjacent_cities: [] };
 
   const adjacent = (page.adjacent_cities || []).filter(Boolean);
+  const faqItems = (page.faq || []).filter((f) => f && (f.q || f.question) && (f.a || f.answer));
+
+  // Hero copy: prefer the entry headline, else read as a clean "Roofing in {City}, WA".
+  const heroTitle = page.headline || `Roofing in ${cityName}, WA`;
+  const state = brandDNA.address?.state || 'WA';
+
+  // Resolve an adjacent-city slug to a display label: the matching rich page's
+  // city name when present, else title-case the slug ("benton-city" -> "Benton City").
+  const cityLabel = (citySlug) => {
+    const match = pages.find((p) => p.slug === citySlug);
+    if (match) return match.city;
+    return String(citySlug)
+      .split('-')
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+      .join(' ');
+  };
+
+  const jsonLd = [
+    buildBreadcrumb([
+      { name: 'Home', path: '/' },
+      { name: 'Service Areas', path: '/service-areas' },
+      { name: cityName, path: `/service-areas/${slug}` },
+    ]),
+    faqItems.length ? buildFAQ(faqItems) : null,
+  ].filter(Boolean);
 
   return (
     <>
       <SEO
         path={`/service-areas/${slug}`}
-        title={`Roofing in ${cityName} | ${brandDNA.company.name}`}
-        jsonLd={buildBreadcrumb([
-          { name: 'Home', path: '/' },
-          { name: 'Service Areas', path: '/service-areas' },
-          { name: cityName, path: `/service-areas/${slug}` },
-        ])}
+        title={`Roofing in ${cityName}, ${state} | ${brandDNA.company.name}`}
+        description={page.subheadline || undefined}
+        jsonLd={jsonLd}
       />
       {/* Page Hero */}
       <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
@@ -119,10 +143,10 @@ export default function LocationDetailPage() {
             <span className="text-white">{page.city}</span>
           </div>
           <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">
-            ROOFING CONTRACTOR
+            {cityName}, {state}
           </p>
           <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {page.headline || page.city.toUpperCase()}
+            {heroTitle}
           </h1>
           <span className="line-gold block w-16 mb-4" />
           {page.subheadline && (
@@ -141,31 +165,53 @@ export default function LocationDetailPage() {
 
       {/* Body content */}
       <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-4xl mx-auto px-8">
-          <MarkdownBody body={page.body} />
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            <div className="lg:col-span-2">
+              <MarkdownBody body={page.body} />
 
-          {adjacent.length > 0 && (
-            <div className="mt-12 pt-8" style={{ borderTop: '1px solid rgba(100,116,139,0.2)' }}>
-              <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">
-                NEARBY AREAS WE SERVE
-              </p>
-              <div className="flex flex-wrap gap-3">
-                {adjacent.map((city) => {
-                  const citySlug = city.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                  return (
-                    <Link
-                      key={city}
-                      to={`/service-area/${citySlug}`}
-                      className="font-heading font-bold text-white text-xs uppercase tracking-wider px-4 py-2 transition-colors hover:text-gold"
-                      style={{ background: 'rgba(15,23,42,0.55)', border: '1px solid rgb(var(--accent) / 0.3)' }}
-                    >
-                      {city}
-                    </Link>
-                  );
-                })}
+              {adjacent.length > 0 && (
+                <div className="mt-12 pt-8" style={{ borderTop: '1px solid rgba(100,116,139,0.2)' }}>
+                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">
+                    NEARBY AREAS WE SERVE
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    {adjacent.map((city) => {
+                      const citySlug = String(city).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                      return (
+                        <Link
+                          key={citySlug}
+                          to={`/service-areas/${citySlug}`}
+                          className="font-heading font-bold text-white text-xs uppercase tracking-wider px-4 py-2 transition-colors hover:text-gold"
+                          style={{ background: 'rgba(15,23,42,0.55)', border: '1px solid rgb(var(--accent) / 0.3)' }}
+                        >
+                          {cityLabel(citySlug)}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {faqItems.length > 0 && (
+                <div className="mt-14">
+                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">
+                    {cityName} Roofing FAQ
+                  </p>
+                  <h2 className="font-heading font-bold text-white uppercase text-2xl mb-6 leading-tight">
+                    Questions From {cityName} Homeowners
+                  </h2>
+                  <FAQAccordion items={faqItems} />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="lg:sticky lg:top-24">
+                <QuoteForm formId={`city-${slug}`} title="Get Your Free Estimate" />
               </div>
             </div>
-          )}
+          </div>
         </div>
       </section>
 

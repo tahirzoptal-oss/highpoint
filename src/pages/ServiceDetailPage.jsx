@@ -3,6 +3,7 @@ import CTABanner from '../components/CTABanner';
 import Ticker from '../components/Ticker';
 import FAQAccordion from '../components/FAQAccordion';
 import CornerOverlay from '../components/CornerOverlay';
+import QuoteForm from '../components/QuoteForm';
 import SEO from '../components/SEO';
 import { buildService, buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
@@ -26,14 +27,19 @@ export default function ServiceDetailPage() {
   const service = {
     title: found.name.split(' ').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' '),
     heroTitle: found.heroTitle || found.name,
-    subtitle: found.subtitle || '',
-    description: found.description || found.blurb || '',
-    image: found.image || `/work/${(brandDNA.previous_projects && brandDNA.previous_projects[0] && brandDNA.previous_projects[0].filename) || 'project1.webp'}`,
+    subtitle: found.subtitle || `Serving ${brandDNA.company.serviceRegion}`,
+    description: found.description || found.description_short || '',
     benefits: found.benefits || [],
     included: found.included || [],
-    process: found.process || [],
+    // No per-service `process` in this client's data: default to the shared
+    // company process so "How It Works" always renders. process_steps ship as
+    // { n, title, body }; the Process block below expects { num, title, desc }.
+    process: (found.process && found.process.length)
+      ? found.process
+      : brandDNA.process_steps.map((s) => ({ num: s.n, title: s.title, desc: s.body })),
     faq: found.faq || [],
     related: found.related || [],
+    reviews: found.reviews || [],
     body: found.body || '',
   };
 
@@ -97,7 +103,7 @@ export default function ServiceDetailPage() {
     );
   };
 
-  const renderBody = () => {
+  const renderBodyBlocks = () => {
     if (!service.body) return null;
     const rawBlocks = service.body.trim().split(/\n\s*\n/);
     // Walk blocks once, grouping any range between SUBSERVICE_START and
@@ -139,13 +145,7 @@ export default function ServiceDetailPage() {
       out.push(renderBlock(rawBlocks[i], `b-${i}`));
       i += 1;
     }
-    return (
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-4xl mx-auto px-8">
-          {out}
-        </div>
-      </section>
-    );
+    return out;
   };
 
   return (
@@ -200,53 +200,101 @@ export default function ServiceDetailPage() {
         </div>
       </section>
 
-      {/* Rich body from copy-deck (Stage 6) */}
-      {renderBody()}
-
-      {/* Benefits + Included */}
-      {(service.benefits.length > 0 || service.included.length > 0) && (
+      {/* Main content: service overview + copy-deck body + reviews, beside a
+          sticky quote rail (the site's inner-page convention). */}
       <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8 grid grid-cols-1 lg:grid-cols-2 gap-10">
-          {/* Key benefits */}
-          <div>
-            <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">WHY {brandDNA.company.shortName.toUpperCase()}</p>
-            <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-6">
-              WHY {brandDNA.company.shortName.toUpperCase()} FOR<br />{service.title.toUpperCase()}
-            </h2>
-            <div className="flex flex-col gap-4">
-              {service.benefits.map((b, i) => (
-                <div key={i} className="card-elevated-dark flex items-start gap-4 p-4 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                  <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 font-heading font-bold text-sm text-navy" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                    {i + 1}
-                  </div>
-                  <p className="text-cool text-sm leading-relaxed pt-1">{b}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Body column */}
+            <div className="lg:col-span-2">
+              <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">SERVICE OVERVIEW</p>
+              <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-4">{service.title}</h2>
+              <span className="line-gold block w-12 mb-6" />
+              {service.description && (
+                <p className="text-cool text-sm leading-relaxed mb-2">{service.description}</p>
+              )}
 
-          {/* What's included */}
-          <div>
-            <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">SCOPE OF WORK</p>
-            <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-6">
-              WHAT'S INCLUDED
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {service.included.map((item, i) => (
-                <div key={i} className="card-elevated-dark flex items-start gap-3 p-4 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                  <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.3)' }}>
-                    <svg className="w-2.5 h-2.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
+              {/* Rich copy-deck body (renders only when a service ships one). */}
+              {renderBodyBlocks()}
+
+              {/* Why us + scope of work, STACKED in the main column so the sticky
+                  quote rail has a tall body to stay pinned beside. */}
+              {service.benefits.length > 0 && (
+                <div className="mt-12">
+                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">WHY {brandDNA.company.shortName.toUpperCase()}</p>
+                  <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-6">
+                    WHY {brandDNA.company.shortName.toUpperCase()} FOR {service.title.toUpperCase()}
+                  </h2>
+                  <div className="flex flex-col gap-4">
+                    {service.benefits.map((b, i) => (
+                      <div key={i} className="card-elevated-dark flex items-start gap-4 p-4 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
+                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 font-heading font-bold text-sm text-white" style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.45)', background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
+                          {i + 1}
+                        </div>
+                        <p className="text-cool text-sm leading-relaxed pt-1">{b}</p>
+                      </div>
+                    ))}
                   </div>
-                  <span className="text-cool text-sm leading-snug">{item}</span>
                 </div>
-              ))}
+              )}
+
+              {service.included.length > 0 && (
+                <div className="mt-12">
+                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">SCOPE OF WORK</p>
+                  <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-6">
+                    WHAT'S INCLUDED
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {service.included.map((item, i) => (
+                      <div key={i} className="card-elevated-dark flex items-start gap-3 p-4 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
+                        <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.3)' }}>
+                          <svg className="w-2.5 h-2.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                        <span className="text-cool text-sm leading-snug">{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Service reviews (renders only when present). */}
+              {service.reviews.length > 0 && (
+                <div className="mt-10">
+                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">WHAT HOMEOWNERS SAY</p>
+                  <div className="flex flex-col gap-4">
+                    {service.reviews.map((r, i) => (
+                      <figure
+                        key={i}
+                        className="card-elevated-dark p-5 bg-navy-slate"
+                        style={{ border: '1px solid rgba(100,116,139,0.25)' }}
+                      >
+                        <div className="flex gap-1 mb-3">
+                          {[0, 1, 2, 3, 4].map((s) => (
+                            <svg key={s} className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                          ))}
+                        </div>
+                        <blockquote className="text-cool text-sm leading-relaxed mb-3">&ldquo;{r.quote}&rdquo;</blockquote>
+                        <figcaption className="text-white text-xs font-semibold uppercase tracking-wide">{r.reviewer}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Sticky quote rail */}
+            <div>
+              <div className="lg:sticky lg:top-24">
+                <QuoteForm formId={`service-${slug}`} title="Get Your Free Estimate" />
+              </div>
             </div>
           </div>
         </div>
       </section>
-      )}
 
       {/* Process */}
       {service.process.length > 0 && (
@@ -267,7 +315,7 @@ export default function ServiceDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {service.process.map((step) => (
               <div key={step.num} className="card-elevated-dark flex flex-col gap-3 p-5 bg-navy" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="w-10 h-10 flex items-center justify-center font-heading font-bold text-sm text-navy" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
+                <div className="w-10 h-10 flex items-center justify-center font-heading font-bold text-sm text-white" style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.45)', background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
                   {step.num}
                 </div>
                 <div className="font-heading font-bold text-white uppercase text-base tracking-wide leading-tight">{step.title}</div>

@@ -52,7 +52,7 @@ export default function SpecialOffers() {
           <div className="max-w-2xl mx-auto mb-8">
             <div className="inline-flex items-center justify-center mb-6">
               <div className="w-20 h-20 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                <span className="text-navy">{offerIcons[0] || fallbackIcon}</span>
+                <span style={{ color: '#ffffff' }}>{offerIcons[0] || fallbackIcon}</span>
               </div>
             </div>
             <p className="font-heading font-bold text-white uppercase tracking-widest text-3xl mb-4">

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import CTABanner from '../components/CTABanner';
 import Ticker from '../components/Ticker';
 import CornerOverlay from '../components/CornerOverlay';
+import QuoteForm from '../components/QuoteForm';
 import SEO from '../components/SEO';
 import { buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
@@ -189,7 +190,7 @@ export default function FinancingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {steps.map((s) => (
               <div key={s.num} className="card-elevated-dark flex flex-col gap-3 p-5 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="w-10 h-10 flex items-center justify-center font-heading font-bold text-sm flex-shrink-0 text-navy" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
+                <div className="w-10 h-10 flex items-center justify-center font-heading font-bold text-sm flex-shrink-0 text-white" style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.45)', background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
                   {s.num}
                 </div>
                 <div className="font-heading font-bold text-white uppercase text-sm tracking-wide leading-tight">{s.title}</div>
@@ -201,73 +202,87 @@ export default function FinancingPage() {
       </section>
 
       {/* Financing Options */}
-      <section className="relative overflow-hidden py-16 bg-grid bg-navy-slate">
-        {/* Rule 58: per-client corner overlays. */}
-        <CornerOverlay position="top-left" size={320} />
-        <CornerOverlay position="bottom-right" size={320} />
-        <div className="relative max-w-5xl mx-auto px-8">
-          <div className="text-center mb-10">
-            <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">YOUR OPTIONS</p>
-            <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2">
-              {isOffered ? "FINANCING OPTIONS" : "WAYS HOMEOWNERS PAY"}
-            </h2>
-            <span className="line-gold block w-12 mx-auto mt-3 mb-4" />
-            <p className="text-cool text-sm max-w-md mx-auto">
-              {isOffered
-                ? "We work with multiple lenders to find the right fit for your situation."
-                : "Insurance covers most storm damage. Third-party lenders handle the rest. We do not collect deposits."
-              }
-            </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {options.map((o) => (
-              <div
-                key={o.name}
-                className="card-elevated-dark flex flex-col gap-3 p-6 bg-navy"
-                style={{
-                  border: o.highlight ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
-                  borderTop: o.highlight ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
-                }}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="font-heading font-bold text-white uppercase text-base leading-tight">{o.name}</div>
-                  {o.tag && (
-                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 flex-shrink-0" style={{ background: o.highlight ? 'rgb(var(--accent) / 0.2)' : 'rgba(100,116,139,0.2)', color: o.highlight ? 'rgb(var(--accent))' : '#94A3BB', border: `1px solid ${o.highlight ? 'rgb(var(--accent) / 0.3)' : 'rgba(100,116,139,0.3)'}` }}>
-                      {o.tag}
-                    </span>
-                  )}
-                </div>
-                <p className="text-gold text-sm font-semibold leading-snug">{o.headline}</p>
-                <p className="text-cool text-xs leading-relaxed">{o.details}</p>
+      <section className="relative py-16 bg-grid bg-navy-slate">
+        {/* Rule 58: per-client corner overlays, clipped in an inner layer so the
+            section stays overflow-visible and the sticky rail can pin. */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <CornerOverlay position="top-left" size={320} />
+          <CornerOverlay position="bottom-right" size={320} />
+        </div>
+        <div className="relative max-w-6xl mx-auto px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <div className="mb-10">
+                <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">YOUR OPTIONS</p>
+                <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2">
+                  {isOffered ? "FINANCING OPTIONS" : "WAYS HOMEOWNERS PAY"}
+                </h2>
+                <span className="line-gold block w-12 mt-3 mb-4" />
+                <p className="text-cool text-sm max-w-md">
+                  {isOffered
+                    ? "Payment plans are offered to every customer, subject to credit approval, so you find the fit for your budget."
+                    : "Insurance covers most storm damage. Third-party lenders handle the rest. We do not collect deposits."
+                  }
+                </p>
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {options.map((o) => (
+                  <div
+                    key={o.name}
+                    className="card-elevated-dark flex flex-col gap-3 p-6 bg-navy"
+                    style={{
+                      border: o.highlight ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
+                      borderTop: o.highlight ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-heading font-bold text-white uppercase text-base leading-tight">{o.name}</div>
+                      {o.tag && (
+                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 flex-shrink-0" style={{ background: o.highlight ? 'rgb(var(--accent) / 0.2)' : 'rgba(100,116,139,0.2)', color: o.highlight ? 'rgb(var(--accent))' : '#94A3BB', border: `1px solid ${o.highlight ? 'rgb(var(--accent) / 0.3)' : 'rgba(100,116,139,0.3)'}` }}>
+                          {o.tag}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gold text-sm font-semibold leading-snug">{o.headline}</p>
+                    <p className="text-cool text-xs leading-relaxed">{o.details}</p>
+                  </div>
+                ))}
+              </div>
 
-          {/* Insurance-backed work callout */}
-          <div className="mt-8 p-5 flex items-start gap-4 bg-navy" style={{ border: '1px solid rgba(100,116,139,0.25)', borderLeft: '2px solid rgb(var(--accent))' }}>
-            <div className="w-9 h-9 flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--accent) / 0.1)', border: '1px solid rgb(var(--accent) / 0.3)' }}>
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 10c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.25-8.25-3.286z" />
-              </svg>
+              {/* Insurance-backed work callout */}
+              <div className="mt-8 p-5 flex items-start gap-4 bg-navy" style={{ border: '1px solid rgba(100,116,139,0.25)', borderLeft: '2px solid rgb(var(--accent))' }}>
+                <div className="w-9 h-9 flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--accent) / 0.1)', border: '1px solid rgb(var(--accent) / 0.3)' }}>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 10c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.25-8.25-3.286z" />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-heading font-bold text-white uppercase text-sm tracking-wide mb-1">STORM DAMAGE? OFTEN ONLY YOUR DEDUCTIBLE.</div>
+                  <p className="text-cool text-xs leading-relaxed">
+                    If your roof was damaged by a covered storm, we document everything to insurance standards and work the claim with your adjuster. Many homeowners end up paying only their deductible.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-10">
+                <Link to="/contact" className="btn-gold inline-block font-heading font-bold text-base uppercase px-10 py-3.5 tracking-widest text-navy">
+                  {brandDNA.copy.buttonText}
+                </Link>
+                {isOffered && (
+                  <p className="text-steel text-xs mt-4">Payment plans subject to credit approval. Ask Terry when he gives you your estimate.</p>
+                )}
+                {!isOffered && (
+                  <p className="text-steel text-xs mt-4">No deposits. Pay on completion. Insurance work coordinated end to end.</p>
+                )}
+              </div>
             </div>
+
+            {/* Sticky quote rail */}
             <div>
-              <div className="font-heading font-bold text-white uppercase text-sm tracking-wide mb-1">STORM DAMAGE? OFTEN ZERO OUT-OF-POCKET.</div>
-              <p className="text-cool text-xs leading-relaxed">
-                If your roof was damaged by a covered storm or hail event, your insurance pays for the bulk of the work. Most homeowners only pay their deductible. We handle the claim documentation and work directly with your adjuster.
-              </p>
+              <div className="lg:sticky lg:top-24">
+                <QuoteForm formId="financing" title="Get Your Free Estimate" />
+              </div>
             </div>
-          </div>
-
-          <div className="text-center mt-10">
-            <Link to="/contact" className="btn-gold inline-block font-heading font-bold text-base uppercase px-10 py-3.5 tracking-widest text-navy">
-              {brandDNA.copy.buttonText}
-            </Link>
-            {isOffered && (
-              <p className="text-steel text-xs mt-4">No hard credit pull for pre-qualification. No commitment required.</p>
-            )}
-            {!isOffered && (
-              <p className="text-steel text-xs mt-4">No deposits. Pay on completion. Insurance work coordinated end to end.</p>
-            )}
           </div>
         </div>
       </section>

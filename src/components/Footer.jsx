@@ -1,22 +1,20 @@
 import { Link } from 'react-router-dom';
 import { brandDNA } from '../config/brand-dna';
 
-// Rule 68: homepage-only default. Footer links go to homepage anchors, not
-// /page routes. Manual full-build flips these back to absolute paths.
+// Rule 68 full build: footer links point at real page routes.
 const companyLinks = [
   { label: 'Home', to: '/' },
-  { label: 'About Us', to: '/#about' },
-  { label: 'Our Work', to: '/#gallery' },
-  { label: 'Financing', to: '/#financing' },
-  { label: 'Blog', to: '/#blog' },
-  { label: 'Contact', to: '/#cta-form' },
+  { label: 'About Us', to: '/about' },
+  { label: 'Our Work', to: '/gallery' },
+  { label: 'Financing', to: '/financing' },
+  { label: 'Blog', to: '/blog' },
+  { label: 'Contact', to: '/contact' },
 ];
 
-// All service links share the same anchor — Services section on homepage —
-// since per-service detail pages don't exist in the demo build.
+// Per-service detail page links (full build).
 const serviceLinks = brandDNA.services.slice(0, 7).map((s) => ({
   label: s.name.split(' ').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' '),
-  to: '/#services',
+  to: `/services/${s.slug}`,
 }));
 
 const PhoneIcon = () => (
@@ -129,7 +127,7 @@ export default function Footer() {
             {(brandDNA.serviceAreas || []).slice(0, 12).map((city) => (
               <li key={city}>
                 <Link
-                  to="/#service-area"
+                  to={`/service-areas/${slugify(city)}`}
                   className="text-steel font-body text-xs hover:text-white transition-colors flex items-center gap-1.5"
                 >
                   <span className="text-gold">+</span> {city}

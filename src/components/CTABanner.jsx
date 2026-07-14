@@ -57,27 +57,32 @@ export default function CTABanner() {
               {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
               <input {...honeypotProps} />
               <input
+                name="name"
                 className="form-input px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Your Name"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', color: 'white' }}
               />
               <input
+                name="phone"
                 className="form-input px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Phone Number"
                 type="tel"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', color: 'white' }}
               />
               <input
+                name="email"
                 className="form-input sm:col-span-2 px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Email Address"
                 type="email"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', color: 'white' }}
               />
               <select
+                name="service"
+                defaultValue=""
                 className="form-input sm:col-span-2 px-4 py-3 text-sm"
                 style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.14)', color: 'rgba(255,255,255,0.75)' }}
               >
-                <option style={{ background: '#1E293B', color: 'white' }}>How Can We Help?</option>
+                <option value="" style={{ background: '#1E293B', color: 'white' }}>How Can We Help?</option>
                 {brandDNA.services.map((s) => (
                   <option key={s.slug} value={s.slug} style={{ background: '#1E293B', color: 'white' }}>{s.name}</option>
                 ))}

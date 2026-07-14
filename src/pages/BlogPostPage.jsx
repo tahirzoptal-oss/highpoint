@@ -1,20 +1,13 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import CTABanner from '../components/CTABanner';
 import SEO from '../components/SEO';
+import QuoteForm from '../components/QuoteForm';
 import { buildArticle, buildBreadcrumb } from '../lib/schema';
 import { blogPosts } from './BlogPage';
 import { brandDNA } from '../config/brand-dna';
-import { useLeadForm } from '../lib/leadForm';
-
-const glassInput = {
-  background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.14)',
-  color: 'white',
-};
 
 export default function BlogPostPage() {
   const { slug } = useParams();
-  const { honeypotProps, onSubmit: handleEstimateSubmit } = useLeadForm('blog-estimate');
   const post = blogPosts.find((p) => p.slug === slug);
 
   if (!post) return <Navigate to="/blog" replace />;
@@ -60,7 +53,7 @@ export default function BlogPostPage() {
       <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
         <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
           <img
-            src="/hero-image.webp"
+            src={post.cover}
             alt={post.title}
             className="w-full h-full object-cover"
             style={{ objectPosition: '50% 40%' }}
@@ -87,6 +80,9 @@ export default function BlogPostPage() {
           <h1 className="font-heading font-bold text-white uppercase leading-tight text-4xl lg:text-5xl max-w-3xl">
             {post.title}
           </h1>
+          {post.byline && (
+            <p className="text-cool text-sm font-body mt-4">By {post.byline}</p>
+          )}
         </div>
       </section>
 
@@ -129,30 +125,6 @@ export default function BlogPostPage() {
                 })}
               </div>
 
-              {/* Inline estimate form */}
-              <div className="mt-10 overflow-hidden" style={{ background: 'rgba(15,23,42,0.60)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.10)', boxShadow: '0 20px 60px rgba(0,0,0,0.55)' }}>
-                <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-                  <span className="heading-metallic font-heading font-bold text-white text-xl uppercase tracking-wide block">{brandDNA.copy.formHeader}</span>
-                  <span className="text-white/50 text-[11px] font-body">{brandDNA.copy.formSubtext} No obligation.</span>
-                </div>
-                <form onSubmit={handleEstimateSubmit} className="p-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
-                  <input {...honeypotProps} />
-                  <input className="form-input px-4 py-3 text-sm placeholder-white/40" style={glassInput} placeholder="Your Name" />
-                  <input className="form-input px-4 py-3 text-sm placeholder-white/40" style={glassInput} placeholder="Phone Number" type="tel" />
-                  <input className="form-input px-4 py-3 text-sm placeholder-white/40" style={glassInput} placeholder="Email Address" type="email" />
-                  <div className="sm:col-span-3">
-                    <button
-                      type="submit"
-                      className="btn-gold w-full font-heading font-bold text-base uppercase tracking-widest py-3 text-navy"
-                    >
-                      {brandDNA.copy.buttonText} →
-                    </button>
-                    <p className="text-center text-white/35 text-[10px] mt-2">No obligation. No pressure. We will never send you unsolicited messages.</p>
-                  </div>
-                </form>
-              </div>
-
               {/* Author box */}
               <div className="mt-8 flex items-center gap-4 p-5 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
                 <img
@@ -181,7 +153,11 @@ export default function BlogPostPage() {
 
             {/* Sidebar */}
             <aside className="flex flex-col gap-5">
-              {/* CTA card */}
+              {/* Sticky quote rail */}
+              <div className="lg:sticky lg:top-24 flex flex-col gap-5">
+                <QuoteForm formId={`blog-${post.slug}`} title="Get Your Free Estimate" />
+
+                {/* CTA card */}
               <div className="p-6 text-center bg-navy-slate" style={{ border: '1px solid rgb(var(--accent) / 0.2)', borderTop: '2px solid rgb(var(--accent))' }}>
                 <div className="font-heading font-bold text-white uppercase text-lg mb-2">
                   FREE ROOF INSPECTION
@@ -202,7 +178,7 @@ export default function BlogPostPage() {
                 <div className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">CALL US DIRECT</div>
                 <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="flex items-center gap-3 group mb-3">
                   <div className="w-8 h-8 flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                    <svg className="w-3.5 h-3.5 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-3.5 h-3.5" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                     </svg>
                   </div>
@@ -232,6 +208,7 @@ export default function BlogPostPage() {
                     </Link>
                   ))}
                 </div>
+              </div>
               </div>
             </aside>
           </div>

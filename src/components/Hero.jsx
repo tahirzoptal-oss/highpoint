@@ -35,7 +35,7 @@ export default function Hero() {
             src="/hero-image.webp"
             alt={`${brandDNA.company.name}, ${brandDNA.address.city} roofing contractor`}
             className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 30%' }}
+            style={{ objectPosition: '50% 62%' }}
             loading="eager"
             fetchpriority="high"
             onError={(e) => { e.target.style.display = 'none'; }}
@@ -214,37 +214,43 @@ export default function Hero() {
               {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
               <input {...honeypotProps} />
               <input
+                name="name"
                 className="form-input px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Your Name"
                 style={glassInput}
               />
               <input
+                name="phone"
                 className="form-input px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Phone Number"
                 type="tel"
                 style={glassInput}
               />
               <input
+                name="email"
                 className="form-input col-span-2 px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Email Address"
                 type="email"
                 style={glassInput}
               />
               <select
+                name="service"
                 className="form-input col-span-2 px-4 py-3 text-sm"
                 style={{ ...glassInput, color: 'rgba(255,255,255,0.75)' }}
               >
-                <option style={{ background: '#1E293B', color: 'white' }}>How Can We Help?</option>
+                <option value="" style={{ background: '#1E293B', color: 'white' }}>How Can We Help?</option>
                 {brandDNA.services.map((s) => (
                   <option key={s.slug} value={s.slug} style={{ background: '#1E293B', color: 'white' }}>{s.name}</option>
                 ))}
               </select>
               <input
+                name="address"
                 className="form-input col-span-2 px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Property Address"
                 style={glassInput}
               />
               <input
+                name="message"
                 className="form-input col-span-2 px-4 py-3 text-sm placeholder-white/40"
                 placeholder="Brief message (optional)"
                 style={glassInput}

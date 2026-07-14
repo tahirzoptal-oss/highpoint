@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import CTABanner from '../components/CTABanner';
 import SEO from '../components/SEO';
@@ -9,8 +10,17 @@ export const blogPosts = brandDNA.blog_posts;
 const categories = brandDNA.blog_categories;
 
 export default function BlogPage() {
+  const [activeCategory, setActiveCategory] = useState('All');
+  const isAll = activeCategory === 'All';
+
   const featured = blogPosts.find((p) => p.featured);
-  const rest = blogPosts.filter((p) => !p.featured);
+  // "All" keeps the featured card up top and grids the rest. Selecting a
+  // category drops the featured card and grids every post that matches,
+  // including the featured one.
+  const gridPosts = isAll
+    ? blogPosts.filter((p) => !p.featured)
+    : blogPosts.filter((p) => p.category === activeCategory);
+  const showFeatured = isAll && Boolean(featured);
 
   return (
     <>
@@ -52,7 +62,7 @@ export default function BlogPage() {
         <div className="max-w-7xl mx-auto px-8">
 
           {/* Featured post */}
-          {featured && (
+          {showFeatured && (
             <div className="mb-12">
               <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">{brandDNA.copy.blog.featuredLabel}</p>
               <Link to={`/blog/${featured.slug}`} className="group card-elevated-dark block overflow-hidden bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
@@ -93,20 +103,26 @@ export default function BlogPage() {
 
           {/* Category filter */}
           <div className="flex flex-wrap gap-2 mb-8">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                className="font-heading font-bold text-xs uppercase tracking-widest px-4 py-2 text-cool hover:text-white hover:border-gold transition-all bg-navy-slate"
-                style={{ border: '1px solid rgba(100,116,139,0.35)' }}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const active = cat === activeCategory;
+              return (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setActiveCategory(cat)}
+                  aria-pressed={active}
+                  className={`font-heading font-bold text-xs uppercase tracking-widest px-4 py-2 transition-all bg-navy-slate ${active ? 'text-gold' : 'text-cool hover:text-white hover:border-gold'}`}
+                  style={{ border: active ? '1px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.35)' }}
+                >
+                  {cat}
+                </button>
+              );
+            })}
           </div>
 
           {/* Blog grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {rest.map((post) => (
+            {gridPosts.map((post) => (
               <Link
                 key={post.slug}
                 to={`/blog/${post.slug}`}
@@ -145,6 +161,10 @@ export default function BlogPage() {
               </Link>
             ))}
           </div>
+
+          {gridPosts.length === 0 && (
+            <p className="text-cool text-sm font-body">No articles in this category yet. Check back soon.</p>
+          )}
         </div>
       </section>
 

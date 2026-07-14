@@ -4,31 +4,34 @@ import { brandDNA } from '../config/brand-dna';
 import AvailableDot from './AvailableDot';
 
 const serviceItems = brandDNA.services.map((s) => ({ label: s.name, slug: s.slug }));
+const areaItems = (brandDNA.location_pages || []).map((p) => ({ label: p.city, slug: p.slug }));
 
-// Rule 68: pipeline default is HOMEPAGE-ONLY build for sales demos. Nav links
-// scroll to homepage section anchors (#about, #services, etc.) so there are
-// no broken /about, /services, /blog page routes in the dist. The hash anchors
-// map to id="..." set on each homepage section component (Services,
-// OurWork=#gallery, Blog, FAQ, WhyChooseUs=#why, OurProcess=#process,
-// Reviews, SpecialOffers=#financing, Founder=#about, CTABanner=#cta-form,
-// ServiceAreas=#service-area). When the sale closes, the manual full build
-// restores per-page routes and these hrefs should flip back to absolute paths.
+// Two nav dropdowns, driven by one shared map (mirrors V1's Services +
+// Service Areas dropdowns). A navLink flagged with `dropdown: '<key>'` renders
+// the matching mega-menu below.
+const dropdowns = {
+  services: { items: serviceItems, allLabel: 'All Services', base: '/services' },
+  areas: { items: areaItems, allLabel: 'All Service Areas', base: '/service-areas' },
+};
+
+// Rule 68 "post-sale full build": per-page routes are live. About sits beside
+// Home (Juan's call). Services and Service Areas stay adjacent, each a dropdown.
+// Financing + Blog are real V2 pages added to the nav.
 const navLinks = [
   { label: 'Home', to: '/' },
-  { label: 'About', to: '/#about' },
-  { label: 'Services', to: '/#services' },
-  { label: 'Gallery', to: '/#gallery' },
-  { label: 'Service Areas', to: '/#service-area' },
-  { label: 'Financing', to: '/#financing' },
-  { label: 'Blog', to: '/#blog' },
-  { label: 'Contact', to: '/#cta-form' },
+  { label: 'About', to: '/about' },
+  { label: 'Services', to: '/services', dropdown: 'services' },
+  { label: 'Service Areas', to: '/service-areas', dropdown: 'areas' },
+  { label: 'Gallery', to: '/gallery' },
+  { label: 'Financing', to: '/financing' },
+  { label: 'Blog', to: '/blog' },
+  { label: 'Contact', to: '/contact' },
 ];
 
 // Rule 62 + Rule 65: nav CTA buttons render --on-accent text on the accent
 // gradient. inject-theme.mjs auto-picks --on-accent (white for blue/navy/red
 // brands, dark navy for yellow/cream brands) so the letters stay readable
-// across the full palette. Previously hardcoded #FFFFFF which made the CTA
-// text invisible on yellow-accent brands (Remodeling MD: 1.00:1 contrast).
+// across the full palette.
 const navCtaTextStyle = {
   color: 'rgb(var(--on-accent))',
   textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)',
@@ -36,21 +39,21 @@ const navCtaTextStyle = {
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileServicesOpen, setMobileServicesOpen] = useState(false);
-  const [servicesOpen, setServicesOpen] = useState(false);
-  const dropdownRef = useRef(null);
+  const [mobileOpenDropdown, setMobileOpenDropdown] = useState(null);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const navRef = useRef(null);
   const location = useLocation();
 
   useEffect(() => {
     setMobileOpen(false);
-    setServicesOpen(false);
-    setMobileServicesOpen(false);
+    setOpenDropdown(null);
+    setMobileOpenDropdown(null);
   }, [location.pathname]);
 
   useEffect(() => {
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setServicesOpen(false);
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setOpenDropdown(null);
       }
     };
     document.addEventListener('mousedown', handler);
@@ -67,34 +70,16 @@ export default function Navbar() {
     return location.pathname.startsWith(to);
   };
 
-  // Rule 63: nav surfaces honor brandDNA.nav_treatment. When the brand-dna
-  // agent flags a contrast risk (logo contains white / light elements that
-  // would vanish against the default light-theme flipped nav), nav_treatment
-  // is set to "dark" and every nav surface adds theme-keep-dark so bg-navy
-  // stays dark in light mode and child text-white stays white.
   const navDark = brandDNA.nav_treatment === 'dark';
   const themeKeep = navDark ? ' theme-keep-dark' : '';
 
   return (
-    // Rule 54: nav element keeps a solid bg-navy in dark theme and bg-white/90
-    // with backdrop-blur in light theme (handled by the light-theme override)
-    // so the logo never reads against the hero photo behind it. Position
-    // relative + z-index lift on the inner row keeps the logo above the hero.
     <nav className={`fixed top-0 left-0 right-0 z-50 shadow-lg bg-navy${themeKeep}`}>
       {/* Thin gold accent line at very top */}
       <div className="line-gold w-full" />
 
       <div className="max-w-7xl mx-auto px-4 flex items-center h-24 md:h-28 gap-4">
-        {/* Logo. Rule 54: relative + z-index 20 so the wordmark sits ABOVE the
-            hero section and the height cap (h-20 md:h-24) keeps the logo
-            inside the nav bar even when the source SVG is tall.
-            Rules 96 + 104: when nav_treatment === 'dark', swap to the
-            white-knockout variant generated by build-from-template.py at
-            /logo-white.webp. The nav surface is bg-navy in this case so the
-            full-color logo would clash; white knockout reads cleanly. Rule 104
-            (2026-06-02) permits the served white-knockout variant and supersedes
-            Rule 96's (2026-05-28) preference for a brightness(0) invert(1) CSS
-            filter on this dark-nav path. */}
+        {/* Logo */}
         <Link to="/" className="flex-shrink-0 relative" style={{ zIndex: 20 }}>
           <img
             src={navDark ? '/logo-white.webp' : '/logo.webp'}
@@ -104,44 +89,49 @@ export default function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden lg:flex items-center gap-5 ml-auto">
-          {navLinks.map((link) =>
-            link.dropdown === 'services' ? (
-              <div key={link.label} className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setServicesOpen(!servicesOpen)}
-                  className={`font-body font-semibold text-sm flex items-center gap-0.5 whitespace-nowrap transition-colors pb-1 ${
-                    isActive(link.to)
-                      ? 'text-white border-b-2 border-gold'
-                      : 'text-cool hover:text-white border-b-2 border-transparent'
-                  }`}
-                >
-                  {link.label}
-                  <svg className={`w-3 h-3 ml-0.5 text-steel transition-transform ${servicesOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {servicesOpen && (
-                  <div className={`absolute top-full left-0 mt-2 w-56 shadow-2xl border border-steel/30 py-2 z-50 bg-navy-slate${themeKeep}`}>
-                    <Link
-                      to="/services"
-                      className="block px-4 py-2 text-xs font-body font-bold text-gold uppercase tracking-wider hover:bg-navy transition-colors border-b border-steel/20 mb-1"
-                    >
-                      All Services →
-                    </Link>
-                    {serviceItems.map((s) => (
+        <div className="hidden lg:flex items-center gap-5 ml-auto" ref={navRef}>
+          {navLinks.map((link) => {
+            if (link.dropdown) {
+              const dd = dropdowns[link.dropdown];
+              const isOpen = openDropdown === link.dropdown;
+              return (
+                <div key={link.label} className="relative">
+                  <button
+                    onClick={() => setOpenDropdown(isOpen ? null : link.dropdown)}
+                    className={`font-body font-semibold text-sm flex items-center gap-0.5 whitespace-nowrap transition-colors pb-1 ${
+                      isActive(link.to)
+                        ? 'text-white border-b-2 border-gold'
+                        : 'text-cool hover:text-white border-b-2 border-transparent'
+                    }`}
+                  >
+                    {link.label}
+                    <svg className={`w-3 h-3 ml-0.5 text-steel transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isOpen && (
+                    <div className={`absolute top-full left-0 mt-2 w-56 shadow-2xl border border-steel/30 py-2 z-50 bg-navy-slate${themeKeep}`}>
                       <Link
-                        key={s.slug}
-                        to={`/services/${s.slug}`}
-                        className="block px-4 py-1.5 text-xs font-body font-semibold text-cool hover:text-white hover:bg-navy transition-colors"
+                        to={dd.base}
+                        className="block px-4 py-2 text-xs font-body font-bold text-gold uppercase tracking-wider hover:bg-navy transition-colors border-b border-steel/20 mb-1"
                       >
-                        {s.label}
+                        {dd.allLabel} &rarr;
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
+                      {dd.items.map((s) => (
+                        <Link
+                          key={s.slug}
+                          to={`${dd.base}/${s.slug}`}
+                          className="block px-4 py-1.5 text-xs font-body font-semibold text-cool hover:text-white hover:bg-navy transition-colors"
+                        >
+                          {s.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return (
               <Link
                 key={link.label}
                 to={link.to}
@@ -153,13 +143,10 @@ export default function Navbar() {
               >
                 {link.label}
               </Link>
-            )
-          )}
+            );
+          })}
 
-          {/* Phone with available-now indicator. Rule 56 (refresh): the dot
-              ALWAYS renders next to the phone number on every desktop
-              breakpoint, not just xl. The label is hidden under xl so the
-              dot fits without crowding the nav links. */}
+          {/* Phone with available-now indicator */}
           <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="flex items-center gap-2 ml-1">
             <span className="hidden xl:inline-flex">
               <AvailableDot size="sm" label={true} />
@@ -170,11 +157,6 @@ export default function Navbar() {
             <span className="font-body font-semibold text-sm text-cool whitespace-nowrap">{brandDNA.contact.phone}</span>
           </a>
 
-          {/* Locked phrase: SOP allows only "Get My Free Estimate" as the
-              primary CTA across the entire site. Sourced from
-              brandDNA.copy.buttonText, which defaults to that exact string.
-              Rule 62: white text + drop shadow so letters stay crisp on the
-              metallic accent gradient. */}
           <button
             onClick={scrollToForm}
             className="btn-gold font-heading font-bold text-xs uppercase px-5 py-2.5 tracking-wider ml-1 whitespace-nowrap"
@@ -184,11 +166,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile: CTA between logo and hamburger. Rule 56 (refresh): the
-            dot is ALWAYS present in the mobile slot, with the label visible
-            from the sm breakpoint up so the office hours signal carries
-            even on 375px viewports. Rule 62 keeps the text white + shadow
-            across breakpoints. */}
+        {/* Mobile: CTA between logo and hamburger */}
         <div className="lg:hidden ml-auto mr-2 flex items-center gap-2">
           <a
             href={`tel:${brandDNA.contact.phoneTelLink}`}
@@ -233,39 +211,47 @@ export default function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className={`lg:hidden border-t border-steel/20 px-4 py-3 flex flex-col gap-0.5 bg-navy${themeKeep}`}>
-          {/* Rule 56 (refresh): when the hamburger expands, surface the
-              available-now indicator inside the menu so the signal carries
-              over to the expanded mobile nav. */}
           <div className="py-2 border-b border-steel/20">
             <AvailableDot size="sm" label={true} />
           </div>
-          {navLinks.map((link) =>
-            link.dropdown === 'services' ? (
-              <div key={link.label}>
-                <button
-                  onClick={() => setMobileServicesOpen(!mobileServicesOpen)}
-                  className="w-full text-left font-body font-semibold text-sm py-2.5 border-b border-steel/20 flex items-center justify-between text-cool hover:text-white"
-                >
-                  {link.label}
-                  <svg className={`w-3 h-3 transition-transform ${mobileServicesOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {mobileServicesOpen && (
-                  <div className="pl-3 py-1 flex flex-col gap-0.5">
-                    {serviceItems.map((s) => (
+          {navLinks.map((link) => {
+            if (link.dropdown) {
+              const dd = dropdowns[link.dropdown];
+              const isOpen = mobileOpenDropdown === link.dropdown;
+              return (
+                <div key={link.label}>
+                  <button
+                    onClick={() => setMobileOpenDropdown(isOpen ? null : link.dropdown)}
+                    className="w-full text-left font-body font-semibold text-sm py-2.5 border-b border-steel/20 flex items-center justify-between text-cool hover:text-white"
+                  >
+                    {link.label}
+                    <svg className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isOpen && (
+                    <div className="pl-3 py-1 flex flex-col gap-0.5">
                       <Link
-                        key={s.slug}
-                        to={`/services/${s.slug}`}
-                        className="text-xs font-body font-semibold py-1.5 text-steel hover:text-white"
+                        to={dd.base}
+                        className="text-xs font-body font-bold py-1.5 text-gold uppercase tracking-wider"
                       >
-                        · {s.label}
+                        {dd.allLabel} &rarr;
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ) : (
+                      {dd.items.map((s) => (
+                        <Link
+                          key={s.slug}
+                          to={`${dd.base}/${s.slug}`}
+                          className="text-xs font-body font-semibold py-1.5 text-steel hover:text-white"
+                        >
+                          &middot; {s.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+            return (
               <Link
                 key={link.label}
                 to={link.to}
@@ -273,9 +259,8 @@ export default function Navbar() {
               >
                 {link.label}
               </Link>
-            )
-          )}
-          {/* Rule 62: collapsed nav CTA also uses white text + shadow */}
+            );
+          })}
           <button
             onClick={() => { scrollToForm(); setMobileOpen(false); }}
             className="mt-2 btn-gold font-heading font-bold text-sm uppercase px-4 py-2.5 tracking-wider text-center w-full"

@@ -16,7 +16,7 @@ export default function ThankYouPage() {
           className="w-20 h-20 flex items-center justify-center mx-auto mb-6"
           style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)', boxShadow: '0 8px 32px rgb(var(--accent) / 0.35)' }}
         >
-          <svg className="w-10 h-10 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-10 h-10" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
           </svg>
         </div>

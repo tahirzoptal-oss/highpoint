@@ -53,9 +53,19 @@
 html {
   margin: 0;
   padding: 0;
-  overflow-x: clip;
   font-optical-sizing: auto;
   font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+/* Horizontal-overflow guard, MOBILE ONLY. overflow-x: clip on html/body breaks
+   position: sticky in Chromium (clip acts as a sticky boundary), so we scope it
+   below the lg breakpoint (1024px), where the inner-page quote rails are NOT
+   sticky. On desktop (lg+) there is no clip, so the sticky rails pin correctly. */
+@media (max-width: 1023px) {
+  html,
+  body {
+    overflow-x: clip;
+  }
 }
 
 /* Wave 1: tabular-nums utility for ratings, phone numbers, prices, dates.
@@ -392,7 +402,6 @@ html {
 body {
   margin: 0;
   padding: 0;
-  overflow-x: hidden;
   font-family: 'Montserrat', sans-serif;
   background: #fff;
 }
@@ -722,6 +731,17 @@ p { margin: 0; }
 [data-theme-mode="light"] .btn-outline:hover {
   background: rgba(15, 23, 42, 0.05);
 }
+/* But inside a theme-keep-dark section (dark hero photos on inner pages), the
+   outline button sits on a dark photo, so it must stay white with a light
+   border, not the light-theme navy which reads as invisible. Higher specificity
+   than the light-theme rule above so it wins. */
+[data-theme-mode="light"] .theme-keep-dark .btn-outline {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+[data-theme-mode="light"] .theme-keep-dark .btn-outline:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
 
 /* Vision/Mission cards on Founder section had hardcoded gradient bg in JSX
    (style={{ background: 'linear-gradient(135deg, #1E293B 0%, #172030 100%)' }}).
@@ -759,7 +779,7 @@ p { margin: 0; }
 }
 @media (min-width: 1024px) {
   .hero-section {
-    min-height: clamp(460px, 72vh, 680px);
+    min-height: clamp(540px, 80vh, 780px);
   }
 }
 
@@ -872,6 +892,54 @@ p { margin: 0; }
   background-color: #FAFBFC !important;
   border: 1px solid rgba(15, 23, 42, 0.2) !important;
   color: rgb(var(--primary)) !important;
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
 }
 
 :root[data-theme-mode="dark"] .btn-gold,

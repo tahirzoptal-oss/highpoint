@@ -51,7 +51,7 @@ export default function FAQAccordion({ items }) {
             >
               <svg
                 className="w-4 h-4"
-                style={{ color: open === i ? '#0F172A' : '#94A3BB' }}
+                style={{ color: open === i ? '#ffffff' : '#94A3BB' }}
                 fill="none" viewBox="0 0 24 24" stroke="currentColor"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16M4 12h16" />

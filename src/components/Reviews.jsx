@@ -105,18 +105,14 @@ export default function Reviews() {
       <CornerOverlay position="top-left" size={320} />
       <CornerOverlay position="bottom-right" size={320} />
 
-      <div className="relative max-w-7xl mx-auto px-8 pt-12 grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-        <div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{brandDNA.copy.reviews.label}</p>
-          <h2 className="font-heading font-bold text-white uppercase leading-none text-5xl">
-            {brandDNA.copy.reviews.heading}
-          </h2>
-        </div>
-        <div className="text-cool font-body text-sm leading-relaxed">
-          <p>
-            {brandDNA.copy.reviews.body}
-          </p>
-        </div>
+      <div className="relative max-w-3xl mx-auto px-8 pt-12 text-center">
+        <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{brandDNA.copy.reviews.label}</p>
+        <h2 className="font-heading font-bold text-white uppercase leading-none text-5xl mb-5">
+          {brandDNA.copy.reviews.heading}
+        </h2>
+        <p className="text-cool font-body text-base leading-relaxed max-w-2xl mx-auto">
+          {brandDNA.copy.reviews.body}
+        </p>
       </div>
 
       {/* Honest "0 reviews" pills for a brand with no public profile yet. */}

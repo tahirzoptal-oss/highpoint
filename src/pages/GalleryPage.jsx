@@ -6,41 +6,31 @@ import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
 // Derive gallery photos from brandDNA.previous_projects (populated by Stage 10.1
-// asset-copy step). Each entry is { filename, type, alt, category? }. Videos are
-// skipped here; the lightbox shows still images only.
+// asset-copy step). Each entry is { filename, type, alt }. Videos are skipped
+// here; the lightbox shows still images only. previous_projects carry no
+// category data, so the gallery is a single clean grid with no filter UI.
 const photos = (brandDNA.previous_projects || [])
   .filter((p) => p && p.filename && p.type !== 'video')
   .map((p) => ({
     src: `/work/${p.filename}`,
     alt: p.alt || `${brandDNA.company.name} project`,
     caption: p.caption || p.alt || `${brandDNA.company.name} project`,
-    category: p.category || 'Projects',
   }));
 
-// Build the filter pills from unique categories present in the data. If every
-// project shares the same category there's no point showing a filter row.
-const uniqueCategories = Array.from(new Set(photos.map((p) => p.category)));
-const categories = uniqueCategories.length > 1 ? ['All', ...uniqueCategories] : [];
-
 export default function GalleryPage() {
-  const [activeCategory, setActiveCategory] = useState('All');
   const [lightbox, setLightbox] = useState(null);
 
-  const filtered = activeCategory === 'All'
-    ? photos
-    : photos.filter((p) => p.category === activeCategory);
-
-  const currentIndex = lightbox !== null ? filtered.findIndex((p) => p.src === lightbox.src) : -1;
+  const currentIndex = lightbox !== null ? photos.findIndex((p) => p.src === lightbox.src) : -1;
 
   const openLightbox = (photo) => setLightbox(photo);
   const closeLightbox = () => setLightbox(null);
   const prevPhoto = () => {
-    const prev = (currentIndex - 1 + filtered.length) % filtered.length;
-    setLightbox(filtered[prev]);
+    const prev = (currentIndex - 1 + photos.length) % photos.length;
+    setLightbox(photos[prev]);
   };
   const nextPhoto = () => {
-    const next = (currentIndex + 1) % filtered.length;
-    setLightbox(filtered[next]);
+    const next = (currentIndex + 1) % photos.length;
+    setLightbox(photos[next]);
   };
 
   return (
@@ -69,7 +59,7 @@ export default function GalleryPage() {
           </div>
           <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{brandDNA.copy.gallery.label}</p>
           <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            OUR COMPLETED<br />PROJECTS
+            {brandDNA.copy.gallery.heading}
           </h1>
           <span className="line-gold block w-16 mb-4" />
           <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>
@@ -78,32 +68,9 @@ export default function GalleryPage() {
         </div>
       </section>
 
-      {/* Filter + Grid */}
+      {/* Grid */}
       <section className="relative py-16 bg-grid bg-navy">
         <div className="max-w-7xl mx-auto px-8">
-          {/* Filter tabs (only render when multiple categories exist) */}
-          {categories.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-10">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`font-heading font-bold text-xs uppercase tracking-widest px-5 py-2.5 transition-all ${
-                    activeCategory === cat
-                      ? 'btn-gold text-navy'
-                      : 'text-cool hover:text-white bg-navy-slate'
-                  }`}
-                  style={activeCategory === cat
-                    ? {}
-                    : { border: '1px solid rgba(100,116,139,0.35)' }
-                  }
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          )}
-
           {/* Empty state when no project photos are supplied */}
           {photos.length === 0 && (
             <div className="text-center py-24 text-cool text-sm max-w-xl mx-auto">
@@ -112,10 +79,10 @@ export default function GalleryPage() {
             </div>
           )}
 
-          {/* Grid */}
+          {/* Photo grid */}
           {photos.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filtered.map((photo, i) => (
+              {photos.map((photo, i) => (
                 <div
                   key={`${photo.src}-${i}`}
                   className="card-elevated-dark group cursor-pointer overflow-hidden"
@@ -136,21 +103,12 @@ export default function GalleryPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="px-4 py-3 flex items-center justify-between bg-navy-slate">
+                  <div className="px-4 py-3 bg-navy-slate">
                     <div className="text-xs font-bold text-white uppercase tracking-wide">{photo.caption}</div>
-                    {categories.length > 0 && (
-                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 text-gold" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.2)' }}>
-                        {photo.category}
-                      </span>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
-          )}
-
-          {photos.length > 0 && filtered.length === 0 && (
-            <div className="text-center py-20 text-steel text-sm">No photos in this category yet. Check back soon.</div>
           )}
         </div>
       </section>
@@ -183,10 +141,10 @@ export default function GalleryPage() {
 
             <div className="flex items-center justify-between mt-4 px-2">
               <div className="text-white/80 text-sm font-semibold">{lightbox.caption}</div>
-              <div className="text-white/50 text-xs">{currentIndex + 1} / {filtered.length}</div>
+              <div className="text-white/50 text-xs">{currentIndex + 1} / {photos.length}</div>
             </div>
 
-            {filtered.length > 1 && (
+            {photos.length > 1 && (
               <>
                 <button
                   className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-14 w-10 h-10 flex items-center justify-center text-white transition-colors bg-navy-slate"
