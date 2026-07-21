@@ -1,10 +1,14 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
+import InnerBanner from '../components/InnerBanner';
 import CTABanner from '../components/CTABanner';
 import SEO from '../components/SEO';
 import QuoteForm from '../components/QuoteForm';
 import { buildArticle, buildBreadcrumb } from '../lib/schema';
 import { blogPosts } from './BlogPage';
 import { brandDNA } from '../config/brand-dna';
+
+
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -49,42 +53,24 @@ export default function BlogPostPage() {
           ]),
         ]}
       />
-      {/* Article Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src={post.cover}
-            alt={post.title}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-            onError={(e) => { e.target.src = '/work/project1.webp'; }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.45) 0%, rgba(15,23,42,0.92) 100%)' }} />
+      {/* Article banner — shared InnerBanner component. The post's own cover
+          is the background, and the meta row rides in as children. */}
+      <InnerBanner
+        title={post.title}
+        image={post.cover}
+        objectPosition="50% 40%"
+        overlayOpacity={0.92}
+        breadcrumb={[{ label: 'Blog', to: '/blog' }, { label: post.category }]}
+        minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
+      >
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] font-medium" style={{ fontFamily: INTER, color: 'rgba(255,255,255,0.68)' }}>
+          {post.readTime && <span>{post.readTime}</span>}
+          {post.readTime && post.date && <span aria-hidden style={{ color: 'rgb(var(--accent-light))' }}>·</span>}
+          {post.date && <span>{post.date}</span>}
+          {post.byline && <span aria-hidden style={{ color: 'rgb(var(--accent-light))' }}>·</span>}
+          {post.byline && <span>By {post.byline}</span>}
         </div>
-        <div className="relative px-8 py-14 max-w-5xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <Link to="/blog" className="hover:text-white transition-colors">Blog</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">{post.category}</span>
-          </div>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 text-gold" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.2)' }}>
-              {post.category}
-            </span>
-            <span className="text-cool text-xs">{post.readTime}</span>
-            <span className="text-steel text-xs">·</span>
-            <span className="text-cool text-xs">{post.date}</span>
-          </div>
-          <h1 className="font-heading font-bold text-white uppercase leading-tight text-4xl lg:text-5xl max-w-3xl">
-            {post.title}
-          </h1>
-          {post.byline && (
-            <p className="text-cool text-sm font-body mt-4">By {post.byline}</p>
-          )}
-        </div>
-      </section>
+      </InnerBanner>
 
       {/* Article Body */}
       <section className="relative py-16 bg-grid bg-navy">
@@ -154,7 +140,7 @@ export default function BlogPostPage() {
             {/* Sidebar */}
             <aside className="flex flex-col gap-5">
               {/* Sticky quote rail */}
-              <div className="lg:sticky lg:top-24 flex flex-col gap-5">
+              <div className="sticky-rail flex flex-col gap-5">
                 <QuoteForm formId={`blog-${post.slug}`} title="Get Your Free Estimate" />
 
                 {/* CTA card */}

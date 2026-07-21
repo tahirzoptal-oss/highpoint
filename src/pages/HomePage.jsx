@@ -1,12 +1,13 @@
 import Hero from '../components/Hero';
-import TrustStrip from '../components/TrustStrip';
-import Reviews from '../components/Reviews';
+import BeltSlider from '../components/BeltSlider';
+import LeadFormBanner from '../components/LeadFormBanner';
+import LogoSlider from '../components/LogoSlider';
+import Testimonials from '../components/Testimonials';
 import Founder from '../components/Founder';
 import Services from '../components/Services';
 import WhyChooseUs from '../components/WhyChooseUs';
 import OurWork from '../components/OurWork';
 import OurProcess from '../components/OurProcess';
-import SpecialOffers from '../components/SpecialOffers';
 import Blog from '../components/Blog';
 import FAQ from '../components/FAQ';
 import ServiceAreas from '../components/ServiceAreas';
@@ -19,18 +20,21 @@ export default function HomePage() {
     <>
       <SEO path="/" jsonLd={[buildLocalBusiness(), buildFAQ()].filter(Boolean)} />
       <Hero />
-      <TrustStrip />
-      <Reviews />
+      <LeadFormBanner />
+      <LogoSlider />
+      <Testimonials />
+      <BeltSlider />
       <Founder />
+      <BeltSlider />
       <Services />
+      <BeltSlider />
       <WhyChooseUs />
       <OurWork />
       <OurProcess />
-      <SpecialOffers />
       <Blog />
+      <CTABanner />
       <FAQ />
       <ServiceAreas />
-      <CTABanner />
     </>
   );
 }

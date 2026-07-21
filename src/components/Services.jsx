@@ -1,20 +1,38 @@
-import Ticker from './Ticker';
+import { Link } from 'react-router-dom';
 import { brandDNA } from '../config/brand-dna';
+import { PRIMARY_SERVICES } from '../config/primary-services';
+
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+// Matches the header CTA exactly (Navbar's navCtaTextStyle). Paired with the
+// global .btn-gold glass class so this button and the nav button are the same
+// component visually.
+const glassBtnTextStyle = {
+  color: 'rgb(var(--on-accent))',
+  textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)',
+  fontFamily: INTER,
+};
 
 const serviceIcons = {
+  // Wrench — repair
   'roof-repair': (
-    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+    <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M11.4 15.2 17.3 21a2.65 2.65 0 0 0 3.7-3.7l-5.9-5.9" />
+      <path d="M11.4 15.2 6.8 20.8a2.55 2.55 0 1 1-3.6-3.6l6.9-5.6" />
+      <path d="M13.9 12.1c.3-.4.7-.6 1.2-.8.6-.2 1.2-.2 1.7-.1a4.5 4.5 0 0 0 4.5-6.3l-3.3 3.3a3 3 0 0 1-2.2-2.3l3.3-3.3a4.5 4.5 0 0 0-6.4 4.5c.1 1.1-.1 2.3-.9 3l-.1.1" />
     </svg>
   ),
+  // Cycle arrows — replacement
   'roof-replacement': (
     <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
     </svg>
   ),
+  // House — new installation
   'new-roof-installation': (
     <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
     </svg>
   ),
   'emergency-roofing': (
@@ -74,7 +92,8 @@ const fallbackIcon = (
    entries that come from a sitemap with no `slug` field — picks the closest
    icon by name keyword so the grid shows varied icons instead of every card
    falling through to the roof fallback). Keyword order matters — specific
-   terms first so "storm damage repair" doesn't collapse to plain "repair". */
+   terms first so "storm damage repair" doesn't collapse to plain "repair",
+   and "replacement" doesn't collapse into "installation". */
 function pickServiceIcon(service) {
   if (service.slug && serviceIcons[service.slug]) return serviceIcons[service.slug];
   const name = (service.name || '').toLowerCase();
@@ -86,11 +105,13 @@ function pickServiceIcon(service) {
     [/inspect/, 'roof-inspections'],
     [/historical|restor/, 'historical-roof-restoration'],
     [/emergency/, 'emergency-roofing'],
-    [/replace|install|new\s+roof/, 'new-roof-installation'],
+    [/replace/, 'roof-replacement'],
+    [/install|new\s+roof/, 'new-roof-installation'],
     [/siding/, 'siding'],
     [/gutter/, 'gutters'],
     [/window/, 'windows'],
     [/metal/, 'metal-roofing'],
+    [/renovat|remodel/, 'siding'],
     [/repair|leak|patch/, 'roof-repair'],
     [/roof/, 'roof-replacement'],
   ];
@@ -100,75 +121,187 @@ function pickServiceIcon(service) {
   return fallbackIcon;
 }
 
-export default function Services() {
+// The seven services, their order and their resolved hrefs all come from the
+// shared config so this section, the header dropdown and the footer stay in
+// lockstep. See src/config/primary-services.js.
+const SERVICES = PRIMARY_SERVICES;
+
+const ChevronRight = (props) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <path d="m9 5 7 7-7 7" />
+  </svg>
+);
+
+const projectFile =
+  brandDNA.previous_projects?.[1]?.filename ||
+  brandDNA.previous_projects?.[0]?.filename ||
+  'project1.webp';
+
+/**
+ * Service card. Shadow-free and border-free by design — the interaction is
+ * carried entirely by colour: the tile tints toward accent blue, a gloss
+ * sweeps across, the icon eases up, the label shifts 3px right and warms to
+ * primary, and a chevron slides in from the right. All on one 280ms curve.
+ */
+function ServiceCard({ service, className = '' }) {
   return (
-    <section id="services" className="relative overflow-hidden bg-navy">
-      <Ticker />
-
-      {/* Mobile image */}
-      <div className="lg:hidden relative h-52 overflow-hidden">
-        <img
-          src={`/work/${(brandDNA.previous_projects && brandDNA.previous_projects[1] && brandDNA.previous_projects[1].filename) || (brandDNA.previous_projects && brandDNA.previous_projects[0] && brandDNA.previous_projects[0].filename) || 'project1.webp'}`}
-          alt={`${brandDNA.company.name} crew completing a residential project`}
-          className="w-full h-full object-cover"
-          style={{ objectPosition: '50% 40%' }}
-          onError={(e) => { e.target.src = '/hero-image.webp'; }}
+    <li className={className}>
+      <Link
+        to={service.href}
+        className="group relative flex h-full items-center gap-3.5 overflow-hidden rounded-[18px] bg-white/70 p-3.5 backdrop-blur-md transition-colors duration-[280ms] ease-out hover:bg-[rgb(var(--accent)/0.10)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2"
+        style={{border: '1px solid rgba(44, 90, 166, 0.2),'}}
+      >
+        {/* glossy highlight sweep */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 -left-full w-full transition-transform duration-[700ms] ease-out group-hover:translate-x-[200%]"
+          style={{ background: 'linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.75) 50%, transparent 62%)' }}
         />
-        <div className="absolute inset-x-0 bottom-0 h-20" style={{ background: 'linear-gradient(to top, #F5F7FA, transparent)' }} />
+
+        <span
+          className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[13px] transition-transform duration-[280ms] ease-out"
+          style={{
+            background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
+            color: 'rgb(var(--on-accent))',
+          }}
+        >
+          <span aria-hidden className="pointer-events-none absolute inset-x-[3px] top-[3px] h-[44%] rounded-[10px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.45), transparent)' }} />
+          <span className="relative">{pickServiceIcon(service)}</span>
+        </span>
+
+        <span
+          className="relative flex-1 text-[13px] font-semibold uppercase leading-[1.25] tracking-[0.05em] text-[rgb(var(--primary-dark))] transition-[color,transform] duration-[280ms] ease-out group-hover:text-[rgb(var(--primary))]"
+          style={{ fontFamily: INTER }}
+        >
+          {service.name}
+        </span>
+
+        <ChevronRight className="relative h-4 w-4 flex-shrink-0 -translate-x-2 text-[rgb(var(--accent))] opacity-0 transition-[transform,opacity] duration-[280ms] ease-out group-hover:translate-x-0 group-hover:opacity-100" />
+      </Link>
+    </li>
+  );
+}
+
+/**
+ * Services — the homepage's single services section. Absorbed the former
+ * standalone "What We Do" component: its layout, glass tiles, mesh background
+ * and architectural decoration now live here, alongside this section's own
+ * brand belt, project photo and logo lockup.
+ */
+export default function Services() {
+  const c = brandDNA.copy.services;
+
+  return (
+    <section id="services" className="relative overflow-hidden">
+      {/* ── Soft mesh base — theme-blue radial pools over a pale wash.
+             Declared before the content so every `relative` block below
+             paints on top of it without needing z-index juggling. ── */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(52% 46% at 88% 14%, rgba(110,143,196,0.20) 0%, transparent 62%),' +
+            'radial-gradient(46% 42% at 6% 8%, rgba(44,90,166,0.13) 0%, transparent 64%),' +
+            'radial-gradient(54% 50% at 20% 98%, rgba(24,60,120,0.10) 0%, transparent 62%),' +
+            'linear-gradient(170deg, #FFFFFF 0%, #F6F9FD 52%, #E9F0F9 100%)',
+        }}
+      />
+
+      {/* ── Architectural decoration: blueprint grid, diagonals, roof peak ── */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(24,60,120,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(24,60,120,0.04) 1px, transparent 1px)',
+            backgroundSize: '54px 54px',
+            maskImage: 'radial-gradient(ellipse 68% 60% at 28% 55%, #000 8%, transparent 74%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 68% 60% at 28% 55%, #000 8%, transparent 74%)',
+          }}
+        />
+        <div className="absolute inset-0" style={{ background: 'repeating-linear-gradient(118deg, transparent 0 88px, rgba(24,60,120,0.035) 88px 89px)' }} />
+        
+        <div className="absolute -right-14 bottom-24 h-64 w-64 rounded-full blur-3xl" style={{ background: 'rgb(var(--accent-light) / 0.2)' }} />
       </div>
 
-      {/* Desktop: image left | content right */}
-      <div className="relative grid grid-cols-1 lg:grid-cols-2">
+      <div className="site-container relative py-14 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:gap-14">
+          {/* ════ LEFT — label, heading, intro, service grid, CTA ════ */}
+          <div>
 
-        {/* Left: image with right-side fade (desktop only) */}
-        <div className="hidden lg:block relative overflow-hidden" style={{ minHeight: 580 }}>
-          <img
-            src={`/work/${(brandDNA.previous_projects && brandDNA.previous_projects[1] && brandDNA.previous_projects[1].filename) || (brandDNA.previous_projects && brandDNA.previous_projects[0] && brandDNA.previous_projects[0].filename) || 'project1.webp'}`}
-            alt={`${brandDNA.company.name} crew completing a residential project`}
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-            onError={(e) => { e.target.src = '/hero-image.webp'; }}
-          />
-          {/* Right-edge fade */}
-          <div className="absolute inset-y-0 right-0 w-44" style={{ background: 'linear-gradient(to right, transparent, #F5F7FA)' }} />
-        </div>
+            <p className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
+              <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
+              {c.label}
+            </p>
 
-        {/* Right: content */}
-        <div className="px-8 pt-8 pb-4 flex flex-col justify-center">
-          <div className="mb-4">
-            <img src="/logo.webp" alt={brandDNA.company.name} className="w-44 h-auto" />
+            <h2 className="section-h2 uppercase" style={{ color: 'rgb(var(--primary))' }}>
+              {c.heading}
+            </h2>
+
+            <span className="mb-5 mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+
+            <p className="max-w-[62ch] text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>{c.body}</p>
+
+            {/* 2-up from sm; the odd seventh tile spans the row so the grid
+                closes cleanly. `h-full` keeps every tile the same height. */}
+            <ul className="mt-7 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2 sm:gap-3.5">
+              {SERVICES.map((s, i) => (
+                <ServiceCard
+                  key={s.name}
+                  service={s}
+                  className={i === SERVICES.length - 1 && SERVICES.length % 2 === 1 ? 'sm:col-span-2' : ''}
+                />
+              ))}
+            </ul>
+
+            <a
+              href="#get-free-quote"
+              className="btn-gold mt-8 inline-flex items-center gap-2.5 px-6 py-3 text-[12.5px] uppercase tracking-[0.07em]"
+              style={glassBtnTextStyle}
+            >
+              {brandDNA.copy.buttonText}
+              <span aria-hidden>→</span>
+            </a>
           </div>
 
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-2">
-            {brandDNA.copy.services.label}
-          </p>
-          <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-3">
-            {brandDNA.copy.services.heading}
-          </h2>
-          <span className="line-gold block w-12 mb-5" />
-          <p className="text-cool font-body text-sm mb-8 max-w-lg">
-            {brandDNA.copy.services.body}
-          </p>
+          {/* ════ RIGHT — existing project photo, framed and layered ════ */}
+          <div className="relative mx-auto w-full max-w-[460px] lg:mx-0 lg:max-w-none">
+            <span
+              aria-hidden
+              className="absolute -right-3.5 -top-3.5 hidden h-20 w-20 rounded-tr-[24px] sm:block"
+              style={{ borderTop: '2px solid rgb(var(--accent) / 0.32)', borderRight: '2px solid rgb(var(--accent) / 0.32)' }}
+            />
+            <span
+              aria-hidden
+              className="absolute -bottom-3.5 -left-3.5 hidden h-28 w-28 rounded-[24px] sm:block"
+              style={{
+                background: 'linear-gradient(150deg, rgb(var(--accent) / 0.22), rgb(var(--accent) / 0.04))',
+                border: '1px solid rgba(255,255,255,0.5)',
+              }}
+            />
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {brandDNA.services.map((s, idx) => (
-              <div
-                key={s.slug || s.name || idx}
-                className="card-elevated-dark flex items-center gap-3 p-3 cursor-pointer transition-all group border-l-2 bg-navy-slate"
-                style={{ border: '1px solid rgba(100,116,139,0.3)', borderLeft: '2px solid rgb(var(--accent))' }}
-              >
-                <div className="flex-shrink-0 flex items-center justify-center text-gold">
-                  {pickServiceIcon(s)}
-                </div>
-                <span className="font-heading font-bold text-white text-xs uppercase leading-tight">{s.name}</span>
-              </div>
-            ))}
+            <div
+              className="relative overflow-hidden rounded-[24px] bg-white"
+              style={{
+                border: '1px solid rgba(255,255,255,0.7)',
+                boxShadow: '0 2px 6px -1px rgba(16,40,79,0.06), 0 30px 58px -26px rgba(16,40,79,0.36)',
+              }}
+            >
+              <img
+                src={`/work/${projectFile}`}
+                alt={`${brandDNA.company.name} crew completing a residential project`}
+                className="block aspect-[16/11] w-full object-cover lg:aspect-[4/5]"
+                style={{ objectPosition: '50% 40%' }}
+                loading="lazy"
+                decoding="async"
+                onError={(e) => { e.target.src = '/hero-image.webp'; }}
+              />
+              <span aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(200deg, rgba(24,60,120,0.10), transparent 45%)' }} />
+              <span aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-1/4" style={{ background: 'linear-gradient(to top, rgba(11,20,42,0.35), transparent)' }} />
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="mt-8">
-        <Ticker />
       </div>
     </section>
   );

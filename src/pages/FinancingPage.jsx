@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import InnerBanner from '../components/InnerBanner';
 import { Link } from 'react-router-dom';
 import CTABanner from '../components/CTABanner';
-import Ticker from '../components/Ticker';
+import BeltSlider from '../components/BeltSlider';
 import CornerOverlay from '../components/CornerOverlay';
 import QuoteForm from '../components/QuoteForm';
 import SEO from '../components/SEO';
@@ -128,55 +129,28 @@ export default function FinancingPage() {
         title={`Financing | ${brandDNA.company.name}`}
         jsonLd={financingJsonLd}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt="Roofing financing options"
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-            onError={(e) => { e.target.src = '/work/project1.webp'; }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.88) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">Financing</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">
-            {isOffered ? 'FLEXIBLE OPTIONS' : 'PAYMENT OPTIONS'}
-          </p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {isOffered ? (
+      {/* Page banner — shared InnerBanner component */}
+      <InnerBanner
+        title={isOffered ? (
               <>YOUR ROOF SHOULDN'T<br />BREAK THE BANK</>
             ) : (
               <>HOW HOMEOWNERS<br />PAY FOR ROOFS</>
             )}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>
-            {financing.termsDescription || (isOffered
+        subtitle={financing.termsDescription || (isOffered
               ? "We offer flexible financing through trusted lending partners so you can protect your home now and pay on a schedule that works for you."
               : `${brandDNA.company.shortName || brandDNA.company.name} does not offer in-house financing. We focus on roofing and exteriors and let specialised lenders handle the lending. Below is what every homeowner should consider.`
             )}
-          </p>
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Link to="/contact" className="btn-gold font-heading font-bold text-sm uppercase px-6 py-3 tracking-widest text-navy">
-              {brandDNA.copy.buttonText} →
-            </Link>
-          </div>
-        </div>
-      </section>
+        objectPosition="50% 40%"
+        breadcrumb={[{ label: "Financing" }]}
+        minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
+      />
 
       {/* How It Works */}
       <section className="relative py-16 bg-grid bg-navy">
         <div className="max-w-5xl mx-auto px-8">
           <div className="text-center mb-10">
             <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">THE PROCESS</p>
-            <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2">
+            <h2 className="section-h2 text-white uppercase mb-2">
               HOW IT WORKS
             </h2>
             <span className="line-gold block w-12 mx-auto mt-3 mb-4" />
@@ -214,7 +188,7 @@ export default function FinancingPage() {
             <div className="lg:col-span-2">
               <div className="mb-10">
                 <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">YOUR OPTIONS</p>
-                <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2">
+                <h2 className="section-h2 text-white uppercase mb-2">
                   {isOffered ? "FINANCING OPTIONS" : "WAYS HOMEOWNERS PAY"}
                 </h2>
                 <span className="line-gold block w-12 mt-3 mb-4" />
@@ -279,7 +253,7 @@ export default function FinancingPage() {
 
             {/* Sticky quote rail */}
             <div>
-              <div className="lg:sticky lg:top-24">
+              <div className="sticky-rail">
                 <QuoteForm formId="financing" title="Get Your Free Estimate" />
               </div>
             </div>
@@ -287,13 +261,13 @@ export default function FinancingPage() {
         </div>
       </section>
 
-      <Ticker />
+      <BeltSlider />
 
       {/* FAQ */}
       <section className="relative py-16 bg-grid bg-navy">
         <div className="max-w-3xl mx-auto px-8">
           <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3 text-center">{brandDNA.copy.faq.label}</p>
-          <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2 text-center">
+          <h2 className="section-h2 text-white uppercase mb-2 text-center">
             {isOffered ? "FINANCING FAQ" : "PAYMENT FAQ"}
           </h2>
           <span className="line-gold block w-12 mx-auto mt-3 mb-8" />

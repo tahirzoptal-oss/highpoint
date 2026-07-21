@@ -1,38 +1,33 @@
 import { brandDNA } from '../config/brand-dna';
 import FAQAccordion from './FAQAccordion';
-import CornerOverlay from './CornerOverlay';
+
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
 
 export default function FAQ() {
+  const c = brandDNA.copy.faq;
+
   return (
-    <section id="faq" className="relative py-20 overflow-hidden bg-grid bg-navy">
+    <section id="faq" className="relative overflow-hidden py-14 lg:py-20">
 
-      {/* Gold top line */}
-      <div className="absolute top-0 left-0 right-0 line-gold" />
+      <div className="site-container relative">
+        {/* ── Centred header ── */}
+        <div className="mx-auto mb-10 max-w-3xl text-center lg:mb-12">
+          <p className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
+            <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
+            {c.label}
+          </p>
 
-      {/* Rule 58: per-client corner overlays. */}
-      <CornerOverlay position="top-left" size={320} />
-      <CornerOverlay position="bottom-right" size={320} />
+          <h2 className="section-h2 uppercase" style={{ color: 'rgb(var(--primary))' }}>
+            {c.heading}
+          </h2>
 
-      <div className="relative max-w-3xl mx-auto px-8">
-
-        {/* Logo + accent lines */}
-        <div className="flex items-center justify-center gap-4 mb-8">
-          <div className="flex-1 h-px" style={{ background: 'rgb(var(--accent) / 0.35)' }} />
-          <div className="px-4 py-2 bg-navy-slate" style={{ border: '1px solid rgb(var(--accent) / 0.2)' }}>
-            <img src="/logo.webp" alt={brandDNA.company.name} className="w-28 h-auto" />
-          </div>
-          <div className="flex-1 h-px" style={{ background: 'rgb(var(--accent) / 0.35)' }} />
+          <span className="mx-auto mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
         </div>
 
-        <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] text-center mb-2">
-          {brandDNA.copy.faq.label}
-        </p>
-        <h2 className="font-heading font-bold text-white uppercase text-5xl text-center mb-10 leading-tight">
-          {brandDNA.copy.faq.heading}
-        </h2>
-
-        <FAQAccordion items={brandDNA.faq} />
-
+        <div className="mx-auto max-w-3xl">
+          <FAQAccordion items={brandDNA.faq} />
+        </div>
       </div>
     </section>
   );

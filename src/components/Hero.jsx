@@ -1,272 +1,204 @@
 import { brandDNA } from '../config/brand-dna';
-import BackgroundPattern from './BackgroundPattern';
 import ScrollRevealHeadline from './ScrollRevealHeadline';
-import ClaimIcon from './ClaimIcon';
-import { useLeadForm } from '../lib/leadForm';
+import OwnerCard from './OwnerCard';
 
-const glassInput = {
-  background: 'rgba(255,255,255,0.07)',
-  border: '1px solid rgba(255,255,255,0.14)',
-  color: 'white',
-};
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+// Hero headings use Josefin Sans ONLY (loaded via the @import in index.css).
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
 
-const glassPill = {
-  background: 'rgba(255,255,255,0.09)',
-  border: '1px solid rgba(255,255,255,0.16)',
-  backdropFilter: 'blur(10px)',
-  WebkitBackdropFilter: 'blur(10px)',
+// Official platform marks — the ONLY colors allowed outside the blue palette,
+// used exclusively inside the review cards (per brief).
+const GoogleMark = (props) => (
+  <svg viewBox="0 0 24 24" {...props}>
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+  </svg>
+);
+const FacebookMark = (props) => (
+  <svg viewBox="0 0 24 24" fill="#1877F2" {...props}>
+    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+  </svg>
+);
+
+const Stars = () => (
+  <span className="inline-flex text-[16px] leading-none tracking-tight" style={{ color: 'rgb(var(--accent))' }}>{'★★★★★'}</span>
+);
+
+// ── Outline icons, matched to each trust point ──
+const Ic = ({ children, className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
+);
+const BoltIcon = (p) => <Ic {...p}><path d="M13 2 4.5 13.5H11l-1 8.5 8.5-11.5H12z" /></Ic>;
+const UserIcon = (p) => <Ic {...p}><circle cx="12" cy="8" r="3.4" /><path d="M4.8 20c0-3.5 3.3-5.4 7.2-5.4S19.2 16.5 19.2 20" /></Ic>;
+const WalletIcon = (p) => <Ic {...p}><rect x="3" y="6" width="18" height="13" rx="2.5" /><path d="M3 10h18" /><circle cx="16.5" cy="14" r="1.2" fill="currentColor" stroke="none" /></Ic>;
+const ShieldIcon = (p) => <Ic {...p}><path d="M12 3 5 6v5c0 4.5 3 7.6 7 9 4-1.4 7-4.5 7-9V6z" /><path d="m9.2 12 2 2 3.6-3.8" /></Ic>;
+const AwardIcon = (p) => <Ic {...p}><circle cx="12" cy="9" r="5" /><path d="m9 13.5-1.5 7L12 18l4.5 2.5-1.5-7" /></Ic>;
+const CheckBadgeIcon = (p) => <Ic {...p}><path d="M12 3l2.2 1.6 2.7-.3.9 2.6 2.3 1.4-.8 2.6.8 2.6-2.3 1.4-.9 2.6-2.7-.3L12 21l-2.2-1.6-2.7.3-.9-2.6-2.3-1.4.8-2.6-.8-2.6 2.3-1.4.9-2.6 2.7.3z" /><path d="m9 12 2 2 4-4" /></Ic>;
+
+function trustIcon(text) {
+  const t = String(text).toLowerCase();
+  if (/same.?day|fast|24|hour|quick|response|repair/.test(t)) return BoltIcon;
+  if (/owner|every job|crew|team|local|family/.test(t)) return UserIcon;
+  if (/payment|financ|plan|budget|afford|price|cost/.test(t)) return WalletIcon;
+  if (/licens|insur|bond|certif|guarant|warrant/.test(t)) return ShieldIcon;
+  if (/experience|year|award|rated|proven|star/.test(t)) return AwardIcon;
+  return CheckBadgeIcon;
+}
+
+const GOOGLE_REVIEW_URL = 'https://share.google/LPZS1EkTCmfvW3sov';
+
+const lightCard = {
+  background: '#FFFFFF',
+  border: '1px solid rgba(16,40,79,0.06)',
+  boxShadow: '0 12px 28px -16px rgba(16,40,79,0.32)',
 };
+// Two separate, identically-sized review cards (light UI).
+const ReviewCard = ({ href, icon, top, stars, sub }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="group flex min-w-[188px] flex-1 items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-16px_rgba(16,40,79,0.4)]"
+    style={lightCard}
+  >
+    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-black/5" style={{ background: '#F3F7FC' }}>{icon}</span>
+    <span className="min-w-0">
+      <span className="flex items-center gap-1.5">
+        <span className="text-[15px] font-bold leading-none text-ink" style={{ fontFamily: INTER }}>{top}</span>
+        {stars && <Stars />}
+      </span>
+      <span className="mt-1 block text-[12px] text-ink/55" style={{ fontFamily: INTER }}>{sub}</span>
+    </span>
+  </a>
+);
 
 export default function Hero() {
-  const { honeypotProps, onSubmit: handleSubmit } = useLeadForm('hero');
+  const { copy, reviews, social, team, company } = brandDNA;
+  const founder = team.founder;
+  const trustFeatures = copy.heroTrustChips.slice(0, 3);
+
+  const hasGoogle = reviews?.googleCount > 0;
+  const hasFacebook = reviews?.facebookCount > 0;
+  const showFacebook = Boolean(social?.facebook);
 
   return (
-    <section
-      id="hero"
-      className="hero-section relative overflow-hidden flex flex-col bg-navy theme-keep-dark"
-    >
-      <BackgroundPattern motif={brandDNA.shape_motif} opacity={0.3} color="white" />
-      {/* Full-screen hero image (WebP with mobile-srcset, PNG fallback) */}
-      <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-        <picture>
-          <source media="(max-width: 768px)" srcSet="/hero-image-mobile.webp" type="image/webp" />
-          <source srcSet="/hero-image.webp" type="image/webp" />
-          <img
-            src="/hero-image.webp"
-            alt={`${brandDNA.company.name}, ${brandDNA.address.city} roofing contractor`}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 38%' }}
-            loading="eager"
-            fetchpriority="high"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
-        </picture>
+    <section id="hero" className="hero-section relative flex flex-col overflow-hidden">
+      {/* ── Light multi-tone background (theme blues) ── */}
+      <div className="absolute inset-0" style={{ zIndex: 0, background: 'linear-gradient(120deg, #F2F6FC 0%, #E5EDF8 46%, #D8E3F2 100%)' }} />
+      {/* subtle architectural texture — very low opacity so it never competes with text */}
+      <div aria-hidden className="pointer-events-none absolute inset-0" style={{ zIndex: 0 }}>
+        <div className="absolute inset-0" style={{ background: 'repeating-linear-gradient(135deg, transparent 0 26px, rgba(24,60,120,0.022) 26px 27px)' }} />
+        <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full" style={{ background: 'radial-gradient(circle, rgba(44,90,166,0.10), transparent 68%)' }} />
+        <div className="absolute left-[18%] -bottom-28 h-80 w-80 rounded-full" style={{ background: 'radial-gradient(circle, rgba(24,60,120,0.07), transparent 68%)' }} />
+        
       </div>
-      {/* Rule 72: dark overlay sits as sibling of picture wrapper with explicit
-          zIndex: 2 so it renders between hero image (z=1) and text content (z=5).
-          Nesting it inside the picture wrapper creates a stacking-context trap
-          where the overlay renders invisible under the image. */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ background: 'linear-gradient(to right, rgba(8,12,20,0.92) 0%, rgba(8,12,20,0.82) 32%, rgba(8,12,20,0.64) 58%, rgba(8,12,20,0.42) 100%)', zIndex: 2 }}
-      />
 
-      {/* Two-column layout: text left, form right */}
-      <div
-        className="relative flex flex-col lg:flex-row flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 pt-24 pb-10 lg:pt-24 lg:pb-0 lg:items-center lg:gap-14"
-        style={{ zIndex: 5 }}
-      >
-        {/* LEFT: headline + badges + trust claims */}
-        <div className="text-left lg:flex-1 lg:py-8">
-          {/* Eyebrow — Rule 73: read brand_dna.hero.eyebrow_color when set
-              (used by clients whose accent is too dark on the overlaid hero,
-              e.g. Cloud Nine navy accent → orange primary override). Default
-              uses raw brand accent (rgb(var(--accent))) inline so the Rule 65
-              light-theme darkening does NOT apply to the hero eyebrow — on a
-              55% navy overlay, the brand accent reads cleanly without the
-              dark-mix needed against a white surface. */}
-          <p
-            className="font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4"
-            style={{
-              color: brandDNA.hero?.eyebrow_color || 'rgb(var(--accent))',
-              textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)',
-            }}
-          >
-            {brandDNA.copy.hero.eyebrow}
+      {/* ── Full-bleed right composition — completed-project photo + owner (lg only) ── */}
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-[56%] lg:block" style={{ zIndex: 2 }}>
+        <div className="absolute inset-0 overflow-hidden" style={{ clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0 100%)' }}>
+          <img src="/work/project16.webp" alt="" className="h-full w-full object-cover" style={{ objectPosition: '50% 42%' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(118deg, rgba(11,20,42,0.82) 0%, rgba(16,40,79,0.52) 44%, rgba(11,30,66,0.32) 100%)' }} />
+          <div className="absolute inset-x-0 bottom-0 h-2/5" style={{ background: 'linear-gradient(to top, rgba(8,12,20,0.78), transparent)' }} />
+        </div>
+        {/* diagonal seam accents (blend light left → image right) */}
+        <div className="absolute inset-0" style={{ background: 'rgb(var(--accent-light))', opacity: 0.8, clipPath: 'polygon(20% 0, 18.9% 0, -1.1% 100%, 0 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'rgb(var(--accent) / 0.5)', clipPath: 'polygon(21% 0, 21.5% 0, 6.5% 100%, 6% 100%)' }} />
+        {/* soft glow halo to lift the owner */}
+        <div className="absolute" style={{ left: '24%', top: '10%', width: '62%', height: '82%', background: 'radial-gradient(ellipse at 45% 40%, rgba(147,175,214,0.28) 0%, transparent 62%)' }} />
+      </div>
+
+      {/* ════ Two-column content row ════ */}
+      {/* Bottom padding reserves room for the floating lead form, which lifts
+          itself by 64px (mobile) / 128px (desktop) into this space. On desktop
+          the extra 16px leaves the bottom-aligned columns just clear of the
+          form's top edge. */}
+      <div className="site-container relative flex flex-1 flex-col gap-6 pb-20 pt-10 lg:flex-row lg:items-end lg:gap-6 lg:pb-36 lg:pt-8" style={{ zIndex: 5 }}>
+        {/* LEFT — marketing content (dark text on light) */}
+        <div className="order-2 text-left lg:order-1 lg:flex-1 lg:max-w-[600px]">
+          <p className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
+            <span className="h-2 w-2 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
+            {copy.hero.eyebrow}
           </p>
 
-          {/* Rule 55: H1 carries the same drop-shadow as the subheading so
-              both stay legible against any Mid-Atlantic / sky / shingle hero
-              photo.
-              Wave 2 (research bake): wrapped in <ScrollRevealHeadline> for
-              per-word fade-in on scroll. One premium motion moment per page. */}
           <ScrollRevealHeadline
             as="h1"
-            className="font-heading font-bold text-white uppercase leading-display tracking-display mb-0"
-            style={{ fontSize: 'clamp(40px, 5vw, 76px)', color: '#FFFFFF', textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}
+            className="uppercase"
+            style={{
+              fontFamily: JOSEFIN,
+              fontWeight: 700,
+              fontSize: 'clamp(34px, 4.4vw, 51px)',
+              lineHeight: 1.05,
+              letterSpacing: '-0.02em',
+              color: 'rgb(var(--primary))',
+              WebkitTextFillColor: 'rgb(var(--primary))',
+              background: 'none',
+            }}
           >
-            {brandDNA.copy.hero.headline}
+            {copy.hero.headline}
           </ScrollRevealHeadline>
 
-          {/* Gold accent line */}
-          <span className="line-gold block w-16 mt-4 mb-5" />
+          <span className="mt-4 mb-5 block h-[3px] w-16 rounded-full" style={{ background: 'rgb(var(--accent))' }} />
 
-          {/* Rule 55: subheading (3-stat trust line) renders white with a navy
-              drop-shadow. NEVER text-cool / text-steel — slate greys vanish on
-              most hero photos. */}
-          <p
-            className="text-sm font-body leading-relaxed mb-6 max-w-sm"
-            style={{ color: '#FFFFFF', textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}
-          >
-            {brandDNA.copy.hero.subheadline}
-          </p>
-
-          {/* Clickable rating + accreditation pills — frosted glass. Each pill
-              is gated on its own data, so a brand with only Google (or only a
-              BBB rating) never renders an empty Facebook or 0-count pill. */}
-          {(brandDNA.reviews?.googleCount > 0 || brandDNA.reviews?.facebookCount > 0 || brandDNA.certifications?.bbb) && (
-          <div className="flex items-center justify-start gap-2 mb-6 flex-wrap">
-            {brandDNA.reviews?.googleCount > 0 && (
-            <a
-              href={brandDNA.contact.googleMapsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 transition-all hover:border-gold"
-              style={glassPill}
-            >
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-              <div>
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-xs text-white">{brandDNA.reviews.rating.toFixed(1)}</span>
-                  <div className="flex text-yellow-400 text-xs leading-none">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                  <span className="text-white/50 text-[10px]">({brandDNA.reviews.googleCount})</span>
+          {/* Trust badges — compact elevated cards (same glass/shadow treatment,
+              tighter box) so the hero stays short without feeling cramped. */}
+          <div className="mb-5 flex flex-wrap gap-2">
+            {trustFeatures.map((claim) => {
+              const Icon = trustIcon(claim);
+              return (
+                <div key={claim} className="flex items-center gap-2.5 rounded-xl px-3 py-1.5" style={lightCard}>
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full" style={{ background: 'rgb(var(--accent) / 0.1)', color: 'rgb(var(--accent))' }}>
+                    <Icon className="h-[18px] w-[18px]" />
+                  </span>
+                  <span className="pr-0.5 text-[13px] font-semibold leading-tight text-ink" style={{ fontFamily: INTER }}>{claim}</span>
                 </div>
-                <div className="text-[10px] text-white/55 leading-none">{brandDNA.reviews.googleLabel}</div>
-              </div>
-            </a>
-            )}
-
-            {brandDNA.reviews?.facebookCount > 0 && (
-            <a
-              href={brandDNA.social.facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 transition-all hover:border-gold"
-              style={glassPill}
-            >
-              <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-              </svg>
-              <div>
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-xs text-white">{brandDNA.reviews.rating.toFixed(1)}</span>
-                  <div className="flex text-yellow-400 text-xs leading-none">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-                  <span className="text-white/50 text-[10px]">({brandDNA.reviews.facebookCount})</span>
-                </div>
-                <div className="text-[10px] text-white/55 leading-none">{brandDNA.reviews.facebookLabel}</div>
-              </div>
-            </a>
-            )}
-
-            {brandDNA.certifications?.bbb && (
-            <a
-              href={brandDNA.contact.bbbUrl || 'https://www.bbb.org/'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 transition-all hover:border-gold"
-              style={glassPill}
-            >
-              <div className="flex items-center justify-center px-1 h-5 flex-shrink-0" style={{ background: '#0A4C8B' }}>
-                <span className="font-heading font-bold text-white text-[11px] leading-none tracking-tight">BBB</span>
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <span className="font-bold text-xs text-white">{brandDNA.certifications.bbb_rating || 'A+'}</span>
-                  <span className="text-white/50 text-[10px]">Rating</span>
-                </div>
-                <div className="text-[10px] text-white/55 leading-none">BBB Accredited</div>
-              </div>
-            </a>
-            )}
+              );
+            })}
           </div>
-          )}
 
-          {/* Trust claims */}
-          <div className="flex flex-col gap-2.5">
-            {brandDNA.copy.heroTrustChips.map((claim) => (
-              <div key={claim} className="flex items-center gap-2.5">
-                <ClaimIcon claim={claim} className="w-6 h-6 flex-shrink-0" />
-                <span className="text-white text-base font-body font-semibold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>{claim}</span>
-              </div>
-            ))}
+          {/* Two SEPARATE review cards */}
+          <div className="flex flex-wrap items-stretch gap-3 sm:max-w-[440px]">
+            {hasGoogle && (
+              <ReviewCard href={GOOGLE_REVIEW_URL} icon={<GoogleMark className="h-6 w-6" />} top={reviews.rating.toFixed(1)} stars sub={`${reviews.googleCount} Google reviews`} />
+            )}
+            {showFacebook && (
+              <ReviewCard
+                href={social.facebook}
+                icon={<FacebookMark className="h-6 w-6" />}
+                top={hasFacebook ? reviews.rating.toFixed(1) : 'Facebook'}
+                stars={hasFacebook}
+                sub={hasFacebook ? `${reviews.facebookCount} Facebook reviews` : 'Read our reviews'}
+              />
+            )}
           </div>
         </div>
 
-        {/* RIGHT: form — frosted glass. Rule 65: marked `theme-keep-dark` so
-            the dark glass surface keeps its white text in BOTH light and
-            dark theme builds. Without this, light-theme clients flip
-            text-white -> text-primary which renders as low-contrast navy
-            on the dark glass (failures ~1.38 in WCAG audit). */}
-        <div id="quote" className="mt-8 lg:mt-0 lg:w-[420px] lg:flex-shrink-0 lg:py-0">
-          <div
-            className="overflow-hidden theme-keep-dark"
-            style={{
-              background: 'rgba(38,38,42,0.62)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255,255,255,0.10)',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.30)',
-            }}
-          >
-            <div className="px-6 pt-6 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-              <span className="heading-metallic font-heading font-bold text-white text-xl uppercase tracking-wide block">
-                {brandDNA.copy.formHeader}
-              </span>
-              <span className="text-white/50 text-[11px] font-body">{brandDNA.copy.formSubtext}</span>
-            </div>
+        {/* RIGHT — owner + branded-truck cutout floats over the composition.
+            The asset is landscape (1146×617) so the frame is aspect-driven
+            rather than fixed-height: it scales without ever distorting. */}
+        {/* The -mb on desktop drops the composition 44px past the column
+            baseline, so its bottom tucks ~28px behind the floating form (z-30)
+            instead of hovering above it — the two read as one composition.
+            The negative margin also keeps the taller image from adding height. */}
+        <div className="order-1 flex w-full items-center justify-center lg:order-2 lg:-mb-14 lg:w-[56%]">
+          <div className="relative w-full max-w-[560px] lg:max-w-[760px]">
+            <img
+              src="/owner-banner-img.webp"
+              alt={`${founder.name}, ${founder.title} of ${company.name}`}
+              width={1146}
+              height={617}
+              className="block h-auto w-full object-contain"
+              style={{ filter: 'drop-shadow(0 24px 40px rgba(8,12,20,0.45))' }}
+              loading="eager"
+            />
 
-            <form onSubmit={handleSubmit} className="p-4 grid grid-cols-2 gap-3">
-              {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
-              <input {...honeypotProps} />
-              <input
-                name="name"
-                className="form-input px-4 py-3 text-sm placeholder-white/40"
-                placeholder="Your Name"
-                style={glassInput}
-              />
-              <input
-                name="phone"
-                className="form-input px-4 py-3 text-sm placeholder-white/40"
-                placeholder="Phone Number"
-                type="tel"
-                style={glassInput}
-              />
-              <input
-                name="email"
-                className="form-input col-span-2 px-4 py-3 text-sm placeholder-white/40"
-                placeholder="Email Address"
-                type="email"
-                style={glassInput}
-              />
-              <select
-                name="service"
-                className="form-input col-span-2 px-4 py-3 text-sm"
-                style={{ ...glassInput, color: 'rgba(255,255,255,0.75)' }}
-              >
-                <option value="" style={{ background: '#1E293B', color: 'white' }}>How Can We Help?</option>
-                {brandDNA.services.map((s) => (
-                  <option key={s.slug} value={s.slug} style={{ background: '#1E293B', color: 'white' }}>{s.name}</option>
-                ))}
-              </select>
-              <input
-                name="address"
-                className="form-input col-span-2 px-4 py-3 text-sm placeholder-white/40"
-                placeholder="Property Address"
-                style={glassInput}
-              />
-              <input
-                name="message"
-                className="form-input col-span-2 px-4 py-3 text-sm placeholder-white/40"
-                placeholder="Brief message (optional)"
-                style={glassInput}
-              />
-              <div className="col-span-2">
-                <button
-                  type="submit"
-                  className="btn-gold w-full font-heading font-bold text-base uppercase tracking-widest py-3.5 text-white"
-                >
-                  {brandDNA.copy.buttonText} →
-                </button>
-                <p className="text-center text-white/35 font-body text-[10px] mt-2">
-                  No obligation. No pressure. We will never send you unsolicited messages.
-                </p>
-              </div>
-            </form>
+            {/* ── Owner card — pinned to the far right of the composition,
+                   clear of the floating form's top edge. Same OwnerCard
+                   component the About section uses, so the two stay identical. ── */}
+            <div className="absolute bottom-[10%] right-0 z-20 transition-transform duration-300 lg:bottom-[17%]">
+              <OwnerCard name={founder.name} role={founder.title} className="min-w-[210px]" />
+            </div>
           </div>
         </div>
       </div>

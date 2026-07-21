@@ -1,38 +1,59 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { brandDNA } from '../config/brand-dna';
+import { PRIMARY_SERVICES } from '../config/primary-services';
+import { QUOTE_HASH, goToQuote } from '../lib/scrollToQuote';
+import { isActivePath } from '../lib/activePath';
 
-// Rule 68 full build: footer links point at real page routes.
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+// Client-supplied Google listing URL (same one the top bar uses).
+const GOOGLE_LISTING_URL =
+  'https://www.google.com/search?q=High+Point+Renovation+%26+Roofing+WA&oq=High+Point+Renovation+%26+Roofing&gs_lcrp=EgZjaHJvbWUqCAgBEEUYJxg7MgYIABBFGDsyCAgBEEUYJxg7MggIAhAAGBYYHjINCAMQABiGAxiABBiKBTIHCAQQABjvBTIGCAUQRRg8MgYIBhBFGDwyBggHEEUYPdIBCDE0OThqMGo3qAIAsAIA&sourceid=chrome&source=chrome.ob&ie=UTF-8';
+
+// Company column. NOTE: /privacy-policy and /terms-conditions have no route in
+// App.jsx yet — they fall through to NotFoundPage until those pages are built.
 const companyLinks = [
   { label: 'Home', to: '/' },
-  { label: 'About Us', to: '/about' },
-  { label: 'Our Work', to: '/gallery' },
-  { label: 'Financing', to: '/financing' },
+  { label: 'About', to: '/about' },
+  { label: 'Gallery', to: '/gallery' },
   { label: 'Blog', to: '/blog' },
   { label: 'Contact', to: '/contact' },
+  { label: 'Privacy Policy', to: '/privacy-policy' },
+  { label: 'Terms & Conditions', to: '/terms-conditions' },
 ];
 
-// Per-service detail page links (full build).
-const serviceLinks = brandDNA.services.slice(0, 7).map((s) => ({
-  label: s.name.split(' ').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' '),
-  to: `/services/${s.slug}`,
-}));
+// Format the structured brand-dna hours into one display line. `hours.display`
+// is empty for this client, so the line is derived rather than authored.
+function formatHours() {
+  const w = brandDNA.hours?.weekday;
+  if (!w?.dayOfWeek?.length || !w.opens || !w.closes) return null;
+  const days = w.dayOfWeek;
+  const span = days.length > 1 ? `${days[0]} – ${days[days.length - 1]}` : days[0];
+  const to12 = (hhmm) => {
+    const [h, m] = String(hhmm).split(':').map(Number);
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 === 0 ? 12 : h % 12;
+    return `${hour}:${String(m).padStart(2, '0')} ${suffix}`;
+  };
+  return `${span}: ${to12(w.opens)} – ${to12(w.closes)}`;
+}
 
-const PhoneIcon = () => (
-  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+// ── Icons (1.6 stroke) ──
+const Ic = ({ children, className }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {children}
   </svg>
 );
+const PhoneIcon = (p) => <Ic {...p}><path d="M2.5 5.2c0-1 .8-1.8 1.8-1.8h2a1.8 1.8 0 0 1 1.8 1.5l.5 2.6a1.8 1.8 0 0 1-.9 1.9l-1.3.7a13.5 13.5 0 0 0 6 6l.7-1.3a1.8 1.8 0 0 1 1.9-.9l2.6.5a1.8 1.8 0 0 1 1.5 1.8v2c0 1-.8 1.8-1.8 1.8h-.9A15.7 15.7 0 0 1 2.5 6.1v-.9Z" /></Ic>;
+const MailIcon = (p) => <Ic {...p}><rect x="2.6" y="4.8" width="18.8" height="14.4" rx="2.4" /><path d="m3.4 6.6 8.6 5.8 8.6-5.8" /></Ic>;
+const PinIcon = (p) => <Ic {...p}><path d="M12 21.3s7-5.6 7-11.3a7 7 0 1 0-14 0c0 5.7 7 11.3 7 11.3Z" /><circle cx="12" cy="10" r="2.6" /></Ic>;
+const ClockIcon = (p) => <Ic {...p}><circle cx="12" cy="12" r="8.8" /><path d="M12 7.2V12l3.2 1.9" /></Ic>;
+const ChevronIcon = (p) => <Ic {...p}><path d="m9 5 7 7-7 7" /></Ic>;
 
-const MailIcon = () => (
-  <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
-  </svg>
-);
-
-const LocationIcon = () => (
-  <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+const HeartIcon = (props) => (
+  <svg viewBox="0 0 24 24" fill="#E5484D" aria-hidden="true" {...props}>
+    <path d="M12 21s-7.8-4.9-9.9-9.2A5.6 5.6 0 0 1 12 5.5a5.6 5.6 0 0 1 9.9 6.3C19.8 16.1 12 21 12 21Z" />
   </svg>
 );
 
@@ -45,199 +66,237 @@ const SOCIAL_ICON_MAP = {
   twitter: 'M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z',
   linkedin: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z',
   tiktok: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z',
+  google: 'M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09zM12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23zM5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62zM12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z',
 };
 
-const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+// Column heading — near-black navy at 15px so it clearly outranks the 14.5px
+// medium-grey links beneath it.
+const ColHeading = ({ children }) => (
+  <h4 className="mb-6 text-[15px] font-bold uppercase leading-none tracking-[0.14em]" style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}>
+    {children}
+  </h4>
+);
 
-export default function Footer() {
-  const scrollToForm = () => {
-    const el = document.getElementById('quote') || document.getElementById('cta-form');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-  };
+// Link row with a chevron that nudges right on hover — the only motion here.
+// The current page uses the SAME cue as the header: the darker primary-dark
+// label plus semibold weight, which hover never borrows (hover only lightens to
+// primary), so you can always tell where you are.
+const FooterLink = ({ to, children, active }) => (
+  <li>
+    <Link
+      to={to}
+      aria-current={active ? 'page' : undefined}
+      className={`group inline-flex items-center gap-2.5 text-[14.5px] leading-[1.5] transition-colors duration-300 ease-out ${
+        active
+          ? 'font-semibold text-[rgb(var(--primary-dark))]'
+          : 'font-medium text-ink/75 hover:text-[rgb(var(--primary))]'
+      }`}
+      style={{ fontFamily: INTER }}
+    >
+      <ChevronIcon className="h-3 w-3 flex-shrink-0 text-[rgb(var(--accent))] transition-transform duration-300 ease-out group-hover:translate-x-0.5" />
+      {children}
+    </Link>
+  </li>
+);
+
+/**
+ * Contact row — glass icon plate, then the label and value stacked beside it.
+ * No card, no background, no border: the row sits directly on the footer.
+ *
+ * `items-center` on the row plus a fixed 44px plate means the icon's centre
+ * always lands on the vertical midpoint of the label+value block, so every row
+ * aligns even when the address wraps to two lines. The icon is deliberately
+ * static — only the value text responds to hover, and only on linked rows.
+ */
+function ContactRow({ icon, label, value, href }) {
+  const Icon = icon;
+  const body = (
+    <>
+      <span
+        className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[13px]"
+        style={{
+          background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
+          border: '1px solid rgba(255,255,255,0.6)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55), 0 8px 18px -8px rgb(var(--accent) / 0.55)',
+          color: 'rgb(var(--on-accent))',
+        }}
+      >
+        <span aria-hidden className="pointer-events-none absolute inset-x-[3px] top-[3px] h-[42%] rounded-[10px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.45), transparent)' }} />
+        <Icon className="relative h-[19px] w-[19px]" />
+      </span>
+
+      <span className="min-w-0">
+        <span className="block text-[11px] font-bold uppercase leading-none tracking-[0.14em] text-ink/50" style={{ fontFamily: INTER }}>
+          {label}
+        </span>
+        <span
+          className="mt-2 block text-[14.5px] font-semibold leading-[1.55] text-[rgb(var(--primary-dark))] transition-colors duration-300 ease-out"
+          style={{ fontFamily: INTER }}
+        >
+          {value}
+        </span>
+      </span>
+    </>
+  );
+
+  const shell = 'group flex items-center gap-4 text-left';
 
   return (
-    <footer className="bg-navy">
-      {/* Gold top accent line */}
-      <div className="line-gold w-full" />
+    <li>
+      {href ? (
+        <a
+          href={href}
+          className={`${shell} rounded-[12px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-4`}
+        >
+          {body}
+        </a>
+      ) : (
+        <div className={shell}>{body}</div>
+      )}
+    </li>
+  );
+}
 
-      <div className="max-w-7xl mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-        {/* Brand col */}
-        <div className="lg:col-span-1">
-          <Link to="/" className="flex items-center gap-2 mb-3">
-            <img src="/logo.webp" alt={brandDNA.company.name} className="w-40 h-auto" />
-          </Link>
-          <p className="text-steel font-body text-xs leading-relaxed mb-4">
-            {brandDNA.company.tagline}
-          </p>
-          {/* Social icons. Render ONLY platforms with a non-empty URL set in
-              brandDNA.social. Icon stroke uses currentColor so the global
-              light-theme override paints them navy on white footer, gold on
-              hover. */}
-          <div className="flex items-center gap-3">
-            {Object.entries(brandDNA.social || {}).map(([platform, url]) => {
-              if (!url || !SOCIAL_ICON_MAP[platform]) return null;
-              return (
+export default function Footer() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Same rule the header uses, so the two never highlight different items.
+  const isActive = (to) => isActivePath(location.pathname, to);
+  // Service rows are leaves — see the `exact` note on isActivePath.
+  const isExact = (to) => isActivePath(location.pathname, to, { exact: true });
+  const hoursLine = formatHours();
+
+  // Facebook (and any other configured platform) plus the Google listing.
+  const socials = [
+    ...Object.entries(brandDNA.social || {}).filter(([k, url]) => url && SOCIAL_ICON_MAP[k]),
+    ['google', GOOGLE_LISTING_URL],
+  ];
+
+  return (
+    <footer className="relative overflow-hidden">
+      {/* ── Light base — the same pale wash the homepage sections use ── */}
+      <div
+        aria-hidden
+        className="absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(46% 42% at 8% 6%, rgba(110,143,196,0.16) 0%, transparent 62%),' +
+            'radial-gradient(42% 40% at 94% 14%, rgba(44,90,166,0.1) 0%, transparent 64%),' +
+            'linear-gradient(170deg, #FFFFFF 0%, #F8FAFC 55%, #EEF3FA 100%)',
+        }}
+      />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent) / 0.3), transparent)' }} />
+
+      <div className="site-container relative pb-10 pt-14 lg:pt-20">
+        {/* ════ Four columns ════ */}
+        <div className="grid grid-cols-1 gap-10 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4 lg:gap-12">
+          {/* Col 1 — brand */}
+          <div className="flex flex-col items-center sm:items-start">
+            <Link to="/" className="inline-block">
+              <img src="/logo.webp" alt={brandDNA.company.name} className="h-auto w-40" />
+            </Link>
+
+            <p className="mt-5 max-w-[34ch] text-[14.5px] leading-[1.75] text-ink/75" style={{ fontFamily: INTER }}>
+              {brandDNA.company.tagline}
+            </p>
+
+            {/* Dark outline chips — navy glyph on white with a navy ring, so
+                they read clearly on the light footer. Colour-only hover. */}
+            <div className="mt-7 flex items-center gap-3">
+              {socials.map(([platform, url]) => (
                 <a
                   key={platform}
                   href={url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label={platform}
-                  className="footer-social-icon w-8 h-8 flex items-center justify-center transition-colors bg-navy-slate"
-                  style={{ border: '1px solid rgba(100,116,139,0.25)' }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgb(var(--accent) / 0.15)';
-                    e.currentTarget.style.borderColor = 'rgb(var(--accent) / 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = '';
-                    e.currentTarget.style.borderColor = 'rgba(100,116,139,0.25)';
-                  }}
+                  aria-label={platform.charAt(0).toUpperCase() + platform.slice(1)}
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[rgb(var(--primary-dark))] transition-colors duration-300 ease-out hover:border-[rgb(var(--primary))] hover:bg-[rgb(var(--primary))] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2"
+                  style={{ border: '1.5px solid rgb(var(--primary-dark) / 0.55)' }}
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="h-[17px] w-[17px]" viewBox="0 0 24 24" fill="currentColor">
                     <path d={SOCIAL_ICON_MAP[platform]} />
                   </svg>
                 </a>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          {/* Col 2 — company */}
+          <div>
+            <ColHeading>Company</ColHeading>
+            <ul className="m-0 flex list-none flex-col items-center gap-3 p-0 sm:items-start">
+              {companyLinks.map((link) => (
+                <FooterLink key={link.label} to={link.to} active={isActive(link.to)}>{link.label}</FooterLink>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 3 — services. Same seven, same order, same hrefs as the header
+              dropdown and the homepage Services section (shared config). */}
+          <div>
+            <ColHeading>Services</ColHeading>
+            <ul className="m-0 flex list-none flex-col items-center gap-3 p-0 sm:items-start">
+              {PRIMARY_SERVICES.map((s) => (
+                <FooterLink key={s.name} to={s.href} active={isExact(s.href)}>{s.name}</FooterLink>
+              ))}
+            </ul>
+          </div>
+
+          {/* Col 4 — contact rows (no cards, no backgrounds) */}
+          <div>
+            <ColHeading>Contact</ColHeading>
+            <ul className="m-0 flex list-none flex-col gap-6 p-0 text-left">
+              <ContactRow icon={PhoneIcon} label="Call Us" value={brandDNA.contact.phone} href={`tel:${brandDNA.contact.phoneTelLink}`} />
+              <ContactRow icon={MailIcon} label="Email" value={<span className="break-all">{brandDNA.contact.email}</span>} href={`mailto:${brandDNA.contact.email}`} />
+              <ContactRow icon={PinIcon} label="Address" value={brandDNA.address.full} />
+              {hoursLine && <ContactRow icon={ClockIcon} label="Business Hours" value={hoursLine} />}
+            </ul>
           </div>
         </div>
 
-        {/* Services links */}
-        <div>
-          <h4 className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">SERVICES</h4>
-          <ul className="flex flex-col gap-2">
-            {serviceLinks.map((link) => (
-              <li key={link.label}>
-                <Link to={link.to} className="text-steel font-body text-xs hover:text-white transition-colors flex items-center gap-1.5">
-                  <span className="text-gold">+</span> {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Service Areas links. Rule 68: homepage-only build, every city
-            collapses to the ServiceAreas section anchor on the homepage
-            (per-city pages don't exist in the demo build). Slugify retained
-            for the post-sale full-build switch. */}
-        <div>
-          <h4 className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">SERVICE AREAS</h4>
-          <ul className="flex flex-col gap-2">
-            {(brandDNA.serviceAreas || []).slice(0, 12).map((city) => (
-              <li key={city}>
-                <Link
-                  to={`/service-areas/${slugify(city)}`}
-                  className="text-steel font-body text-xs hover:text-white transition-colors flex items-center gap-1.5"
-                >
-                  <span className="text-gold">+</span> {city}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Company links */}
-        <div>
-          <h4 className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">COMPANY</h4>
-          <ul className="flex flex-col gap-2">
-            {companyLinks.map((link) => (
-              <li key={link.label}>
-                <Link to={link.to} className="text-steel font-body text-xs hover:text-white transition-colors flex items-center gap-1.5">
-                  <span className="text-gold">+</span> {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        {/* Contact + CTA */}
-        <div>
-          <h4 className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">GET IN TOUCH</h4>
-          <div className="flex flex-col gap-3 mb-6">
-            <div className="flex items-start gap-2">
-              <LocationIcon />
-              <div className="text-steel font-body text-xs leading-relaxed">
-                {brandDNA.address.full}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <PhoneIcon />
-              <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="text-cool font-body text-xs hover:text-white transition-colors">
-                {brandDNA.contact.phone}
-              </a>
-            </div>
-            <div className="flex items-center gap-2">
-              <MailIcon />
-              <a href={`mailto:${brandDNA.contact.email}`} className="text-cool font-body text-xs hover:text-white transition-colors">
-                {brandDNA.contact.email}
-              </a>
-            </div>
-          </div>
-          <p className="font-heading font-bold text-white text-sm uppercase tracking-wide mb-3">
-            NEED ROOFING HELP? CALL TODAY.
+        {/* ════ CTA strip — dark navy bar, text and button on one baseline ════ */}
+        <div
+          className="mt-12 flex flex-col items-center justify-between gap-5 rounded-[20px] px-6 py-7 text-center sm:px-9 md:flex-row md:text-left lg:mt-16 lg:px-10"
+          style={{
+            background: 'linear-gradient(150deg, rgb(var(--primary)) 0%, rgb(var(--primary-dark)) 100%)',
+            boxShadow: '0 2px 6px -1px rgba(16,40,79,0.14), 0 20px 44px -24px rgba(16,40,79,0.5)',
+          }}
+        >
+          <p className="text-[19px] font-bold uppercase leading-[1.25] sm:text-[22px]" style={{ fontFamily: JOSEFIN, color: '#FFFFFF', letterSpacing: '0.01em' }}>
+            Need Roofing Help? Call Today.
           </p>
-          <button
-            onClick={scrollToForm}
-            className="btn-gold inline-block font-heading font-bold text-sm uppercase px-6 py-2.5 tracking-widest text-navy"
+          <a
+            href={QUOTE_HASH}
+            onClick={(e) => goToQuote(e, navigate)}
+            className="btn-gold inline-flex flex-shrink-0 items-center gap-2.5 px-7 py-3.5 text-[12.5px] uppercase tracking-[0.07em]"
+            style={{ color: 'rgb(var(--on-accent))', textShadow: '0 1px 2px rgba(0,0,0,0.18)', fontFamily: INTER }}
           >
             {brandDNA.copy.buttonText}
-          </button>
+          </a>
         </div>
       </div>
 
-      {/* Trust stack row — hidden entirely when no reviews and no license captured */}
-      {(brandDNA.reviews?.googleCount > 0 || brandDNA.reviews?.facebookCount > 0 || brandDNA.company?.licenseNumber) && (
-      <div className="border-t px-8 py-4" style={{ borderColor: 'rgba(100,116,139,0.15)' }}>
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 sm:gap-10 flex-wrap">
-          {brandDNA.reviews?.googleCount > 0 && (
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span className="text-steel font-body text-xs">{brandDNA.reviews.googleStat}</span>
-          </div>
-          )}
-          {brandDNA.reviews?.facebookCount > 0 && (
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="#1877F2">
-              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-            </svg>
-            <span className="text-steel font-body text-xs">{brandDNA.reviews.facebookStat}</span>
-          </div>
-          )}
-          {brandDNA.company?.licenseNumber && (
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 10c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.25-8.25-3.286z" />
-            </svg>
-            <span className="text-steel font-body text-xs">License #{brandDNA.company.licenseNumber}</span>
-          </div>
-          )}
-        </div>
-      </div>
-      )}
-
-      {/* Copyright bar */}
-      <div className="py-3 px-8 bg-navy-dark">
-        <div className="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
-          <p className="text-steel font-body text-xs">
+      {/* ════ Bottom bar — slightly darker for separation ════ */}
+      <div className="relative" style={{ background: '#EEF2F7', borderTop: '1px solid #d2d2d2' }}>
+        <div className="site-container flex flex-col items-center justify-between gap-3 py-5 text-center md:flex-row md:text-left">
+          <p className="text-[12.5px] text-ink/75" style={{ fontFamily: INTER }}>
             {brandDNA.copy.copyright}
           </p>
-          <p className="text-steel font-body text-xs">
-            Designed with love by{' '}
+
+          <p className="inline-flex flex-wrap items-center justify-center gap-x-1.5 text-[12.5px] text-ink/75 md:justify-end" style={{ fontFamily: INTER }}>
+            <span>Website Designed With</span>
+            <HeartIcon className="h-3.5 w-3.5" />
+            <span>By</span>
             <a
               href="https://kingcontractor.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gold hover:underline transition-colors"
-              aria-label="Visit King Contractor"
+              className="font-semibold underline underline-offset-2 transition-colors duration-300 ease-out hover:text-[rgb(var(--primary))]"
+              style={{ color: 'rgb(var(--primary-dark))' }}
             >
-              {brandDNA.credit.agency}
+              King Contractor Agency
             </a>
+            <span>– Building America&rsquo;s Most Trusted Roofing Brands.</span>
           </p>
         </div>
       </div>

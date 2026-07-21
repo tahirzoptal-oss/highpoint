@@ -1,21 +1,34 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
-import CTABanner from '../components/CTABanner';
-import Ticker from '../components/Ticker';
-import SEO from '../components/SEO';
-import QuoteForm from '../components/QuoteForm';
+import InnerBanner from '../components/InnerBanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
 import FAQAccordion from '../components/FAQAccordion';
+import ServiceAreas from '../components/ServiceAreas';
+import SEO from '../components/SEO';
+// Shared silo primitives — the same bands, headings, buttons, medallions,
+// body renderer and sticky rail the service detail pages use, so the two page
+// types read as one system.
+import { Band, SectionHead, CallNow, Medallion, CheckIcon, StickyRail, SiloBody } from '../components/SiloSection';
+import { PRIMARY_SERVICES } from '../config/primary-services';
 import { buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
+
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+const CARD =
+  'rounded-[18px] bg-white shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-20px_rgba(16,40,79,0.22)]';
+const CARD_BORDER = { border: '1px solid rgba(16,40,79,0.07)' };
 
 // Slugify a city name the same way the route's getStaticPaths enumerates
 // brandDNA.serviceAreas (lowercase, non-alphanumeric -> '-', trimmed).
 const slugifyCity = (name) =>
   String(name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
-// Title-case an UPPERCASE service-area string (e.g. "LEE'S SUMMIT" -> "Lee's Summit")
-// for the on-page heading / breadcrumb / SEO title when there is no rich
-// location_pages entry to pull a pre-formatted city name from. Capitalises the
-// first letter of each whitespace-separated word only, so a letter after an
+// Title-case an UPPERCASE service-area string (e.g. "LEE'S SUMMIT" -> "Lee's
+// Summit") for the on-page heading / breadcrumb / SEO title when there is no
+// rich location_pages entry to pull a pre-formatted city name from. Capitalises
+// the first letter of each whitespace-separated word only, so a letter after an
 // apostrophe stays lowercase ("Lee's", not "Lee'S").
 const titleCaseCity = (name) =>
   String(name)
@@ -24,87 +37,59 @@ const titleCaseCity = (name) =>
     .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
     .join(' ');
 
-// Render a copy-deck markdown body. Splits on double-newlines and detects:
-//  - "## " H2 headings    -> styled section heading
-//  - "- " bullet items    -> grouped bulleted list
-//  - "**...**" bold spans -> inline gold callout
-//  - everything else      -> paragraph
-function MarkdownBody({ body }) {
-  if (!body) return null;
-  const blocks = body.trim().split(/\n\s*\n/);
-  return (
-    <div className="prose-becker max-w-none">
-      {blocks.map((block, i) => {
-        const trimmed = block.trim();
-        if (trimmed.startsWith('## ')) {
-          return (
-            <h2 key={i} className="font-heading font-bold text-white uppercase text-2xl mt-10 mb-4 leading-tight">
-              {trimmed.replace(/^##\s+/, '').replace(/\*([^*]+)\*/g, '$1')}
-            </h2>
-          );
-        }
-        if (trimmed.startsWith('- ')) {
-          const items = trimmed.split(/\n- /).map((s) => s.replace(/^- /, '').trim()).filter(Boolean);
-          return (
-            <ul key={i} className="flex flex-col gap-2 mb-6">
-              {items.map((item, j) => (
-                <li key={j} className="flex items-start gap-3 text-cool text-sm leading-relaxed">
-                  <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-1 bg-navy-slate" style={{ border: '1px solid rgb(var(--accent) / 0.5)' }}>
-                    <svg className="w-2.5 h-2.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          );
-        }
-        return (
-          <p key={i} className="text-cool text-sm leading-relaxed mb-5">
-            {trimmed.split(/(\*[^*]+\*)/g).map((seg, k) =>
-              seg.startsWith('*') && seg.endsWith('*')
-                ? <em key={k} className="text-white font-semibold not-italic">{seg.slice(1, -1)}</em>
-                : seg
-            )}
-          </p>
-        );
-      })}
-    </div>
-  );
+/**
+ * Split a copy-deck body at its `## ` headings so each one becomes its own
+ * band, rather than the whole page reading as a single column of text. The
+ * copy is untouched — the heading line is simply promoted out of the body and
+ * rendered as the section's own heading.
+ *
+ * Returns [{ heading: string|null, body: string }]; the first entry carries
+ * whatever ran before the first heading (heading === null).
+ */
+function splitBodySections(body) {
+  if (!body) return [];
+  const out = [];
+  let current = { heading: null, lines: [] };
+  const flush = () => {
+    if (current.heading || current.lines.join('').trim()) out.push(current);
+  };
+  for (const line of body.trim().split('\n')) {
+    const m = /^##\s+(.+)$/.exec(line.trim());
+    if (m) {
+      flush();
+      current = { heading: m[1].replace(/\*([^*]+)\*/g, '$1').trim(), lines: [] };
+    } else {
+      current.lines.push(line);
+    }
+  }
+  flush();
+  return out.map((s) => ({ heading: s.heading, body: s.lines.join('\n').trim() }));
 }
 
 export default function LocationDetailPage() {
   const { slug } = useParams();
   const pages = brandDNA.location_pages || [];
-  // Prefer a rich location_pages entry. When none exists (the common case,
-  // where serviceAreas is just a flat list of city names), fall back to the
-  // matching service-area string so the prerendered /service-areas/:slug route
-  // still resolves to real content instead of redirecting.
+  // Prefer a rich location_pages entry. When none exists (a flat list of city
+  // names), fall back to the matching service-area string so the prerendered
+  // /service-areas/:slug route still resolves to real content.
   const richPage = pages.find((p) => p.slug === slug);
   const areaMatch = (brandDNA.serviceAreas || []).find((a) => slugifyCity(a) === slug);
   if (!richPage && !areaMatch) return <Navigate to="/service-areas" replace />;
 
   const cityName = richPage ? richPage.city : titleCaseCity(areaMatch);
-  const page = richPage || { city: cityName, headline: null, subheadline: null, body: '', faq: [], adjacent_cities: [] };
+  const page = richPage || { city: cityName, headline: null, subheadline: null, body: '', faq: [] };
 
-  const adjacent = (page.adjacent_cities || []).filter(Boolean);
   const faqItems = (page.faq || []).filter((f) => f && (f.q || f.question) && (f.a || f.answer));
 
   // Hero copy: prefer the entry headline, else read as a clean "Roofing in {City}, WA".
-  const heroTitle = page.headline || `Roofing in ${cityName}, WA`;
   const state = brandDNA.address?.state || 'WA';
+  const heroTitle = page.headline || `Roofing in ${cityName}, ${state}`;
 
-  // Resolve an adjacent-city slug to a display label: the matching rich page's
-  // city name when present, else title-case the slug ("benton-city" -> "Benton City").
-  const cityLabel = (citySlug) => {
-    const match = pages.find((p) => p.slug === citySlug);
-    if (match) return match.city;
-    return String(citySlug)
-      .split('-')
-      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
-      .join(' ');
-  };
+  // Each copy-deck heading becomes its own band, and the bands alternate
+  // white / pale blue down the page so the read breaks into scannable blocks.
+  const bodySections = splitBodySections(page.body);
+  let bandIdx = 0;
+  const nextTone = () => ((bandIdx++ % 2 === 0) ? 'white' : 'light');
 
   const jsonLd = [
     buildBreadcrumb([
@@ -123,100 +108,128 @@ export default function LocationDetailPage() {
         description={page.subheadline || undefined}
         jsonLd={jsonLd}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt={`${page.city} roofing contractor`}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.92) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <Link to="/service-areas" className="hover:text-white transition-colors">Service Areas</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">{page.city}</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">
-            {cityName}, {state}
-          </p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {heroTitle}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          {page.subheadline && (
-            <p className="text-white text-sm max-w-2xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>{page.subheadline}</p>
-          )}
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Link to="/contact" className="btn-gold font-heading font-bold text-sm uppercase px-6 py-3 tracking-widest text-navy">
-              {brandDNA.copy.buttonText}
-            </Link>
-            <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="btn-outline font-heading font-bold text-sm uppercase px-6 py-3 tracking-wider">
-              CALL {brandDNA.contact.phone}
-            </a>
-          </div>
-        </div>
-      </section>
 
-      {/* Body content */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            <div className="lg:col-span-2">
-              <MarkdownBody body={page.body} />
+      {/* ════ 1. Banner — shared InnerBanner component ════ */}
+      <InnerBanner
+        title={heroTitle}
+        subtitle={page.subheadline}
+        objectPosition="50% 40%"
+        breadcrumb={[{ label: 'Service Areas', to: '/service-areas' }, { label: cityName }]}
+      />
 
-              {adjacent.length > 0 && (
-                <div className="mt-12 pt-8" style={{ borderTop: '1px solid rgba(100,116,139,0.2)' }}>
-                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">
-                    NEARBY AREAS WE SERVE
-                  </p>
-                  <div className="flex flex-wrap gap-3">
-                    {adjacent.map((city) => {
-                      const citySlug = String(city).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                      return (
-                        <Link
-                          key={citySlug}
-                          to={`/service-areas/${citySlug}`}
-                          className="font-heading font-bold text-white text-xs uppercase tracking-wider px-4 py-2 transition-colors hover:text-gold"
-                          style={{ background: 'rgba(15,23,42,0.55)', border: '1px solid rgb(var(--accent) / 0.3)' }}
-                        >
-                          {cityLabel(citySlug)}
-                        </Link>
-                      );
-                    })}
+      {/* ════ 2 & 3. Global logo slider + brand belt ════ */}
+      <LogoSlider />
+      <BeltSlider />
+
+      {/* ════ SILO — the same 70/30 structure as the service pages: full-bleed
+             bands down the left, the quote form floating over the right third
+             and pinned until the last band ends. ════ */}
+      <div className="relative">
+
+        {/* ── One band per copy-deck heading. The first carries whatever ran
+               before the first heading and keeps the page title; the rest take
+               the heading straight out of the body. Backgrounds alternate
+               white / pale blue, and every band closes with the same left
+               aligned Call button. ── */}
+        {bodySections.map((section, i) => (
+          <Band key={section.heading || `intro-${i}`} tone={nextTone()}>
+            <SectionHead
+              eyebrow={section.heading ? undefined : `${cityName.toUpperCase()}, ${state}`}
+              title={section.heading || heroTitle}
+            />
+            {!section.heading && page.subheadline && (
+              <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+                {page.subheadline}
+              </p>
+            )}
+            <div className="mt-6"><SiloBody body={section.body} /></div>
+            <CallNow className="mt-2" />
+          </Band>
+        ))}
+
+        <StickyRail formId={`city-${slug}`} />
+
+        {/* ── What we do here — the same seven primary services the header and
+               footer list, each linking to its own page. ── */}
+        <Band tone={nextTone()}>
+          <SectionHead eyebrow="WHAT WE DO HERE" title={`OUR SERVICES IN ${cityName.toUpperCase()}`} />
+          <ul className="m-0 mt-8 flex list-none flex-col gap-4 p-0">
+            {PRIMARY_SERVICES.map((s) => (
+              <li key={s.name}>
+                <Link
+                  to={s.href}
+                  className={`group flex items-center gap-4 px-5 py-4 transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-[3px] hover:shadow-[0_2px_4px_rgba(16,40,79,0.05),0_22px_46px_-20px_rgba(16,40,79,0.3)] ${CARD}`}
+                  style={CARD_BORDER}
+                >
+                  <Medallion>
+                    <CheckIcon className="relative h-[18px] w-[18px]" />
+                  </Medallion>
+                  <span
+                    className="text-[15px] font-bold uppercase leading-[1.35] tracking-[0.04em] transition-colors duration-300 ease-out group-hover:text-[rgb(var(--accent))]"
+                    style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+                  >
+                    {s.name}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <CallNow className="mt-8" />
+        </Band>
+
+        {/* ── How it works — the shared company process ── */}
+        {brandDNA.process_steps.length > 0 && (
+          <Band tone={nextTone()}>
+            <SectionHead eyebrow="THE PROCESS" title="HOW IT WORKS" />
+            <ol className="m-0 mt-8 flex list-none flex-col gap-4 p-0">
+              {brandDNA.process_steps.map((step, i) => (
+                <li key={step.n ?? i} className={`flex items-start gap-4 p-5 ${CARD}`} style={CARD_BORDER}>
+                  <Medallion>
+                    <span className="relative text-[15px] font-bold leading-none" style={{ fontFamily: JOSEFIN }}>
+                      {String(step.n ?? i + 1).padStart(2, '0')}
+                    </span>
+                  </Medallion>
+                  <div className="min-w-0">
+                    <h3
+                      className="text-[15px] font-bold uppercase leading-[1.35] tracking-[0.04em]"
+                      style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>{step.body}</p>
                   </div>
-                </div>
-              )}
+                </li>
+              ))}
+            </ol>
+            <CallNow className="mt-8" />
+          </Band>
+        )}
 
-              {faqItems.length > 0 && (
-                <div className="mt-14">
-                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">
-                    {cityName} Roofing FAQ
-                  </p>
-                  <h2 className="font-heading font-bold text-white uppercase text-2xl mb-6 leading-tight">
-                    Questions From {cityName} Homeowners
-                  </h2>
-                  <FAQAccordion items={faqItems} />
-                </div>
-              )}
+        {/* ── FAQ ── */}
+        {faqItems.length > 0 && (
+          <Band tone={nextTone()}>
+            <SectionHead eyebrow={brandDNA.copy.faq.label} title={`QUESTIONS FROM ${cityName.toUpperCase()} HOMEOWNERS`} />
+            <div className="mt-8">
+              <FAQAccordion items={faqItems} />
             </div>
+            <CallNow className="mt-8" />
+          </Band>
+        )}
 
-            <div>
-              <div className="lg:sticky lg:top-24">
-                <QuoteForm formId={`city-${slug}`} title="Get Your Free Estimate" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Ticker />
-      <CTABanner />
+        {/* ── Where we work — the same stacked, bare, dark-variant section the
+               service pages close on. `mapQuery` points the existing map frame
+               at THIS city; nothing else about the component changes. This is
+               the closing section — there is no CTA banner, and "Nearby Areas
+               We Serve" is gone (this section already lists every city). ── */}
+        <Band tone="dark">
+          <ServiceAreas
+            variant="dark"
+            layout="stacked"
+            as="div"
+            mapQuery={`${cityName}, ${state}`}
+          />
+        </Band>
+      </div>
     </>
   );
 }

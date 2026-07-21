@@ -1,14 +1,19 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import InnerBanner from '../components/InnerBanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
+import Lightbox from '../components/Lightbox';
 import CTABanner from '../components/CTABanner';
 import SEO from '../components/SEO';
 import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
-// Derive gallery photos from brandDNA.previous_projects (populated by Stage 10.1
-// asset-copy step). Each entry is { filename, type, alt }. Videos are skipped
-// here; the lightbox shows still images only. previous_projects carry no
-// category data, so the gallery is a single clean grid with no filter UI.
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+
+// Derive gallery photos from brandDNA.previous_projects (populated by the
+// Stage 10.1 asset-copy step). Each entry is { filename, type, alt }. Videos
+// are skipped — the lightbox shows still images only. previous_projects carry
+// no category data, so the gallery is one clean grid with no filter UI.
 const photos = (brandDNA.previous_projects || [])
   .filter((p) => p && p.filename && p.type !== 'video')
   .map((p) => ({
@@ -17,21 +22,14 @@ const photos = (brandDNA.previous_projects || [])
     caption: p.caption || p.alt || `${brandDNA.company.name} project`,
   }));
 
+const ExpandIcon = (props) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" />
+  </svg>
+);
+
 export default function GalleryPage() {
-  const [lightbox, setLightbox] = useState(null);
-
-  const currentIndex = lightbox !== null ? photos.findIndex((p) => p.src === lightbox.src) : -1;
-
-  const openLightbox = (photo) => setLightbox(photo);
-  const closeLightbox = () => setLightbox(null);
-  const prevPhoto = () => {
-    const prev = (currentIndex - 1 + photos.length) % photos.length;
-    setLightbox(photos[prev]);
-  };
-  const nextPhoto = () => {
-    const next = (currentIndex + 1) % photos.length;
-    setLightbox(photos[next]);
-  };
+  const [openIndex, setOpenIndex] = useState(null);
 
   return (
     <>
@@ -40,136 +38,90 @@ export default function GalleryPage() {
         title={`Project Gallery | ${brandDNA.company.name}`}
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Gallery', path: '/gallery' }])}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt={`${brandDNA.company.name} Gallery`}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 35%' }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.88) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">Our Work</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{brandDNA.copy.gallery.label}</p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {brandDNA.copy.gallery.heading}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>
-            {brandDNA.copy.gallery.body}
-          </p>
-        </div>
-      </section>
 
-      {/* Grid */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8">
-          {/* Empty state when no project photos are supplied */}
-          {photos.length === 0 && (
-            <div className="text-center py-24 text-cool text-sm max-w-xl mx-auto">
-              <p className="font-heading font-bold text-white uppercase text-lg mb-3">PROJECT GALLERY COMING SOON</p>
-              <p>Call us for project photos and references from work in your area.</p>
-            </div>
-          )}
+      {/* ════ 1. Banner — shared InnerBanner component ════ */}
+      <InnerBanner
+        title="Our Completed Projects"
+        subtitle={brandDNA.copy.gallery.body}
+        objectPosition="50% 35%"
+        breadcrumb={[{ label: 'Our Work' }]}
+      />
 
-          {/* Photo grid */}
-          {photos.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {photos.map((photo, i) => (
-                <div
-                  key={`${photo.src}-${i}`}
-                  className="card-elevated-dark group cursor-pointer overflow-hidden"
-                  style={{ border: '1px solid rgba(100,116,139,0.25)' }}
-                  onClick={() => openLightbox(photo)}
-                >
-                  <div className="relative overflow-hidden" style={{ paddingBottom: '68%' }}>
-                    <img
-                      src={photo.src}
-                      alt={photo.alt}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: 'rgba(15,23,42,0.55)' }}>
-                      <div className="w-12 h-12 flex items-center justify-center" style={{ background: 'rgb(var(--accent) / 0.85)' }}>
-                        <svg className="w-5 h-5 text-navy" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-4 py-3 bg-navy-slate">
-                    <div className="text-xs font-bold text-white uppercase tracking-wide">{photo.caption}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      {/* ════ 2. Logo slider ════ */}
+      <LogoSlider />
+       <BeltSlider />
 
-      {/* Lightbox */}
-      {lightbox && (
+      {/* ════ 3. Gallery grid ════ */}
+      <section className="relative overflow-hidden py-14 lg:py-20">
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(6,12,24,0.95)' }}
-          onClick={closeLightbox}
-        >
-          <div className="relative max-w-4xl w-full" onClick={(e) => e.stopPropagation()}>
-            <button
-              className="absolute -top-12 right-0 text-white/70 hover:text-white transition-colors"
-              onClick={closeLightbox}
-            >
-              <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(46% 42% at 10% 8%, rgba(110,143,196,0.16) 0%, transparent 62%),' +
+              'radial-gradient(42% 40% at 92% 14%, rgba(44,90,166,0.1) 0%, transparent 64%),' +
+              'linear-gradient(170deg, #FFFFFF 0%, #F8FAFC 55%, #EEF3FA 100%)',
+          }}
+        />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent) / 0.3), transparent)' }} />
 
-            <div className="overflow-hidden" style={{ boxShadow: '0 40px 80px rgba(0,0,0,0.6)', border: '1px solid rgba(100,116,139,0.25)' }}>
-              <img
-                src={lightbox.src}
-                alt={lightbox.alt}
-                className="w-full object-contain"
-                style={{ maxHeight: '80vh' }}
-              />
+        <div className="site-container relative">
+          {photos.length === 0 ? (
+            <div className="mx-auto max-w-xl py-16 text-center">
+              <h2 className="section-h2 uppercase" style={{ color: 'rgb(var(--primary))' }}>
+                Project Gallery Coming Soon
+              </h2>
+              <p className="mt-4 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+                Call us for project photos and references from work in your area.
+              </p>
             </div>
-
-            <div className="flex items-center justify-between mt-4 px-2">
-              <div className="text-white/80 text-sm font-semibold">{lightbox.caption}</div>
-              <div className="text-white/50 text-xs">{currentIndex + 1} / {photos.length}</div>
-            </div>
-
-            {photos.length > 1 && (
-              <>
-                <button
-                  className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-14 w-10 h-10 flex items-center justify-center text-white transition-colors bg-navy-slate"
-                  style={{ border: '1px solid rgba(100,116,139,0.4)' }}
-                  onClick={prevPhoto}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-14 w-10 h-10 flex items-center justify-center text-white transition-colors bg-navy-slate"
-                  style={{ border: '1px solid rgba(100,116,139,0.4)' }}
-                  onClick={nextPhoto}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
+          ) : (
+            <ul className="m-0 grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+              {photos.map((photo, i) => (
+                <li key={`${photo.src}-${i}`}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenIndex(i)}
+                    aria-label={`Open image ${i + 1} of ${photos.length}: ${photo.caption}`}
+                    className="group relative block w-full overflow-hidden rounded-[18px] bg-white shadow-[0_1px_2px_rgba(16,40,79,0.05),0_12px_30px_-18px_rgba(16,40,79,0.24)] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(16,40,79,0.06),0_22px_44px_-20px_rgba(16,40,79,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2"
+                    style={{ border: '1px solid rgba(16,40,79,0.07)' }}
+                  >
+                    {/* Every tile shares one aspect ratio, so photos of any
+                        native size line up on a clean grid with no gaps. */}
+                    <span className="relative block aspect-[4/3] overflow-hidden">
+                      <img
+                        src={photo.src}
+                        alt={photo.alt}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-[600ms] ease-out group-hover:scale-[1.06]"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                      {/* navy veil + expand affordance, revealed on hover */}
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100 group-focus-visible:opacity-100"
+                        style={{ background: 'linear-gradient(200deg, rgba(11,28,58,0.55), rgba(8,18,38,0.4))' }}
+                      />
+                      <span
+                        aria-hidden
+                        className="pointer-events-none absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 scale-90 items-center justify-center rounded-full opacity-0 backdrop-blur-md transition-[opacity,transform] duration-300 ease-out group-hover:scale-100 group-hover:opacity-100 group-focus-visible:scale-100 group-focus-visible:opacity-100"
+                        style={{ background: 'rgba(255,255,255,0.92)', border: '1px solid rgba(255,255,255,0.7)', color: 'rgb(var(--primary))' }}
+                      >
+                        <ExpandIcon className="h-5 w-5" />
+                      </span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-      )}
+      </section>
 
+      <Lightbox items={photos} index={openIndex} onClose={() => setOpenIndex(null)} onIndex={setOpenIndex} />
+
+
+      {/* ════ 4. Global CTA ════ */}
       <CTABanner />
     </>
   );

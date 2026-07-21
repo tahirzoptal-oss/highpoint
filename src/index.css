@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
@@ -15,9 +15,9 @@
   --primary: 24 60 120;
   --primary-dark: 16 40 79;
   --primary-slate: 24 60 120;
-  --accent: 212 154 46;
-  --accent-light: 221 189 129;
-  --accent-dark: 125 89 21;
+  --accent: 44 90 166;
+  --accent-light: 110 143 196;
+  --accent-dark: 18 49 94;
   --neutral: 92 100 115;
   --neutral-dim: 92 100 115;
   --silver: 201 206 214;
@@ -55,6 +55,9 @@ html {
   padding: 0;
   font-optical-sizing: auto;
   font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  /* Every in-page CTA anchor (#get-free-quote etc.) eases instead of jumping.
+     The prefers-reduced-motion guard below resets this to `auto`. */
+  scroll-behavior: smooth;
 }
 
 /* Horizontal-overflow guard, MOBILE ONLY. overflow-x: clip on html/body breaks
@@ -277,7 +280,7 @@ html {
   color: rgb(var(--accent));
 }
 .empty-state-headline {
-  font-family: 'Oswald', 'Impact', sans-serif;
+  font-family: 'Josefin Sans', sans-serif;
   font-weight: 700;
   font-size: 1.5rem;
   line-height: 1.2;
@@ -327,7 +330,7 @@ html {
   color: color-mix(in srgb, rgb(var(--accent-dark)) 70%, rgb(var(--accent)) 30%);
 }
 .section-eyebrow-heading {
-  font-family: 'Oswald', 'Impact', sans-serif;
+  font-family: 'Josefin Sans', sans-serif;
   font-weight: 700;
   font-size: clamp(1.875rem, 4vw, 3rem);
   line-height: 1.05;
@@ -361,7 +364,7 @@ html {
   }
 }
 .composition-stat-hero .stat-num {
-  font-family: 'Oswald', 'Impact', sans-serif;
+  font-family: 'Josefin Sans', sans-serif;
   font-weight: 800;
   font-size: clamp(4rem, 12vw, 9rem);
   line-height: 0.9;
@@ -411,7 +414,7 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Oswald', Impact, sans-serif;
+  font-family: 'Josefin Sans', sans-serif;
   margin: 0;
 }
 
@@ -432,79 +435,113 @@ p { margin: 0; }
 .carousel-scroll::-webkit-scrollbar { display: none; }
 .carousel-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Gold/Accent CTA Button with static metallic glare ──
-   Uses per-client --accent / --accent-light / --accent-dark CSS variables
-   so the button takes the brand's actual accent color (copper for Becker,
-   classic gold for Capstone). The accent stops are derived in
-   tools/derive-accent-stops.py from the base accent color so the metallic
-   gradient still has light->base->dark->light progression. */
+/* ── Primary GLASS button — used site-wide via .btn-gold ──
+   A premium blue-glass CTA built only from the logo blues. Soft blue gradient
+   body, a semi-gloss highlight across the top (::before, painted behind the
+   label), an inner top highlight + inner bottom shadow for depth, a thin
+   light-blue border, ~14px corners and a soft blue outer glow. Hover lifts +
+   brightens the glass; active presses in. Inter, high-contrast white label.
+   (Class name kept as .btn-gold so every existing CTA inherits the new style.) */
 .btn-gold {
   position: relative;
   overflow: hidden;
-  background: linear-gradient(
-    160deg,
-    rgb(var(--accent-light)) 0%,
-    rgb(var(--accent)) 35%,
-    rgb(var(--accent-dark)) 62%,
-    rgb(var(--accent-light)) 100%
-  );
-  /* Rule 65: text color = --on-accent (computed by inject-theme.mjs based on
-     accent luminance). White text on yellow-accent brands renders at 1.00:1
-     (invisible); dark text on royal-blue brands renders at 1.21:1 (also
-     bad). --on-accent picks whichever side has higher contrast against the
-     brand accent. Per-client overrides (e.g. a brand that wants forced-white
-     CTA labels) belong in that client's src/custom.css, NOT here: hardcoding a
-     color in the shared template makes light-accent CTAs invisible. */
+  border-radius: 14px;
+  border: 1px solid rgb(var(--accent-light));
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 600;
   color: rgb(var(--on-accent));
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
-  box-shadow: 0 5px 0 rgb(var(--accent-dark)), 0 7px 16px rgba(0,0,0,0.35);
+  text-shadow: 0 1px 2px rgba(16, 40, 79, 0.35);
+  background: linear-gradient(
+    180deg,
+    rgb(var(--accent-light)) 0%,
+    rgb(var(--accent)) 48%,
+    rgb(var(--primary)) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),           /* inner top highlight */
+    inset 0 -9px 16px -10px rgba(16, 40, 79, 0.5),      /* inner bottom shadow (depth) */
+    0 6px 16px -6px rgba(44, 90, 166, 0.5),             /* soft blue outer shadow */
+    0 2px 5px rgba(16, 40, 79, 0.16);
   transform: translateY(0);
-  /* Wave 2 (research bake): explicit transition-property (no transition:all)
-   * + premium-out easing curve + asymmetric enter/exit duration. */
-  transition-property: transform, box-shadow;
-  transition-duration: 200ms;
+  transition-property: transform, box-shadow, filter;
+  transition-duration: 280ms;
   transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
   will-change: transform;
 }
-.btn-gold::after {
+/* Semi-gloss glass reflection across the top, behind the label. */
+.btn-gold::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  height: 48%;
+  border-radius: 13px 13px 45% 45% / 13px 13px 26px 26px;
   background: linear-gradient(
-    110deg,
-    rgba(255, 255, 255, 0.32) 0%,
-    rgba(255, 255, 255, 0.16) 12%,
-    transparent 26%,
-    transparent 74%,
-    rgba(255, 255, 255, 0.16) 88%,
-    rgba(255, 255, 255, 0.28) 100%
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.16) 55%,
+    rgba(255, 255, 255, 0) 100%
   );
+  opacity: 0.9;
   pointer-events: none;
+  transition: opacity 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-gold:hover {
-  box-shadow: 0 3px 0 rgb(var(--accent-dark)), 0 4px 10px rgba(0,0,0,0.28);
-  transform: translateY(2px);
+  transform: translateY(-3px);
+  filter: brightness(1.06) saturate(1.03);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    inset 0 -9px 16px -10px rgba(16, 40, 79, 0.45),
+    0 14px 28px -8px rgba(44, 90, 166, 0.6),            /* stronger blue glow */
+    0 5px 12px rgba(16, 40, 79, 0.2);
 }
+.btn-gold:hover::before { opacity: 1; }
 .btn-gold:active {
-  box-shadow: 0 1px 0 rgb(var(--accent-dark)), 0 2px 6px rgba(0,0,0,0.22);
-  transform: translateY(4px);
+  transform: translateY(-1px);
+  filter: brightness(0.99);
+  box-shadow:
+    inset 0 2px 6px rgba(16, 40, 79, 0.32),             /* pressed-in inner shadow */
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 10px -4px rgba(44, 90, 166, 0.42);
+}
+.btn-gold:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 0 3px rgba(110, 143, 196, 0.55),
+    0 6px 16px -6px rgba(44, 90, 166, 0.5);
 }
 
-/* ── Outline Secondary Button ── */
+/* ── Secondary button (.btn-outline) — white with a deep-blue edge that fills
+   with the same blue glass gradient on hover. ── */
 .btn-outline {
-  border: 1px solid #C0C6CF;
-  color: white;
-  background: transparent;
-  transition: background 0.15s ease;
+  position: relative;
+  border-radius: 14px;
+  border: 1.5px solid rgb(var(--primary));
+  background-color: #ffffff;
+  color: rgb(var(--primary));
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-weight: 600;
+  transition-property: transform, box-shadow, background-color, background-image, color, border-color;
+  transition-duration: 280ms;
+  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  color: rgb(var(--on-accent));
+  border-color: rgb(var(--accent-light));
+  background-image: linear-gradient(180deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 48%, rgb(var(--primary)) 100%);
+  text-shadow: 0 1px 2px rgba(16, 40, 79, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 12px 24px -8px rgba(44, 90, 166, 0.5);
 }
 .btn-outline:active {
-  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(0);
+  box-shadow: inset 0 2px 6px rgba(16, 40, 79, 0.3);
+}
+.btn-outline:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(110, 143, 196, 0.5);
 }
 
 /* ── Thin accent lines ── */
@@ -519,6 +556,201 @@ p { margin: 0; }
   height: 1px;
   background: #C0C6CF;
   opacity: 0.4;
+}
+
+/* Lightbox image fade-in. Keyed per image in Lightbox.jsx, so swapping to the
+   next photo replays this instead of cutting hard. */
+.lightbox-image {
+  animation: lightboxFade 320ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes lightboxFade {
+  from { opacity: 0; transform: scale(0.985); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ================================================================
+   Global section-heading scale (.section-h2).
+   The homepage H2 is the site-wide standard, so every section heading on
+   every page uses this one rule — size, weight, line-height and tracking are
+   identical from the homepage through every inner page, and scale together on
+   tablet and mobile via the clamp.
+   Colour is deliberately NOT set here: sections keep their own (navy on light
+   surfaces, white on dark). Inline `style` beats this rule, so a heading that
+   still sets fontSize/lineHeight inline will not pick it up.
+   ================================================================ */
+.section-h2 {
+  font-family: 'Josefin Sans', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: clamp(26px, 3vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+}
+
+/* ================================================================
+   Global site container — 1440px max-width, 90% width, centered.
+   Applied to the top bar, main navigation and hero so the whole header
+   locks to the site grid (overrides the old ~1280px feel).
+   ================================================================ */
+.site-container {
+  width: 90%;
+  max-width: 1440px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ================================================================
+   .sticky-rail — the single offset every sticky quote form uses.
+
+   The header is `sticky top-0`, so a rail pinned any higher than the
+   header's own height scrolls underneath it. That height is fixed (no
+   scroll-shrink):
+       TopBar   46px   (.topbar-geo — hidden below lg)
+     + Navbar   88px   (lg:h-[88px]; h-20 below lg)
+     ------------------
+       total   134px
+   plus a 24px breathing gap = 158px.
+
+   Sticky engages at lg and up, which is exactly the breakpoint where the
+   top bar appears, so one value is correct at every sticky width. Below
+   lg the rule does not apply at all and the rail stays in normal flow —
+   mobile behaviour is unchanged. Update this ONE value if the header
+   height ever changes.
+   ================================================================ */
+@media (min-width: 1024px) {
+  .sticky-rail {
+    position: sticky;
+    top: 158px;
+  }
+}
+
+/* ================================================================
+   Reusable logo marquee (LogoSlider) — infinite, seamless, GPU-friendly.
+   The track holds the logo list TWICE and translates by exactly -50%, so the
+   restart is invisible. Pauses on hover; honors prefers-reduced-motion via the
+   global guard. Speed is set per-instance with --logo-marquee-duration.
+   ================================================================ */
+.logo-marquee {
+  overflow: hidden;
+}
+.logo-marquee-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  animation: logoMarquee var(--logo-marquee-duration, 34s) linear infinite;
+  will-change: transform;
+}
+.logo-marquee:hover .logo-marquee-track,
+.logo-marquee:focus-within .logo-marquee-track {
+  animation-play-state: paused;
+}
+@keyframes logoMarquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+/* ================================================================
+   Thin blue GRADIENT hairline for frosted-glass cards (.glass-ring).
+   The usual `padding-box / border-box` two-layer background trick only works
+   when the card body is opaque — with a semi-transparent frosted body the
+   border gradient bleeds through and tints the whole card. So the ring is
+   painted by a masked ::before instead: a 1px gradient frame punched hollow
+   with mask-composite. Radius is inherited, so any rounding works.
+   Usage: <div class="glass-ring rounded-[22px]" style="background:rgba(...)">
+   ================================================================ */
+.glass-ring {
+  position: relative;
+}
+.glass-ring::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    150deg,
+    rgb(var(--accent-light)) 0%,
+    rgb(var(--accent) / 0.32) 42%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ================================================================
+   Brand belt marquee (BeltSlider) — shares the logoMarquee keyframes but
+   deliberately has NO hover/focus pause rule: the belt is a decorative brand
+   band, so it runs continuously at a constant speed. Own promotion hints so it
+   composites on the GPU and never repaints the band while scrolling. Speed is
+   set per-instance with --belt-marquee-duration.
+   ================================================================ */
+.belt-marquee {
+  overflow: hidden;
+}
+.belt-marquee-track {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  animation: logoMarquee var(--belt-marquee-duration, 30s) linear infinite;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+/* Thin, on-brand scrollbar for the testimonial review text (equal-height cards
+   keep long reviews inside a subtle internal scroll area). */
+.review-scroll { scrollbar-width: thin; scrollbar-color: rgba(16, 40, 79, 0.22) transparent; }
+.review-scroll::-webkit-scrollbar { width: 5px; }
+.review-scroll::-webkit-scrollbar-thumb { background: rgba(16, 40, 79, 0.18); border-radius: 3px; }
+.review-scroll::-webkit-scrollbar-thumb:hover { background: rgba(16, 40, 79, 0.3); }
+.review-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* ================================================================
+   Architectural header — geometric top bar + overlapping centered logo
+   The top bar is built from two navy clip-path polygons (::before = left,
+   ::after = right). Their angled inner edges lean toward the centre and stop
+   short of it, leaving a white "cradle" gap that the centered logo sits in —
+   the logo straddles the top bar and the nav below. Pure CSS, no images/SVG.
+   ================================================================ */
+.topbar-geo {
+  position: relative;
+  background: #ffffff; /* the centre gap between the navy wings cradles the logo */
+}
+.topbar-geo::before,
+.topbar-geo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: calc(50% - 86px);
+  /* layered background: a 3px light→mid blue accent line on top of the navy body */
+  background:
+    linear-gradient(180deg, rgb(var(--accent-light)) 0, rgb(var(--accent)) 3px, transparent 3px),
+    linear-gradient(100deg, rgb(var(--primary-dark)) 0%, rgb(var(--primary)) 62%, rgb(var(--primary-dark)) 100%);
+}
+/* Left wing: straight outer edge, inner edge angles in toward the logo. */
+.topbar-geo::before {
+  left: 0;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 34px) 100%, 0 100%);
+}
+/* Right wing: mirror. */
+.topbar-geo::after {
+  right: 0;
+  clip-path: polygon(34px 0, 100% 0, 100% 100%, 0 100%);
+}
+/* Tablet: pull the wings a touch closer so the composition stays tight. */
+@media (max-width: 1279px) {
+  .topbar-geo::before,
+  .topbar-geo::after { width: calc(50% - 70px); }
+}
+
+/* The overlapping logo gets a soft lift so it reads as a distinct badge
+   straddling the navy top bar and the white nav (subtle, not a heavy shadow). */
+.header-logo {
+  filter: drop-shadow(0 5px 10px rgba(16, 40, 79, 0.16));
 }
 
 /* ── Card depth / lift ──
@@ -723,24 +955,32 @@ p { margin: 0; }
 
 
 
-/* Outline button text was white-on-dark. In light theme, navy text + navy border. */
+/* Secondary button on light surfaces: white fill, deep-blue edge + text, that
+   fills with the blue glass gradient on hover (matches the primary glass CTA). */
 [data-theme-mode="light"] .btn-outline {
-  border: 1px solid rgba(15, 23, 42, 0.3);
+  border: 1.5px solid rgb(var(--primary));
   color: rgb(var(--primary));
+  background-color: #ffffff;
 }
 [data-theme-mode="light"] .btn-outline:hover {
-  background: rgba(15, 23, 42, 0.05);
+  color: rgb(var(--on-accent));
+  border-color: rgb(var(--accent-light));
+  background-image: linear-gradient(180deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 48%, rgb(var(--primary)) 100%);
 }
-/* But inside a theme-keep-dark section (dark hero photos on inner pages), the
-   outline button sits on a dark photo, so it must stay white with a light
-   border, not the light-theme navy which reads as invisible. Higher specificity
-   than the light-theme rule above so it wins. */
+/* Inside a theme-keep-dark section (dark hero photos on inner pages), the
+   outline button sits on a dark photo, so it stays white with a light border
+   and a subtle white fill on hover — not the light-surface blue glass. */
 [data-theme-mode="light"] .theme-keep-dark .btn-outline {
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.6);
+  background-color: transparent;
+  background-image: none;
 }
 [data-theme-mode="light"] .theme-keep-dark .btn-outline:hover {
-  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.85);
+  background-color: rgba(255, 255, 255, 0.12);
+  background-image: none;
 }
 
 /* Vision/Mission cards on Founder section had hardcoded gradient bg in JSX
@@ -779,7 +1019,10 @@ p { margin: 0; }
 }
 @media (min-width: 1024px) {
   .hero-section {
-    min-height: clamp(540px, 80vh, 780px);
+    /* Compact, above-the-fold hero. Lowered again so the row's own content
+       (compact trust badges + larger owner composition) sets the height
+       instead of the floor padding it out. */
+    min-height: clamp(420px, 54vh, 580px);
   }
 }
 
@@ -892,6 +1135,326 @@ p { margin: 0; }
   background-color: #FAFBFC !important;
   border: 1px solid rgba(15, 23, 42, 0.2) !important;
   color: rgb(var(--primary)) !important;
+}
+
+/* ── .cta-field — softer fields for the CTA banner's white form panel ──
+   The generic light-theme rules above use !important AND carry (0,4,0)
+   specificity (the :not() argument counts), so an inline style on the input
+   cannot soften them. These rules add one more class to reach (0,5,0) and win
+   cleanly. The :focus variant has to be re-declared at the same weight or the
+   base border here would outrank the shared .form-input:focus ring. */
+[data-theme-mode="light"] .cta-field.form-input:not(.theme-keep-dark .form-input) {
+  background-color: #F8FAFC !important;
+  border: 1px solid #D8DEE9 !important;
+  color: rgb(var(--ink)) !important;
+  height: 50px;
+}
+/* Selects honour `height`, but a textarea must not be pinned to 50px. */
+[data-theme-mode="light"] textarea.cta-field.form-input:not(.theme-keep-dark .form-input) {
+  height: auto;
+}
+[data-theme-mode="light"] .cta-field.form-input:not(.theme-keep-dark .form-input)::placeholder {
+  color: rgba(15, 23, 42, 0.6) !important;
+  opacity: 1;
+}
+[data-theme-mode="light"] .cta-field.form-input:not(.theme-keep-dark .form-input):focus {
+  border-color: rgb(var(--primary)) !important;
+  box-shadow: 0 0 0 4px rgb(var(--accent) / 0.18);
+  outline: none;
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
 }
 
 :root[data-theme-mode="dark"] .btn-gold,
