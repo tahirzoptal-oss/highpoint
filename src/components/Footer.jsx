@@ -188,9 +188,9 @@ export default function Footer() {
 
       <div className="site-container relative pb-10 pt-14 lg:pt-20">
         {/* ════ Four columns ════ */}
-        <div className="grid grid-cols-1 gap-10 text-center sm:grid-cols-2 sm:text-left lg:grid-cols-4 lg:gap-12">
+        <div className="grid grid-cols-1 gap-10 text-left sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
           {/* Col 1 — brand */}
-          <div className="flex flex-col items-center sm:items-start">
+          <div className="flex flex-col items-start">
             <Link to="/" className="inline-block">
               <img src="/logo.webp" alt={brandDNA.company.name} className="h-auto w-60" />
             </Link>
@@ -223,7 +223,7 @@ export default function Footer() {
           {/* Col 2 — company */}
           <div>
             <ColHeading>Company</ColHeading>
-            <ul className="m-0 flex list-none flex-col items-center gap-3 p-0 sm:items-start">
+            <ul className="m-0 grid list-none grid-cols-2 gap-x-5 gap-y-3 p-0 sm:flex sm:flex-col sm:items-start sm:gap-3">
               {companyLinks.map((link) => (
                 <FooterLink key={link.label} to={link.to} active={isActive(link.to)}>{link.label}</FooterLink>
               ))}
@@ -234,7 +234,7 @@ export default function Footer() {
               dropdown and the homepage Services section (shared config). */}
           <div>
             <ColHeading>Services</ColHeading>
-            <ul className="m-0 flex list-none flex-col items-center gap-3 p-0 sm:items-start">
+            <ul className="m-0 grid list-none grid-cols-2 gap-x-5 gap-y-3 p-0 sm:flex sm:flex-col sm:items-start sm:gap-3">
               {PRIMARY_SERVICES.map((s) => (
                 <FooterLink key={s.name} to={s.href} active={isExact(s.href)}>{s.name}</FooterLink>
               ))}
@@ -277,7 +277,7 @@ export default function Footer() {
 
       {/* ════ Bottom bar — slightly darker for separation ════ */}
       <div className="relative" style={{ background: '#EEF2F7', borderTop: '1px solid #d2d2d2' }}>
-        <div className="site-container flex flex-col items-center justify-between gap-3 pt-5 pb-10 lg:py-5 text-center md:flex-row md:text-left">
+        <div className="site-container flex flex-col items-center justify-between gap-3 pt-5 pb-6 lg:py-5 text-center md:flex-row md:text-left">
           <p className="text-[12.5px] text-ink/75" style={{ fontFamily: INTER }}>
             {brandDNA.copy.copyright}
           </p>

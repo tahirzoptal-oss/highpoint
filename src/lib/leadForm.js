@@ -82,13 +82,43 @@ export function useLeadForm(formId = 'lead') {
 
   function onSubmit(e, onLead) {
     e.preventDefault();
-    const raw = Object.fromEntries(new FormData(e.currentTarget).entries());
+    const form = e.currentTarget;
+    const raw = Object.fromEntries(new FormData(form).entries());
     const honeypotHit = !!(honeypotRef.current && honeypotRef.current.value);
-    const { fields, valid } = validateLead(raw);
+    const { fields, errors, valid } = validateLead(raw);
 
-    // Fail silently: bots and invalid input still land on the thank-you page,
-    // but no lead is recorded. Clean, valid submissions fire onLead.
-    if (!honeypotHit && valid && !looksLikeSpam(fields) && typeof onLead === 'function') {
+    // ── Validation gate ──
+    // The browser's own constraint check runs before `submit` fires, so an
+    // empty `required` field never reaches this handler. What DOES reach it is
+    // input the browser accepts but validateLead rejects — a phone with too few
+    // digits, an address-shaped email. Surface those on the offending field
+    // with the native bubble and stop, so no one is bounced to the thank-you
+    // page having submitted nothing usable.
+    //
+    // Bot signals (honeypot, link-stuffing) are deliberately NOT surfaced: they
+    // still fail silently to the thank-you page so a bot gets no feedback.
+    if (!valid) {
+      for (const name of Object.keys(errors)) {
+        const field = form.elements[name];
+        if (!field || typeof field.setCustomValidity !== 'function') continue;
+        field.setCustomValidity(
+          name === 'email'
+            ? 'Please enter a valid email address.'
+            : 'Please enter a valid phone number.'
+        );
+        // Clear on the next edit so the message never sticks to a fixed field.
+        field.addEventListener('input', function clear() {
+          field.setCustomValidity('');
+          field.removeEventListener('input', clear);
+        });
+      }
+      if (typeof form.reportValidity === 'function') form.reportValidity();
+      return;
+    }
+
+    // Clean, valid submissions fire onLead. Bots reach the thank-you page with
+    // no lead recorded and no signal that they were caught.
+    if (!honeypotHit && !looksLikeSpam(fields) && typeof onLead === 'function') {
       onLead({ ...fields, formId });
     }
     navigate('/thank-you');

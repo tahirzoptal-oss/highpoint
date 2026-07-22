@@ -53,9 +53,9 @@ export default function LeadFormBanner() {
             className="grid grid-cols-1 gap-2.5 md:grid-cols-3 md:gap-3.5 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto] lg:items-stretch"
           >
             <input {...honeypotProps} />
-            <input name="name" placeholder="Name" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
-            <input name="email" type="email" placeholder="Email" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
-            <input name="phone" type="tel" placeholder="Phone" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="name" required aria-required="true" placeholder="Name*" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="email" type="email" required aria-required="true" placeholder="Email*" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="phone" type="tel" required aria-required="true" placeholder="Phone*" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
             <input name="address" placeholder="Address" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
             <input name="service" placeholder="How Can We Assist?" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
             <button

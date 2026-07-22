@@ -514,14 +514,14 @@ p { margin: 0; }
 }
 
 /* ── .btn-flat — opt-in modifier for .btn-gold ──
-   Strips ONLY the lift and the shadows (outer glow and the inset depth pair).
-   Background gradient, gloss ::before, text colour, border, radius, font and
-   padding are all inherited unchanged, and hover still brightens.
+   The MOBILE STICKY CTA BAR variant. Strips the lift, the shadows (outer glow
+   and the inset depth pair) and the corner radius. Background gradient, gloss
+   ::before, text colour, border, font and padding are inherited unchanged, and
+   hover still brightens.
 
-   Used by the mobile sticky CTA bar, where the button is edge-to-edge inside a
-   bar that carries its own shadow — a floating, lifting button reads as a
-   mistake there. Adding the class is the only way to get this treatment, so no
-   other .btn-gold on the site is affected.
+   The button there is edge-to-edge in a full-width bar that carries its own
+   shadow, so a floating, rounded button reads as a mistake. Adding the class is
+   the only way to get this treatment, so no other .btn-gold is affected.
 
    `:hover` / `:active` are listed at (0,3,0) so they beat the base rules
    outright rather than relying on source order. */
@@ -531,6 +531,11 @@ p { margin: 0; }
 .btn-gold.btn-flat:focus-visible {
   transform: none;
   box-shadow: none;
+  border-radius: 0;
+}
+/* The gloss ::before inherits the rounded corners from the base rule. */
+.btn-gold.btn-flat::before {
+  border-radius: 0;
 }
 /* Keyboard focus must stay visible once the box-shadow ring is gone. */
 .btn-gold.btn-flat:focus-visible {

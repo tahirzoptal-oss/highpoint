@@ -95,10 +95,15 @@ export default function ServiceAreasPage() {
              global CTA banner closes the page. No sticky sidebar here — that
              belongs to the individual service / service-area pages. ════ */}
 
-      {/* ── Who we cover ── */}
+      {/* ── Who we cover ──
+             The copy is capped at a readable measure, so left-aligning it in a
+             1440px container stranded the whole right half of the row empty.
+             Centring the block inside the standard container balances that
+             whitespace without touching the container width, the horizontal
+             padding, the copy or the type. ── */}
       <Band tone="white" width="full">
-        <SectionHead eyebrow="OUR SERVICE AREA" title="WHERE WE WORK" />
-        <Prose>
+        <div className="mx-auto flex w-full max-w-[74ch] flex-col items-center text-center">
+          <SectionHead eyebrow="OUR SERVICE AREA" title="WHERE WE WORK" align="center" />
           <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
             We serve homeowners across the Tri-Cities and the nearby towns of Eastern Washington. Not sure if you&apos;re covered? Just call and we&apos;ll let you know.
           </p>
@@ -106,7 +111,7 @@ export default function ServiceAreasPage() {
             High Point is a local contractor, not a storm-chasing crew that rolls into town after a big wind and disappears before winter. {founderLabel || 'The owner'} lives and works here, so you get a real name, a real number, and a reputation to protect on every job.
           </p>
           <p
-            className="mt-6 rounded-[14px] p-4 text-[14px] font-medium leading-[1.7]"
+            className="mt-6 w-full rounded-[14px] p-4 text-[14px] font-medium leading-[1.7]"
             style={{ fontFamily: INTER, background: 'rgb(var(--accent) / 0.08)', border: '1px solid rgb(var(--accent) / 0.2)', color: 'rgb(var(--ink) / 0.8)' }}
           >
             Don&apos;t see your city? Call us at{' '}
@@ -115,8 +120,8 @@ export default function ServiceAreasPage() {
             </a>{' '}
             and we&apos;ll confirm if you&apos;re in our service area.
           </p>
-        </Prose>
-        <CallNow className="mt-8" />
+          <CallNow className="mt-8" />
+        </div>
       </Band>
 
       {/* ── What coverage means ── */}

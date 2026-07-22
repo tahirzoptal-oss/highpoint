@@ -36,14 +36,14 @@ export default function OwnerCard({ name, role, statValue, statLabel, className 
       <div className="relative flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div
-            className="truncate sm:text-[18px] font-bold uppercase leading-none"
+            className="truncate text-[14px] sm:text-[18px] font-bold uppercase leading-none"
             style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))', letterSpacing: '0.005em' }}
           >
             {name}
           </div>
 
           <div
-            className="truncate text-[11px] mt-1 sm:mt-2 font-semibold uppercase leading-none tracking-[0.16em]"
+            className="truncate text-[9px] sm:text-[11px] mt-1 sm:mt-2 font-semibold uppercase leading-none tracking-[0.16em]"
             style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}
           >
             {role}

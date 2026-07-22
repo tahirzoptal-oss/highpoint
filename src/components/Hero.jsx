@@ -158,11 +158,11 @@ export default function Hero() {
             {trustFeatures.map((claim) => {
               const Icon = trustIcon(claim);
               return (
-                <div key={claim} className="flex items-center gap-2.5 rounded-xl px-3 py-1.5" style={lightCard}>
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full" style={{ background: 'rgb(var(--accent) / 0.1)', color: 'rgb(var(--accent))' }}>
+                <div key={claim} className="flex items-center gap-1.5 sm:gap-2.5 rounded-xl px-3 py-1.5" style={lightCard}>
+                  <span className="flex h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 items-center justify-center rounded-full" style={{ background: 'rgb(var(--accent) / 0.1)', color: 'rgb(var(--accent))' }}>
                     <Icon className="h-[18px] w-[18px]" />
                   </span>
-                  <span className="pr-0.5 text-[13px] font-semibold leading-tight text-ink" style={{ fontFamily: INTER }}>{claim}</span>
+                  <span className="pr-0.5 text-[12px] sm:text-[13px] font-semibold leading-tight text-ink" style={{ fontFamily: INTER }}>{claim}</span>
                 </div>
               );
             })}

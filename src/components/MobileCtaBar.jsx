@@ -37,7 +37,7 @@ export default function MobileCtaBar() {
       <div className="grid grid-cols-2" style={{ borderTop: '1px solid rgba(15,23,42,0.2)' }}>
         <a
           href={`tel:${brandDNA.contact.phoneTelLink}`}
-          className="relative flex items-center justify-center gap-2 py-4 font-heading font-bold text-sm uppercase tracking-wider"
+          className="relative flex items-center justify-center gap-2 py-2 font-heading font-bold text-sm uppercase tracking-wider"
           aria-label={`Call ${brandDNA.contact.phone}`}
           style={{
             background: '#FFFFFF',
@@ -58,7 +58,7 @@ export default function MobileCtaBar() {
             .btn-gold on the site carries the modifier. */}
         <button
           onClick={scrollToForm}
-          className="btn-gold btn-flat flex items-center justify-center py-4 font-heading font-bold text-sm uppercase tracking-wider"
+          className="btn-gold btn-flat flex items-center justify-center py-2 font-heading font-bold text-sm uppercase tracking-wider"
           style={{ color: '#FFFFFF', textShadow: '0 1px 2px rgba(15, 23, 42, 0.45)' }}
         >
           {brandDNA.copy.buttonText}
