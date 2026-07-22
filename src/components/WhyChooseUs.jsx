@@ -34,13 +34,19 @@ function pickReasonIcon(title) {
 }
 
 /**
- * Reason card — icon-first and centre-aligned: large glass medallion on top,
- * heading beneath. `why_choose_us` carries titles only (there is no per-reason
- * body copy anywhere in brand-dna), so the card is deliberately title-led
- * rather than inventing a description.
+ * Reason card — icon-first and centre-aligned: glass medallion on top, heading
+ * beneath. `why_choose_us` carries titles only (there is no per-reason body
+ * copy anywhere in brand-dna), so the card is deliberately title-led rather
+ * than inventing a description.
  *
- * The shadow is STATIC by design — no shadow, border or lift animation. Only
- * the medallion and the heading colour respond to hover, very gently.
+ * Because there is only a medallion and one line of text, the card is tuned to
+ * sit CLOSE around them: the padding, the medallion-to-title gap and the title
+ * measure are all set so a short reason does not float in a half-empty box.
+ * `justify-center` keeps the pair optically centred when a longer neighbour
+ * stretches the row.
+ *
+ * The shadow is STATIC by design — no lift animation. Only the medallion and
+ * the heading colour respond to hover, very gently.
  */
 function ReasonCard({ title, icon }) {
   // Resolved by the caller and passed in — `react-hooks/static-components`
@@ -48,21 +54,22 @@ function ReasonCard({ title, icon }) {
   const Icon = icon;
   return (
     <div
-      className="group relative flex h-full flex-col items-center overflow-hidden rounded-[22px] bg-white px-6 py-8 text-center shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-18px_rgba(16,40,79,0.16)]"
+      className="group relative flex h-full flex-col items-center justify-center overflow-hidden rounded-[22px] bg-white px-6 py-7 text-center shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-18px_rgba(16,40,79,0.18)] lg:px-7"
+      style={{ border: '1px solid rgba(16,40,79,0.07)' }}
     >
       {/* thin accent line across the top */}
       <span aria-hidden className="absolute inset-x-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent)) 50%, transparent)' }} />
       {/* faint glass wash so the card is not a plain white box */}
       <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-28" style={{ background: 'linear-gradient(180deg, rgba(44,90,166,0.05), transparent)' }} />
 
-      {/* Icon medallion — the focal point, with a thin accent ring around it */}
+      {/* Icon medallion — the focal point, the site's global glass treatment */}
       <span className="relative inline-flex flex-shrink-0">
         <span
-          className="relative flex h-[58px] w-[58px] items-center justify-center rounded-[18px] transition-transform duration-300 ease-out group-hover:scale-[1.05]"
+          className="relative flex h-[58px] w-[58px] items-center justify-center rounded-[18px] transition-transform duration-300 ease-out group-hover:scale-[1.04]"
           style={{
             background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
             border: '1px solid rgba(255,255,255,0.6)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -10px 18px -10px rgba(16,40,79,0.5)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -10px 18px -10px rgba(16,40,79,0.5), 0 12px 26px -14px rgb(var(--accent) / 0.55)',
             color: 'rgb(var(--on-accent))',
           }}
         >
@@ -72,7 +79,7 @@ function ReasonCard({ title, icon }) {
       </span>
 
       <h3
-        className="relative mt-7 text-[18px] font-semibold capitalize leading-[1.35] tracking-[0.02em] text-[rgb(var(--primary-dark))] transition-colors duration-300 ease-out group-hover:text-[rgb(var(--accent))]"
+        className="relative mt-4 max-w-[20ch] text-balance text-[17px] font-semibold capitalize leading-[1.4] tracking-[0.01em] text-[rgb(var(--primary-dark))] transition-colors duration-300 ease-out group-hover:text-[rgb(var(--accent))] lg:text-[18px]"
         style={{ fontFamily: INTER }}
       >
         {title}
@@ -86,7 +93,9 @@ export default function WhyChooseUs() {
 
   return (
     <section id="why" className="relative overflow-hidden">
-      {/* ── Soft mesh base — theme-blue radial pools over a pale wash ── */}
+      {/* ── Soft mesh base — theme-blue radial pools over a pale wash. The
+             SECTION stays light; only the cards are dark, so this never reads
+             as a second heavy band next to the Service Area section below. ── */}
       <div
         aria-hidden
         className="absolute inset-0"
@@ -99,15 +108,13 @@ export default function WhyChooseUs() {
         }}
       />
 
-      {/* Per-client motif pattern + corner overlays (Rule 58), re-tinted for
+      {/* Per-client motif pattern + corner overlays (Rule 58), tinted for
           the light surface. */}
-      
       <CornerOverlay position="top-left" size={300} color="#2C5AA6" opacity={0.07} />
       <CornerOverlay position="bottom-right" size={300} color="#2C5AA6" opacity={0.07} />
 
-      {/* ── Architectural decoration: blueprint grid, diagonals, roof peaks ── */}
+      {/* ── Architectural decoration: roof-peak mark, glow, hairline rule ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        
         <div
           className="absolute right-[7%] bottom-28 hidden h-20 w-20 rotate-45 lg:block"
           style={{ borderTop: '2px solid rgba(44,90,166,0.12)', borderRight: '2px solid rgba(44,90,166,0.12)', borderTopRightRadius: '10px' }}

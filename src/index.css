@@ -513,6 +513,31 @@ p { margin: 0; }
     0 6px 16px -6px rgba(44, 90, 166, 0.5);
 }
 
+/* ── .btn-flat — opt-in modifier for .btn-gold ──
+   Strips ONLY the lift and the shadows (outer glow and the inset depth pair).
+   Background gradient, gloss ::before, text colour, border, radius, font and
+   padding are all inherited unchanged, and hover still brightens.
+
+   Used by the mobile sticky CTA bar, where the button is edge-to-edge inside a
+   bar that carries its own shadow — a floating, lifting button reads as a
+   mistake there. Adding the class is the only way to get this treatment, so no
+   other .btn-gold on the site is affected.
+
+   `:hover` / `:active` are listed at (0,3,0) so they beat the base rules
+   outright rather than relying on source order. */
+.btn-gold.btn-flat,
+.btn-gold.btn-flat:hover,
+.btn-gold.btn-flat:active,
+.btn-gold.btn-flat:focus-visible {
+  transform: none;
+  box-shadow: none;
+}
+/* Keyboard focus must stay visible once the box-shadow ring is gone. */
+.btn-gold.btn-flat:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.9);
+  outline-offset: -3px;
+}
+
 /* ── Secondary button (.btn-outline) — white with a deep-blue edge that fills
    with the same blue glass gradient on hover. ── */
 .btn-outline {
@@ -1014,8 +1039,19 @@ p { margin: 0; }
 }
 
 /* ── Hero height ── */
+/* MOBILE: content-height. The 100vh floor below left slack under the owner
+   composition — the row is `flex-1`, so any height the content did not use
+   piled up at the bottom and read as a gap between the owner image and the
+   floating form that lifts into that space. Tablet and desktop keep their
+   floors. (`#static-lcp-hero`, which used to track this height, is no longer
+   rendered anywhere, so nothing else depends on the 100vh value here.) */
 .hero-section {
-  min-height: 100vh;
+  min-height: auto;
+}
+@media (min-width: 640px) {
+  .hero-section {
+    min-height: 100vh;
+  }
 }
 @media (min-width: 1024px) {
   .hero-section {
@@ -1161,6 +1197,12 @@ p { margin: 0; }
   border-color: rgb(var(--primary)) !important;
   box-shadow: 0 0 0 4px rgb(var(--accent) / 0.18);
   outline: none;
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
 }
 
 :root[data-theme-mode="dark"] .btn-gold,

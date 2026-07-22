@@ -140,7 +140,7 @@ export default function AboutPage() {
 
             <span className="mx-auto mb-8 mt-6 block h-[3px] w-16 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent-light)), rgb(var(--accent)))' }} />
 
-            <div className="flex flex-col gap-6 text-[16.5px] leading-[1.85]" style={{ fontFamily: INTER, color: 'rgba(255,255,255,0.8)' }}>
+            <div className="flex flex-col gap-6 text-[15px] leading-[1.72]" style={{ fontFamily: INTER, color: 'rgba(255,255,255,0.8)' }}>
               <p>{brandDNA.copy.founder.para1}</p>
               <p>{brandDNA.copy.founder.para2}</p>
               <p>

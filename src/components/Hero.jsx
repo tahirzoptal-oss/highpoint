@@ -23,7 +23,7 @@ const FacebookMark = (props) => (
 );
 
 const Stars = () => (
-  <span className="inline-flex text-[16px] leading-none tracking-tight" style={{ color: 'rgb(var(--accent))' }}>{'★★★★★'}</span>
+  <span className="inline-flex text-[14px] leading-none tracking-tight sm:text-[16px]" style={{ color: 'rgb(var(--accent))' }}>{'★★★★★'}</span>
 );
 
 // ── Outline icons, matched to each trust point ──
@@ -55,21 +55,24 @@ const lightCard = {
   boxShadow: '0 12px 28px -16px rgba(16,40,79,0.32)',
 };
 // Two separate, identically-sized review cards (light UI).
+// Review badge. Everything scales down on tablet/mobile — min width, padding,
+// icon plate, glyph and both type sizes — so the pair costs far less vertical
+// space on a narrow hero. The sm-and-up values are the originals.
 const ReviewCard = ({ href, icon, top, stars, sub }) => (
   <a
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="group flex min-w-[188px] flex-1 items-center gap-3 rounded-2xl px-4 py-3 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-16px_rgba(16,40,79,0.4)]"
+    className="group flex min-w-[152px] flex-1 items-center gap-2.5 rounded-xl px-3 py-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_40px_-16px_rgba(16,40,79,0.4)] sm:min-w-[188px] sm:gap-3 sm:rounded-2xl sm:px-4 sm:py-3"
     style={lightCard}
   >
-    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-black/5" style={{ background: '#F3F7FC' }}>{icon}</span>
+    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg border border-black/5 sm:h-11 sm:w-11 sm:rounded-xl" style={{ background: '#F3F7FC' }}>{icon}</span>
     <span className="min-w-0">
       <span className="flex items-center gap-1.5">
-        <span className="text-[15px] font-bold leading-none text-ink" style={{ fontFamily: INTER }}>{top}</span>
+        <span className="text-[13.5px] font-bold leading-none text-ink sm:text-[15px]" style={{ fontFamily: INTER }}>{top}</span>
         {stars && <Stars />}
       </span>
-      <span className="mt-1 block text-[12px] text-ink/55" style={{ fontFamily: INTER }}>{sub}</span>
+      <span className="mt-0.5 block text-[11px] leading-[1.4] text-ink/55 sm:mt-1 sm:text-[12px]" style={{ fontFamily: INTER }}>{sub}</span>
     </span>
   </a>
 );
@@ -114,9 +117,17 @@ export default function Hero() {
           itself by 64px (mobile) / 128px (desktop) into this space. On desktop
           the extra 16px leaves the bottom-aligned columns just clear of the
           form's top edge. */}
-      <div className="site-container relative flex flex-1 flex-col gap-6 pb-20 pt-10 lg:flex-row lg:items-end lg:gap-6 lg:pb-36 lg:pt-8" style={{ zIndex: 5 }}>
-        {/* LEFT — marketing content (dark text on light) */}
-        <div className="order-2 text-left lg:order-1 lg:flex-1 lg:max-w-[600px]">
+      {/* MOBILE bottom padding is deliberately smaller than the floating form's
+          -mt-16 lift, so the form rides up over the last of the hero and meets
+          the owner image with no band of background between them. It still
+          clears the owner card, which sits higher up the image. */}
+      <div className="site-container relative flex flex-1 flex-col gap-5 pb-20 pt-8 sm:gap-6 sm:pb-20 sm:pt-10 lg:flex-row lg:items-end lg:gap-6 lg:pb-36 lg:pt-8" style={{ zIndex: 5 }}>
+        {/* LEFT — marketing content (dark text on light).
+            On tablet/mobile this column runs FIRST, so the stack reads
+            eyebrow → heading → trust badges → review badges → owner image →
+            owner card → floating form. Desktop is unchanged: this stays the
+            left column of the two-column row. */}
+        <div className="order-1 text-left lg:flex-1 lg:max-w-[600px]">
           <p className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
             <span className="h-2 w-2 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
             {copy.hero.eyebrow}
@@ -158,14 +169,14 @@ export default function Hero() {
           </div>
 
           {/* Two SEPARATE review cards */}
-          <div className="flex flex-wrap items-stretch gap-3 sm:max-w-[440px]">
+          <div className="flex flex-wrap items-stretch gap-2 sm:max-w-[440px] sm:gap-3">
             {hasGoogle && (
-              <ReviewCard href={GOOGLE_REVIEW_URL} icon={<GoogleMark className="h-6 w-6" />} top={reviews.rating.toFixed(1)} stars sub={`${reviews.googleCount} Google reviews`} />
+              <ReviewCard href={GOOGLE_REVIEW_URL} icon={<GoogleMark className="h-5 w-5 sm:h-6 sm:w-6" />} top={reviews.rating.toFixed(1)} stars sub={`${reviews.googleCount} Google reviews`} />
             )}
             {showFacebook && (
               <ReviewCard
                 href={social.facebook}
-                icon={<FacebookMark className="h-6 w-6" />}
+                icon={<FacebookMark className="h-5 w-5 sm:h-6 sm:w-6" />}
                 top={hasFacebook ? reviews.rating.toFixed(1) : 'Facebook'}
                 stars={hasFacebook}
                 sub={hasFacebook ? `${reviews.facebookCount} Facebook reviews` : 'Read our reviews'}
@@ -181,7 +192,7 @@ export default function Hero() {
             baseline, so its bottom tucks ~28px behind the floating form (z-30)
             instead of hovering above it — the two read as one composition.
             The negative margin also keeps the taller image from adding height. */}
-        <div className="order-1 flex w-full items-center justify-center lg:order-2 lg:-mb-14 lg:w-[56%]">
+        <div className="order-2 flex w-full items-center justify-center -mb-12 lg:-mb-14 lg:w-[56%]">
           <div className="relative w-full max-w-[560px] lg:max-w-[760px]">
             <img
               src="/owner-banner-img.webp"
@@ -193,11 +204,15 @@ export default function Hero() {
               loading="eager"
             />
 
-            {/* ── Owner card — pinned to the far right of the composition,
-                   clear of the floating form's top edge. Same OwnerCard
-                   component the About section uses, so the two stay identical. ── */}
-            <div className="absolute bottom-[10%] right-0 z-20 transition-transform duration-300 lg:bottom-[17%]">
-              <OwnerCard name={founder.name} role={founder.title} className="min-w-[210px]" />
+            {/* ── Owner card — absolutely positioned at every width, so it stays
+                   part of the composition rather than a block underneath it.
+                   On tablet/mobile it is centred over the bottom of the owner
+                   image; from lg it pins to the far right exactly as before.
+                   The bottom offset keeps it inside the image box, so it never
+                   reaches the floating form that lifts into the space below.
+                   Same OwnerCard component the About section uses. ── */}
+            <div className="absolute bottom-[40px] right-0 z-20 transition-transform duration-300 lg:bottom-[17%] lg:left-auto lg:right-0 lg:translate-x-0">
+              <OwnerCard name={founder.name} role={founder.title} className="sm:min-w-[210px]" />
             </div>
           </div>
         </div>

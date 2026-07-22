@@ -112,10 +112,10 @@ export default function Navbar() {
   // item) and the label shifts charcoal → deep blue.
   //
   // Active and hover must NOT look the same, or you cannot tell which page you
-  // are on while the pointer is over the bar. So they are separated on three
-  // axes: the active pill is denser and permanent, the active label is the
-  // darker primary-dark rather than primary, and only the active item carries
-  // the accent underline. Hovering a non-active item gets the light pill only.
+  // are on while the pointer is over the bar. They are separated on two axes:
+  // the active pill is denser (0.22 vs 0.12) and permanent, and the active
+  // label is the darker primary-dark rather than primary. Hovering a non-active
+  // item fades the light pill in. ONE background span, either way.
   const linkBase =
     'group relative inline-flex items-center gap-1.5 py-1 text-[13px] font-semibold uppercase tracking-[0.04em] transition-[color,transform] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]';
 
@@ -136,14 +136,6 @@ export default function Navbar() {
     />
   );
 
-  // Only the current page gets the rule — it is the one cue hover never borrows.
-  const ActiveRule = () => (
-    <span
-      aria-hidden
-      style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }}
-    />
-  );
-
   const DesktopLink = ({ link }) => {
     const active = isActive(link.to);
 
@@ -159,7 +151,6 @@ export default function Navbar() {
             className={`${linkBase} ${linkTone(active, open)}`}
           >
             <Pill active={active} open={open} />
-            {active && <ActiveRule />}
             <span className="relative flex items-center gap-1.5">
               {link.label}
               <ChevronIcon open={open} />
@@ -207,7 +198,6 @@ export default function Navbar() {
     return (
       <Link to={link.to} aria-current={active ? 'page' : undefined} className={`${linkBase} ${linkTone(active, false)}`}>
         <Pill active={active} open={false} />
-        {active && <ActiveRule />}
         <span className="relative">{link.label}</span>
       </Link>
     );
@@ -270,30 +260,36 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* ── Mobile: call chip (left) + hamburger (right); logo stays centered ── */}
+          {/* ── Mobile / tablet: call button (left) + menu toggle (right), logo
+                 centred between them. The two are deliberately the SAME control
+                 geometry — 44×44, 12px radius, 20px glyph, centred — so the bar
+                 reads as a matched pair. Only the fill differs (the call button
+                 is the accent gradient, the toggle is an outline), which is the
+                 existing design language. The call button carries no label, as
+                 a text label would make it wider than its twin. ── */}
           <a
             href={`tel:${brandDNA.contact.phoneTelLink}`}
-            className="mr-auto inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-[12px] font-bold uppercase tracking-[0.06em] min-[1360px]:hidden"
-            aria-label="Call now"
+            className="mr-auto inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl min-[1360px]:hidden"
+            aria-label={`Call ${brandDNA.contact.phone}`}
             style={{
               background: 'linear-gradient(160deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 45%, rgb(var(--accent-dark)) 100%)',
               color: 'rgb(var(--on-accent))',
-              textShadow: '0 1px 2px rgba(0,0,0,0.18)',
+              border: '1px solid rgba(255,255,255,0.45)',
+              boxShadow: '0 8px 18px -10px rgb(var(--accent) / 0.6)',
             }}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
-            <span className="hidden sm:inline">Call Now</span>
           </a>
 
           <button
-            className="ml-auto inline-flex h-11 w-11 items-center justify-center rounded-lg border border-black/10 text-ink transition-colors hover:border-[rgb(var(--accent))] hover:text-gold min-[1360px]:hidden"
+            className="ml-auto inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-black/10 text-ink transition-colors hover:border-[rgb(var(--accent))] hover:text-gold min-[1360px]:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
             aria-expanded={mobileOpen}
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d={mobileOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
             </svg>
           </button>

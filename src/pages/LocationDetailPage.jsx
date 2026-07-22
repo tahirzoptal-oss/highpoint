@@ -126,6 +126,14 @@ export default function LocationDetailPage() {
              and pinned until the last band ends. ════ */}
       <div className="relative">
 
+        {/* ── Sticky quote rail. DOM position matters ONLY below lg, where the
+               rail is in normal flow — first child, so on tablet/mobile the
+               form is the first thing under the belt slider, ahead of the page
+               content. From lg it is `absolute inset-0` over the whole stack,
+               so its position in the document has no effect on the desktop
+               layout at all. ── */}
+        <StickyRail formId={`city-${slug}`} />
+
         {/* ── One band per copy-deck heading. The first carries whatever ran
                before the first heading and keeps the page title; the rest take
                the heading straight out of the body. Backgrounds alternate
@@ -146,8 +154,6 @@ export default function LocationDetailPage() {
             <CallNow className="mt-2" />
           </Band>
         ))}
-
-        <StickyRail formId={`city-${slug}`} />
 
         {/* ── What we do here — the same seven primary services the header and
                footer list, each linking to its own page. ── */}

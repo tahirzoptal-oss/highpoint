@@ -51,9 +51,14 @@ export default function MobileCtaBar() {
           </svg>
           Call Now
         </a>
+        {/* `.btn-flat` drops the lift and the shadows only — this button is
+            edge-to-edge inside a bar that already has its own shadow, so the
+            floating treatment does not belong here. Gradient, colour, radius,
+            padding, font and the hover brighten are all unchanged, and no other
+            .btn-gold on the site carries the modifier. */}
         <button
           onClick={scrollToForm}
-          className="btn-gold flex items-center justify-center py-4 font-heading font-bold text-sm uppercase tracking-wider"
+          className="btn-gold btn-flat flex items-center justify-center py-4 font-heading font-bold text-sm uppercase tracking-wider"
           style={{ color: '#FFFFFF', textShadow: '0 1px 2px rgba(15, 23, 42, 0.45)' }}
         >
           {brandDNA.copy.buttonText}

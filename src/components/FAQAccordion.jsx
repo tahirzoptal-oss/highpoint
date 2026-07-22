@@ -27,14 +27,17 @@ export default function FAQAccordion({ items }) {
 
   if (!items || items.length === 0) return null;
 
+  // Sizing steps up with the viewport: tighter gaps, radius, padding and toggle
+  // on tablet/mobile so a stack of questions does not dominate a small screen.
+  // The desktop (sm and up) values are unchanged.
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3 sm:gap-5">
       {items.map((item, i) => {
         const isOpen = open === i;
         return (
           <div
             key={i}
-            className="overflow-hidden rounded-[20px] shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_32px_-20px_rgba(16,40,79,0.5)]"
+            className="overflow-hidden rounded-[14px] shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_32px_-20px_rgba(16,40,79,0.5)] sm:rounded-[20px]"
           >
             <h3 className="m-0">
               <button
@@ -42,7 +45,7 @@ export default function FAQAccordion({ items }) {
                 onClick={() => setOpen(isOpen ? null : i)}
                 aria-expanded={isOpen}
                 aria-controls={`faq-panel-${i}`}
-                className="flex w-full items-center justify-between gap-4 px-5 py-5 text-left transition-[background] duration-[350ms] ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[rgb(var(--accent-light))] sm:px-6"
+                className="flex w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-[background] duration-[350ms] ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[rgb(var(--accent-light))] sm:gap-4 sm:px-6 sm:py-5"
                 style={{
                   background: isOpen
                     ? 'linear-gradient(150deg, rgb(var(--primary)) 0%, rgb(var(--primary-dark)) 100%)'
@@ -56,9 +59,10 @@ export default function FAQAccordion({ items }) {
                   {item.q}
                 </span>
 
-                {/* Large circular toggle — glass on the dark card, filled when open */}
+                {/* Circular toggle — glass on the dark card, filled when open.
+                    32px on mobile, the original 44px from sm up. */}
                 <span
-                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full transition-[background,box-shadow,transform] duration-[350ms] ease-in-out"
+                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-[background,box-shadow,transform] duration-[350ms] ease-in-out sm:h-11 sm:w-11"
                   style={
                     isOpen
                       ? {
@@ -76,7 +80,7 @@ export default function FAQAccordion({ items }) {
                         }
                   }
                 >
-                  <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 sm:h-[18px] sm:w-[18px]" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="m6 9 6 6 6-6" />
                   </svg>
                 </span>
@@ -96,10 +100,9 @@ export default function FAQAccordion({ items }) {
             >
               <div className="overflow-hidden">
                 <div
-                  className="px-5 transition-[padding] duration-[350ms] ease-in-out sm:px-6"
-                  style={{ paddingTop: isOpen ? 20 : 0, paddingBottom: isOpen ? 22 : 0 }}
+                  className={`px-4 transition-[padding] duration-[350ms] ease-in-out sm:px-6 ${isOpen ? 'pb-4 pt-3.5 sm:pb-[22px] sm:pt-5' : 'pb-0 pt-0'}`}
                 >
-                  <p className="text-[14.5px] leading-[1.75] text-ink/70" style={{ fontFamily: INTER }}>{item.a}</p>
+                  <p className="text-[14px] leading-[1.7] text-ink/70 sm:text-[14.5px] sm:leading-[1.75]" style={{ fontFamily: INTER }}>{item.a}</p>
                 </div>
               </div>
             </div>

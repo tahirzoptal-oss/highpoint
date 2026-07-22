@@ -76,9 +76,17 @@ export default function ServiceDetailPage() {
 
       {/* ════ SILO — 70/30. Content runs down the left in full-bleed bands;
              the quote form floats over the right third and stays pinned until
-             the last band ends. Below lg the rail drops into the flow, right
-             after the overview, and every band goes full width. ════ */}
+             the last band ends. Below lg the rail drops into normal flow and
+             every band goes full width. ════ */}
       <div className="relative">
+
+        {/* ── Sticky quote rail. DOM position matters ONLY below lg, where the
+               rail is in normal flow — first child, so on tablet/mobile the
+               form is the first thing under the belt slider, ahead of the page
+               content. From lg it is `absolute inset-0` over the whole stack,
+               so its position in the document has no effect on the desktop
+               layout at all. ── */}
+        <StickyRail formId={`service-${slug}`} />
 
         {/* ── Overview ── */}
         <Band tone="white">
@@ -91,8 +99,6 @@ export default function ServiceDetailPage() {
           <div className="mt-2"><SiloBody body={service.body} /></div>
           <CallNow className="mt-4" />
         </Band>
-
-        <StickyRail formId={`service-${slug}`} />
 
         {/* ── Why us ── */}
         {service.benefits.length > 0 && (

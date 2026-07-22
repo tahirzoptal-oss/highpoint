@@ -11,8 +11,7 @@ const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
 const GOOGLE_LISTING_URL =
   'https://www.google.com/search?q=High+Point+Renovation+%26+Roofing+WA&oq=High+Point+Renovation+%26+Roofing&gs_lcrp=EgZjaHJvbWUqCAgBEEUYJxg7MgYIABBFGDsyCAgBEEUYJxg7MggIAhAAGBYYHjINCAMQABiGAxiABBiKBTIHCAQQABjvBTIGCAUQRRg8MgYIBhBFGDwyBggHEEUYPdIBCDE0OThqMGo3qAIAsAIA&sourceid=chrome&source=chrome.ob&ie=UTF-8';
 
-// Company column. NOTE: /privacy-policy and /terms-conditions have no route in
-// App.jsx yet — they fall through to NotFoundPage until those pages are built.
+// Company column. Every entry has a route in App.jsx and prerenders.
 const companyLinks = [
   { label: 'Home', to: '/' },
   { label: 'About', to: '/about' },
@@ -130,7 +129,7 @@ function ContactRow({ icon, label, value, href }) {
           {label}
         </span>
         <span
-          className="mt-2 block text-[14.5px] font-semibold leading-[1.55] text-[rgb(var(--primary-dark))] transition-colors duration-300 ease-out"
+          className="mt-1 block text-[14.5px] font-semibold leading-[1.55] text-[rgb(var(--primary-dark))] transition-colors duration-300 ease-out"
           style={{ fontFamily: INTER }}
         >
           {value}
@@ -193,7 +192,7 @@ export default function Footer() {
           {/* Col 1 — brand */}
           <div className="flex flex-col items-center sm:items-start">
             <Link to="/" className="inline-block">
-              <img src="/logo.webp" alt={brandDNA.company.name} className="h-auto w-40" />
+              <img src="/logo.webp" alt={brandDNA.company.name} className="h-auto w-60" />
             </Link>
 
             <p className="mt-5 max-w-[34ch] text-[14.5px] leading-[1.75] text-ink/75" style={{ fontFamily: INTER }}>
@@ -278,7 +277,7 @@ export default function Footer() {
 
       {/* ════ Bottom bar — slightly darker for separation ════ */}
       <div className="relative" style={{ background: '#EEF2F7', borderTop: '1px solid #d2d2d2' }}>
-        <div className="site-container flex flex-col items-center justify-between gap-3 py-5 text-center md:flex-row md:text-left">
+        <div className="site-container flex flex-col items-center justify-between gap-3 pt-5 pb-10 lg:py-5 text-center md:flex-row md:text-left">
           <p className="text-[12.5px] text-ink/75" style={{ fontFamily: INTER }}>
             {brandDNA.copy.copyright}
           </p>

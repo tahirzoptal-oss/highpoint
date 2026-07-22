@@ -1,14 +1,40 @@
 import { useParams, Link, Navigate } from 'react-router-dom';
 import InnerBanner from '../components/InnerBanner';
-import CTABanner from '../components/CTABanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
 import SEO from '../components/SEO';
-import QuoteForm from '../components/QuoteForm';
+// The exact layout primitives the service detail pages use — same bands, same
+// 67/30 column split, same sticky rail, same copy renderer. Only the content
+// inside the left column differs.
+import { Band, StickyRail, SiloBody } from '../components/SiloSection';
 import { buildArticle, buildBreadcrumb } from '../lib/schema';
 import { blogPosts } from './BlogPage';
 import { brandDNA } from '../config/brand-dna';
 
-
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+// Covers are authored as .png/.jpg in brand-dna but shipped as .webp.
+const coverOf = (post) => (post.cover || '/work/project1.webp').replace(/\.(png|jpe?g)$/i, '.webp');
+
+// Structured content blocks ({type:'p'|'h2'|'list'}) predate the shared copy
+// renderer. Fold them back into markdown so one renderer owns every article,
+// whichever shape the post shipped in.
+const blocksToMarkdown = (blocks) =>
+  blocks
+    .map((b) => {
+      if (b.type === 'h2') return `## ${b.text}`;
+      if (b.type === 'list') return (b.items || []).map((i) => `- ${i}`).join('\n');
+      return b.text || '';
+    })
+    .filter(Boolean)
+    .join('\n\n');
+
+const ArrowLeft = (props) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <path d="M20 12H5M11 18l-6-6 6-6" />
+  </svg>
+);
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -16,27 +42,13 @@ export default function BlogPostPage() {
 
   if (!post) return <Navigate to="/blog" replace />;
 
-  const related = blogPosts.filter((p) => p.slug !== slug).slice(0, 3);
-
-  // Convert a copy-deck markdown body into the BlogPostPage content-block shape
-  // ({type:'p'|'h2'|'list', text|items}). Allows post.body (Stage 6 markdown) to
-  // back-fill the content array when no structured content blocks shipped.
-  const blocksFromMarkdown = (md) => {
-    if (!md) return null;
-    return md.trim().split(/\n\s*\n/).map((blk) => {
-      const t = blk.trim();
-      if (t.startsWith('## ')) return { type: 'h2', text: t.replace(/^##\s+/, '').replace(/\*([^*]+)\*/g, '$1') };
-      if (t.startsWith('- ')) return { type: 'list', items: t.split(/\n- /).map((s) => s.replace(/^- /, '').trim()).filter(Boolean) };
-      return { type: 'p', text: t };
-    });
-  };
-
-  // brandDNA.blog_posts[i].content is the schema-defined rich body. Order of
-  // preference: structured content blocks, copy-deck body markdown, excerpt fallback.
-  const contentBlocks =
-    (post.content && post.content.length > 0)
-      ? post.content
-      : (blocksFromMarkdown(post.body) || [{ type: 'p', text: post.excerpt }]);
+  // Order of preference: the copy-deck body markdown, then structured content
+  // blocks folded into markdown, then the excerpt as a last resort.
+  const markdown =
+    post.body
+    || ((post.content && post.content.length) ? blocksToMarkdown(post.content) : '')
+    || post.excerpt
+    || '';
 
   return (
     <>
@@ -44,6 +56,7 @@ export default function BlogPostPage() {
         path={`/blog/${slug}`}
         title={`${post.title} | ${brandDNA.company.name}`}
         description={post.excerpt}
+        image={coverOf(post)}
         jsonLd={[
           buildArticle(post),
           buildBreadcrumb([
@@ -53,155 +66,124 @@ export default function BlogPostPage() {
           ]),
         ]}
       />
-      {/* Article banner — shared InnerBanner component. The post's own cover
-          is the background, and the meta row rides in as children. */}
+
+      {/* ════ 1. Banner — the post's own cover as the background, the shared
+             dark scrim over it, the post title as the <h1>, and the category /
+             date / read-time meta riding in as children. ════ */}
       <InnerBanner
         title={post.title}
-        image={post.cover}
+        image={coverOf(post)}
         objectPosition="50% 40%"
         overlayOpacity={0.92}
         breadcrumb={[{ label: 'Blog', to: '/blog' }, { label: post.category }]}
         minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
       >
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px] font-medium" style={{ fontFamily: INTER, color: 'rgba(255,255,255,0.68)' }}>
-          {post.readTime && <span>{post.readTime}</span>}
-          {post.readTime && post.date && <span aria-hidden style={{ color: 'rgb(var(--accent-light))' }}>·</span>}
+          {post.category && (
+            <span
+              className="inline-flex items-center rounded-full px-3 py-1 text-[10.5px] font-bold uppercase leading-none tracking-[0.12em]"
+              style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.22)', color: '#FFFFFF' }}
+            >
+              {post.category}
+            </span>
+          )}
           {post.date && <span>{post.date}</span>}
+          {post.date && post.readTime && <span aria-hidden style={{ color: 'rgb(var(--accent-light))' }}>·</span>}
+          {post.readTime && <span>{post.readTime}</span>}
           {post.byline && <span aria-hidden style={{ color: 'rgb(var(--accent-light))' }}>·</span>}
           {post.byline && <span>By {post.byline}</span>}
         </div>
       </InnerBanner>
 
-      {/* Article Body */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      {/* ════ 2 & 3. Global logo slider + brand belt ════ */}
+      <LogoSlider />
+      <BeltSlider />
 
-            {/* Main content */}
-            <article className="lg:col-span-2">
-              <p className="text-cool text-base leading-relaxed mb-6 text-lg pl-5" style={{ borderLeft: '2px solid rgb(var(--accent))' }}>
+      {/* ════ SILO — identical to the service pages: 67% article on the left,
+             the quote form floating over the right third and pinned until the
+             band ends. Below lg the rail drops into normal flow and stops
+             being sticky. ════ */}
+      <div className="relative">
+        {/* ── Sticky quote rail. DOM position matters ONLY below lg, where the
+               rail is in normal flow — first child, so on tablet/mobile the
+               form is the first thing under the belt slider, ahead of the
+               article. From lg it is `absolute inset-0` over the whole stack,
+               so its position in the document has no effect on the desktop
+               layout at all. ── */}
+        <StickyRail formId={`blog-${slug}`} />
+
+        <Band tone="white">
+          <article>
+            {/* Featured image at the top of the article */}
+            <figure
+              className="m-0 overflow-hidden rounded-[22px]"
+              style={{ border: '1px solid rgba(16,40,79,0.07)', boxShadow: '0 1px 2px rgba(16,40,79,0.04), 0 18px 44px -24px rgba(16,40,79,0.3)' }}
+            >
+              <img
+                src={coverOf(post)}
+                alt={post.title}
+                className="block aspect-[16/9] w-full object-cover"
+                decoding="async"
+              />
+            </figure>
+
+            {/* Lead — the excerpt, set larger than the body so the article opens
+                with a clear step down in hierarchy. */}
+            {post.excerpt && (
+              <p
+                className="mt-8 pl-5 text-[17px] leading-[1.75] text-ink/80"
+                style={{ fontFamily: INTER, borderLeft: '3px solid rgb(var(--accent))' }}
+              >
                 {post.excerpt}
               </p>
+            )}
 
-              <div>
-                {contentBlocks.map((block, i) => {
-                  if (block.type === 'p') {
-                    return <p key={i} className="text-cool text-sm leading-relaxed mb-5">{block.text}</p>;
-                  }
-                  if (block.type === 'h2') {
-                    return <h2 key={i} className="font-heading font-bold text-white uppercase text-2xl mt-8 mb-4">{block.text}</h2>;
-                  }
-                  if (block.type === 'list') {
-                    return (
-                      <ul key={i} className="flex flex-col gap-2 mb-5">
-                        {block.items.map((item, j) => (
-                          <li key={j} className="flex items-start gap-3 text-cool text-sm leading-relaxed">
-                            <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.5)' }}>
-                              <svg className="w-2.5 h-2.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                              </svg>
-                            </div>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
+            {/* Body — headings, paragraphs, bullet and numbered lists, quotes,
+                bold, emphasis and inline links, all through the shared renderer.
+                Capped to a readable measure inside the 67% column. */}
+            <div className="mt-8">
+              <SiloBody body={markdown} />
+            </div>
 
-              {/* Author box */}
-              <div className="mt-8 flex items-center gap-4 p-5 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <img
-                  src="/owner.webp"
-                  alt={brandDNA.team.founder.name}
-                  className="w-14 h-14 object-cover flex-shrink-0"
-                  style={{ objectPosition: '50% 10%' }}
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-                <div>
-                  <div className="font-heading font-bold text-white uppercase text-sm">{brandDNA.company.name.toUpperCase()}</div>
-                  <p className="text-cool text-xs leading-relaxed mt-0.5">{brandDNA.team.founder.name}, {brandDNA.team.founder.title}.</p>
-                </div>
-              </div>
-
-              {/* Back to blog */}
-              <div className="mt-8">
-                <Link to="/blog" className="flex items-center gap-2 text-gold text-sm font-bold hover:gap-3 transition-all hover:text-white">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back to all articles
-                </Link>
-              </div>
-            </article>
-
-            {/* Sidebar */}
-            <aside className="flex flex-col gap-5">
-              {/* Sticky quote rail */}
-              <div className="sticky-rail flex flex-col gap-5">
-                <QuoteForm formId={`blog-${post.slug}`} title="Get Your Free Estimate" />
-
-                {/* CTA card */}
-              <div className="p-6 text-center bg-navy-slate" style={{ border: '1px solid rgb(var(--accent) / 0.2)', borderTop: '2px solid rgb(var(--accent))' }}>
-                <div className="font-heading font-bold text-white uppercase text-lg mb-2">
-                  FREE ROOF INSPECTION
-                </div>
-                <p className="text-cool text-xs leading-relaxed mb-5">
-                  Get a professional assessment of your roof. Written report included, zero obligation.
-                </p>
-                <Link
-                  to="/contact"
-                  className="btn-gold block w-full font-heading font-bold text-sm uppercase px-5 py-3 tracking-widest text-navy"
+            {/* ── Post meta / author ── */}
+            <div
+              className="mt-12 flex flex-wrap items-center gap-4 rounded-[18px] bg-white p-5 shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-20px_rgba(16,40,79,0.22)]"
+              style={{ border: '1px solid rgba(16,40,79,0.07)' }}
+            >
+              <img
+                src="/owner.webp"
+                alt={brandDNA.team.founder.name}
+                className="h-14 w-14 flex-shrink-0 rounded-full object-cover"
+                style={{ objectPosition: '50% 10%' }}
+                loading="lazy"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+              <div className="min-w-0">
+                <div
+                  className="text-[15px] font-bold uppercase leading-[1.3] tracking-[0.04em]"
+                  style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
                 >
-                  BOOK INSPECTION →
-                </Link>
-              </div>
-
-              {/* Contact info */}
-              <div className="p-5 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">CALL US DIRECT</div>
-                <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="flex items-center gap-3 group mb-3">
-                  <div className="w-8 h-8 flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                    <svg className="w-3.5 h-3.5" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                    </svg>
-                  </div>
-                  <span className="font-heading font-bold text-white group-hover:text-gold transition-colors">{brandDNA.contact.phone}</span>
-                </a>
-                <p className="text-steel text-xs leading-relaxed">Emergency line available 24/7.</p>
-              </div>
-
-              {/* Related posts */}
-              <div>
-                <div className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-4">MORE ARTICLES</div>
-                <div className="flex flex-col gap-3">
-                  {related.map((p) => (
-                    <Link key={p.slug} to={`/blog/${p.slug}`} className="group flex items-start gap-3 p-3 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                      <div className="w-14 h-14 overflow-hidden flex-shrink-0">
-                        <img
-                          src={p.cover}
-                          alt={p.title}
-                          className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
-                          onError={(e) => { e.target.src = '/work/project1.webp'; }}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-gold">{p.category}</span>
-                        <div className="font-heading font-bold text-white text-xs uppercase leading-tight mt-0.5 group-hover:text-gold transition-colors line-clamp-2">{p.title}</div>
-                      </div>
-                    </Link>
-                  ))}
+                  {brandDNA.company.name}
                 </div>
+                <p className="mt-1.5 text-[14px] leading-[1.6] text-ink/70" style={{ fontFamily: INTER }}>
+                  {brandDNA.team.founder.name}, {brandDNA.team.founder.title}.
+                  {post.date ? ` Published ${post.date}.` : ''}
+                </p>
               </div>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
+            </div>
 
-      <CTABanner />
+            {/* ── Back to blog ── */}
+            <Link
+              to="/blog"
+              className="group mt-8 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-300 ease-out hover:text-[rgb(var(--primary))]"
+              style={{ fontFamily: INTER, color: 'rgb(var(--accent))' }}
+            >
+              <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-1" />
+              Back to all articles
+            </Link>
+          </article>
+        </Band>
+      </div>
     </>
   );
 }

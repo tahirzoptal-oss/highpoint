@@ -40,15 +40,18 @@ const Chevron = ({ dir, ...props }) => (
 
 // Circular glass nav button. Fixed in place — only background, icon colour and
 // shadow transition on hover, no translate.
+//
+// Scales down on small screens (40px mobile / 44px tablet / 52px desktop) so it
+// sits lighter over a narrow slide while keeping a 40px+ touch target.
 const ArrowBtn = ({ dir, onClick, label, className = '' }) => (
   <button
     type="button"
     onClick={onClick}
     aria-label={label}
-    className={`flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-[rgb(var(--primary))] shadow-[0_12px_30px_-14px_rgba(8,16,34,0.8)] backdrop-blur-md transition-[background-color,color,box-shadow] duration-300 ease-out hover:bg-[rgb(var(--accent))] hover:text-white hover:shadow-[0_16px_34px_-12px_rgba(8,16,34,0.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent-light))] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1C3A] lg:h-[52px] lg:w-[52px] ${className}`}
+    className={`flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-[rgb(var(--primary))] shadow-[0_10px_24px_-14px_rgba(8,16,34,0.8)] backdrop-blur-md transition-[background-color,color,box-shadow] duration-300 ease-out hover:bg-[rgb(var(--accent))] hover:text-white hover:shadow-[0_16px_34px_-12px_rgba(8,16,34,0.9)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent-light))] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1C3A] sm:h-11 sm:w-11 lg:h-[52px] lg:w-[52px] ${className}`}
     style={{ border: '1px solid rgba(255,255,255,0.6)' }}
   >
-    <Chevron dir={dir} className="h-5 w-5" />
+    <Chevron dir={dir} className="h-4 w-4 sm:h-[18px] sm:w-[18px] lg:h-5 lg:w-5" />
   </button>
 );
 
@@ -273,30 +276,51 @@ export default function OurWork() {
         )}
       </div>
 
-      {/* ── Pill pagination ── */}
-      {count > 1 && (
-        <div className="site-container relative mt-8">
-          <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-2">
-            {projects.map((_, i) => {
-              const isActive = i === activeIndex;
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => goToIndex(i)}
-                  aria-label={`Go to project ${i + 1} of ${count}`}
-                  aria-current={isActive ? 'true' : undefined}
-                  className="h-2.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent-light))] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1C3A]"
-                  style={{
-                    width: isActive ? 30 : 10,
-                    background: isActive ? 'rgb(var(--accent-light))' : 'rgba(255,255,255,0.24)',
-                  }}
-                />
-              );
-            })}
+      {/* ── Pill pagination ──
+          Dot sizing is responsive: 6px tall with an 18px active pill on mobile,
+          easing up to the full 10px / 30px on desktop. Widths live in classes
+          rather than an inline `width`, which cannot carry a breakpoint.
+
+          On MOBILE only a five-dot window around the active slide is shown —
+          22 dots wrap to three crowded rows otherwise. The window slides with
+          the active index and clamps at both ends, so there is always the same
+          number of dots and no reflow as you page. Every dot stays in the DOM
+          (hidden with `hidden sm:block`), so this is pure CSS: no measurement,
+          no hydration mismatch, and the full set returns from sm up. A
+          "n / total" counter carries the position the hidden dots no longer
+          can. Navigation is unaffected — the arrows and swipe still reach
+          every slide. */}
+      {count > 1 && (() => {
+        const WINDOW = 5;
+        const half = Math.floor(WINDOW / 2);
+        const start = Math.min(Math.max(activeIndex - half, 0), Math.max(count - WINDOW, 0));
+        const end = start + WINDOW - 1;
+        return (
+          <div className="site-container relative mt-8">
+            <div className="mx-auto flex max-w-2xl flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              {projects.map((_, i) => {
+                const isActive = i === activeIndex;
+                const inWindow = i >= start && i <= end;
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => goToIndex(i)}
+                    aria-label={`Go to project ${i + 1} of ${count}`}
+                    aria-current={isActive ? 'true' : undefined}
+                    className={`h-1.5 rounded-full transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent-light))] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B1C3A] sm:h-2 lg:h-2.5 ${
+                      inWindow ? '' : 'hidden sm:block'
+                    } ${isActive ? 'w-[18px] sm:w-6 lg:w-[30px]' : 'w-1.5 sm:w-2 lg:w-2.5'}`}
+                    style={{ background: isActive ? 'rgb(var(--accent-light))' : 'rgba(255,255,255,0.24)' }}
+                  />
+                );
+              })}
+            </div>
+
+            
           </div>
-        </div>
-      )}
+        );
+      })()}
     </section>
   );
 }

@@ -38,7 +38,7 @@ export const SERVICE_PAGES = [
       '',
       'A worn-out or badly damaged roof can lead to recurring leaks, rising repair costs, damaged insulation, and problems inside your home. When isolated repairs are no longer the responsible solution, a complete roof replacement gives the property a fresh, dependable roofing system from the deck upward.',
       '',
-      'High Point Renovation & Roofing provides professional roof replacement for homeowners throughout Kennewick, Pasco, Richland, West Richland, and the greater Tri-Cities. We begin with a careful inspection, explain what we find, and give you a straightforward recommendation based on the roof’s condition — not a high-pressure sales pitch.',
+      'High Point Renovation & Roofing provides professional roof replacement for homeowners throughout Kennewick, Pasco, Richland, West Richland, and the greater Tri-Cities. We begin with a careful inspection, explain what we find, and give you a straightforward recommendation based on the roof’s condition, not a high-pressure sales pitch.',
       '',
       'Our team installs the complete system with close attention to underlayment, flashing, ventilation, valleys, eaves, penetrations, and final shingle alignment. The goal is a roof that looks clean, sheds water correctly, and protects your home for years.',
       '',
@@ -98,7 +98,7 @@ export const SERVICE_PAGES = [
     description:
       'High Point Renovation & Roofing responds to urgent roof leaks and storm damage across Kennewick, Pasco, Richland, and the Tri-Cities with inspections, temporary protection, and repair planning.',
     description_short:
-      'Urgent help for active leaks, lifted shingles, and exposed roof sections — assessment, temporary protection where appropriate, then a permanent repair plan.',
+      'Urgent help for active leaks, lifted shingles, and exposed roof sections: assessment, temporary protection where appropriate, then a permanent repair plan.',
     body: [
       '## Fast Help When Your Roof Can No Longer Wait',
       '',
@@ -164,7 +164,7 @@ export const SERVICE_PAGES = [
     description:
       'High Point Renovation & Roofing helps Tri-Cities property owners with roof inspections, storm-damage photos, repair estimates, and clear roofing information during an insurance claim.',
     description_short:
-      'Roof inspections, damage documentation, and detailed estimates to support your claim — coverage decisions stay between you and your carrier.',
+      'Roof inspections, damage documentation, and detailed estimates to support your claim. Coverage decisions stay between you and your carrier.',
     body: [
       '## Clear Roofing Support During the Insurance Claim Process',
       '',
@@ -230,7 +230,7 @@ export const SERVICE_PAGES = [
     description:
       'High Point Renovation & Roofing inspects and repairs roof damage caused by wind, hail, rain, and debris throughout Kennewick, Pasco, Richland, and the greater Tri-Cities.',
     description_short:
-      'Inspection, documentation, and repair of wind, hail, rain, and impact damage — with an honest call on whether a repair or a replacement is the dependable fix.',
+      'Inspection, documentation, and repair of wind, hail, rain, and impact damage, with an honest call on whether a repair or a replacement is the dependable fix.',
     body: [
       '## Storm Damage Roof Repair That Restores Real Protection',
       '',

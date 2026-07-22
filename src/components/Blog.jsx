@@ -313,26 +313,36 @@ export default function Blog() {
             </div>
           </div>
 
-          {/* Arrows flank the slider, vertically centred. Outside the cards
-              from lg up; below that they overlay the slider edges, because the
-              90% container leaves too little margin to sit clear of them. */}
+          {/* Arrows flank the slider from sm up, vertically centred — outside
+              the cards entirely at lg, overlaying the slider edges between.
+              On MOBILE they leave the card area altogether and sit in a centred
+              row beneath the strip, so they can never cover a cover image or a
+              headline on a narrow screen. */}
           {showNav && (
             <>
               <ArrowBtn
                 dir="left"
                 label="Previous articles"
                 onClick={() => step(-1)}
-                className="absolute left-1 top-1/2 -translate-y-1/2 sm:left-2 lg:-left-[46px] xl:-left-14"
+                className="hidden sm:absolute sm:left-2 sm:top-1/2 sm:flex sm:-translate-y-1/2 lg:-left-[46px] xl:-left-14"
               />
               <ArrowBtn
                 dir="right"
                 label="Next articles"
                 onClick={() => step(1)}
-                className="absolute right-1 top-1/2 -translate-y-1/2 sm:right-2 lg:-right-[46px] xl:-right-14"
+                className="hidden sm:absolute sm:right-2 sm:top-1/2 sm:flex sm:-translate-y-1/2 lg:-right-[46px] xl:-right-14"
               />
             </>
           )}
         </div>
+
+        {/* Mobile-only arrow row, clear of the cards */}
+        {showNav && (
+          <div className="mt-2 flex items-center justify-center gap-3 sm:hidden">
+            <ArrowBtn dir="left" label="Previous articles" onClick={() => step(-1)} />
+            <ArrowBtn dir="right" label="Next articles" onClick={() => step(1)} />
+          </div>
+        )}
       </div>
     </section>
   );

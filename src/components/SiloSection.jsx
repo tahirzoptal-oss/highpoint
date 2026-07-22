@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import QuoteForm from './QuoteForm';
 import { brandDNA } from '../config/brand-dna';
 
@@ -92,22 +93,31 @@ export function Band({ tone = 'white', width = 'silo', children }) {
   );
 }
 
-export function SectionHead({ eyebrow, title, tone = 'white' }) {
+/**
+ * `align="center"` centres the eyebrow, heading and rule. Default is left,
+ * which is what every existing caller renders, so nothing else moves.
+ */
+export function SectionHead({ eyebrow, title, tone = 'white', align = 'left' }) {
   const dark = tone === 'dark';
+  const centered = align === 'center';
+  const accent = dark ? 'rgb(var(--accent-light))' : 'rgb(var(--accent))';
   return (
-    <>
+    <div className={centered ? 'text-center' : undefined}>
       {eyebrow && (
         <p
           className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]"
-          style={{ color: dark ? 'rgb(var(--accent-light))' : 'rgb(var(--accent))', fontFamily: INTER }}
+          style={{ color: accent, fontFamily: INTER }}
         >
-          <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: dark ? 'rgb(var(--accent-light))' : 'rgb(var(--accent))' }} />
+          <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: accent }} />
           {eyebrow}
         </p>
       )}
       <h2 className="section-h2 uppercase" style={{ color: dark ? '#FFFFFF' : 'rgb(var(--primary))' }}>{title}</h2>
-      <span className="mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
-    </>
+      <span
+        className={`mt-4 block h-[3px] w-12 rounded-full ${centered ? 'mx-auto' : ''}`}
+        style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }}
+      />
+    </div>
   );
 }
 
@@ -169,11 +179,13 @@ export function StickyRail({ formId, title = 'Get Your Free Estimate' }) {
 }
 
 /**
- * Copy-deck body renderer, shared by both silo page types. Recognises:
+ * Copy-deck body renderer, shared by the silo page types (service detail,
+ * service-area detail and blog detail). Recognises:
  *   - <!-- SUBSERVICE_START: Title --> ... <!-- SUBSERVICE_END --> markers,
  *     which wrap the enclosed range in a visually distinct zone so an umbrella
  *     page reads as zones, not one stacked stream.
- *   - ## headings, - bulleted lists, *emphasis* spans, **bold** runs.
+ *   - ## and ### headings, - bulleted lists, 1. ordered lists, > blockquotes,
+ *     *emphasis* spans, **bold** runs and [inline](links).
  *   - Defensively SKIPS any heading matching faq / frequently asked / common
  *     questions / service faq, so even if the parser missed stripping the FAQ
  *     block, the FAQAccordion below stays the single source of truth.
@@ -181,10 +193,50 @@ export function StickyRail({ formId, title = 'Get Your Free Estimate' }) {
 const FAQ_HEADING_RE = /^(faq|frequently asked questions?|common questions?|service faq)\s*$/i;
 const SUB_START_RE = /^<!--\s*SUBSERVICE_START:\s*(.+?)\s*-->$/;
 const SUB_END_RE = /^<!--\s*SUBSERVICE_END\s*-->$/;
+const ORDERED_RE = /^\d+\.\s+/;
+
+// Inline runs: **bold**, *emphasis* and [label](href). Internal hrefs route
+// through the router; anything external opens in a new tab.
+function renderInline(text) {
+  const parts = String(text).split(/(\[[^\]]+\]\([^)\s]+\)|\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
+  return parts.map((seg, k) => {
+    const link = /^\[([^\]]+)\]\(([^)\s]+)\)$/.exec(seg);
+    if (link) {
+      const [, label, href] = link;
+      const cls = 'font-semibold text-[rgb(var(--accent))] underline underline-offset-2 transition-colors duration-300 ease-out hover:text-[rgb(var(--primary))]';
+      // Internal path -> router. mailto:/tel: -> plain anchor (a new tab would
+      // leave an empty window behind). Anything else is external.
+      if (href.startsWith('/')) return <Link key={k} to={href} className={cls}>{label}</Link>;
+      if (/^(mailto:|tel:)/i.test(href)) return <a key={k} href={href} className={cls}>{label}</a>;
+      return <a key={k} href={href} className={cls} target="_blank" rel="noopener noreferrer">{label}</a>;
+    }
+    if (seg.startsWith('**') && seg.endsWith('**')) {
+      return <strong key={k} className="font-semibold text-[rgb(var(--primary-dark))]">{seg.slice(2, -2)}</strong>;
+    }
+    if (seg.startsWith('*') && seg.endsWith('*')) {
+      return <em key={k} className="font-semibold not-italic text-[rgb(var(--primary-dark))]">{seg.slice(1, -1)}</em>;
+    }
+    return seg;
+  });
+}
 
 function renderBlock(block, key) {
   const t = block.trim();
   if (!t) return null;
+
+  if (t.startsWith('### ')) {
+    const heading = t.replace(/^###\s+/, '').replace(/\*([^*]+)\*/g, '$1').trim();
+    if (FAQ_HEADING_RE.test(heading)) return null;
+    return (
+      <h4
+        key={key}
+        className="mb-3 mt-8 text-[16px] font-bold uppercase leading-[1.3] tracking-[0.04em] sm:text-[17px]"
+        style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+      >
+        {heading}
+      </h4>
+    );
+  }
 
   if (t.startsWith('## ')) {
     const heading = t.replace(/^##\s+/, '').replace(/\*([^*]+)\*/g, '$1').trim();
@@ -200,6 +252,20 @@ function renderBlock(block, key) {
     );
   }
 
+  // Blockquote — accent rail, larger type, no quotation marks added.
+  if (t.startsWith('> ')) {
+    const quote = t.split('\n').map((l) => l.replace(/^>\s?/, '')).join(' ').trim();
+    return (
+      <blockquote
+        key={key}
+        className="mb-6 mt-2 rounded-r-[14px] py-3 pl-6 pr-4 text-[16px] italic leading-[1.75] text-ink/80"
+        style={{ fontFamily: INTER, borderLeft: '3px solid rgb(var(--accent))', background: 'rgb(var(--accent) / 0.06)' }}
+      >
+        {renderInline(quote)}
+      </blockquote>
+    );
+  }
+
   if (t.startsWith('- ')) {
     const items = t.split(/\n- /).map((s) => s.replace(/^- /, '').trim()).filter(Boolean);
     return (
@@ -207,26 +273,36 @@ function renderBlock(block, key) {
         {items.map((item, j) => (
           <li key={j} className="flex items-start gap-3 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
             <CheckIcon className="mt-[5px] h-[15px] w-[15px] flex-shrink-0" style={{ color: 'rgb(var(--accent))' }} />
-            <span>{item}</span>
+            <span>{renderInline(item)}</span>
           </li>
         ))}
       </ul>
     );
   }
 
-  // Paragraph: support both *italic* emphasis and **bold** runs.
-  const parts = t.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
+  // Ordered list — numerals in an accent chip so they read as steps.
+  if (ORDERED_RE.test(t)) {
+    const items = t.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.replace(ORDERED_RE, ''));
+    return (
+      <ol key={key} className="m-0 mb-6 flex list-none flex-col gap-2.5 p-0">
+        {items.map((item, j) => (
+          <li key={j} className="flex items-start gap-3 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+            <span
+              className="mt-[3px] flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold"
+              style={{ background: 'rgb(var(--accent) / 0.12)', color: 'rgb(var(--accent))' }}
+            >
+              {j + 1}
+            </span>
+            <span>{renderInline(item)}</span>
+          </li>
+        ))}
+      </ol>
+    );
+  }
+
   return (
     <p key={key} className="mb-5 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
-      {parts.map((seg, k) => {
-        if (seg.startsWith('**') && seg.endsWith('**')) {
-          return <strong key={k} className="font-semibold text-[rgb(var(--primary-dark))]">{seg.slice(2, -2)}</strong>;
-        }
-        if (seg.startsWith('*') && seg.endsWith('*')) {
-          return <em key={k} className="font-semibold not-italic text-[rgb(var(--primary-dark))]">{seg.slice(1, -1)}</em>;
-        }
-        return seg;
-      })}
+      {renderInline(t)}
     </p>
   );
 }

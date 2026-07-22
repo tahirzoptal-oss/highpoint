@@ -34,14 +34,14 @@ export default function LeadFormBanner() {
 
       <div className="site-container relative">
         <div
-          className="rounded-[28px] bg-white px-5 py-6 sm:px-8 sm:py-8"
+          className="rounded-[28px] bg-white px-5 py-5 sm:px-8 sm:py-8"
           style={{
             boxShadow:
               '0 44px 88px -30px rgba(16,40,79,0.42), 0 16px 36px -18px rgba(16,40,79,0.22), 0 2px 6px -2px rgba(16,40,79,0.08)',
             border: '1px solid rgba(16,40,79,0.06)',
           }}
         >
-          <div className="mb-5 flex items-center justify-center gap-3">
+          <div className="mb-4 flex items-center justify-center gap-3 sm:mb-5">
             <h2 className="text-xl font-bold uppercase sm:text-2xl" style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary))' }}>
               Request Your Free Inspection Now
             </h2>
@@ -50,17 +50,17 @@ export default function LeadFormBanner() {
           {/* Desktop: single row (5 fields + button). Tablet: two rows (3 cols). Mobile: stacked. */}
           <form
             onSubmit={onSubmit}
-            className="grid grid-cols-1 gap-3.5 md:grid-cols-3 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto] lg:items-stretch"
+            className="grid grid-cols-1 gap-2.5 md:grid-cols-3 md:gap-3.5 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto] lg:items-stretch"
           >
             <input {...honeypotProps} />
-            <input name="name" placeholder="Name" className="form-input rounded-lg px-4 py-3.5 text-sm" style={inputStyle} />
-            <input name="email" type="email" placeholder="Email" className="form-input rounded-lg px-4 py-3.5 text-sm" style={inputStyle} />
-            <input name="phone" type="tel" placeholder="Phone" className="form-input rounded-lg px-4 py-3.5 text-sm" style={inputStyle} />
-            <input name="address" placeholder="Address" className="form-input rounded-lg px-4 py-3.5 text-sm" style={inputStyle} />
-            <input name="service" placeholder="How Can We Assist?" className="form-input rounded-lg px-4 py-3.5 text-sm" style={inputStyle} />
+            <input name="name" placeholder="Name" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="email" type="email" placeholder="Email" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="phone" type="tel" placeholder="Phone" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="address" placeholder="Address" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
+            <input name="service" placeholder="How Can We Assist?" className="form-input rounded-lg px-4 py-2.5 text-sm sm:py-3.5" style={inputStyle} />
             <button
               type="submit"
-              className="btn-gold w-full whitespace-nowrap px-8 py-3.5 text-[13px] font-bold uppercase tracking-[0.08em] lg:w-auto"
+              className="btn-gold w-full whitespace-nowrap px-8 py-3 text-[13px] font-bold uppercase tracking-[0.08em] sm:py-3.5 lg:w-auto"
             >
               Submit
             </button>

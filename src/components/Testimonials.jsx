@@ -199,7 +199,7 @@ export default function Testimonials() {
     <section className="bg-white py-16 lg:py-20" aria-label={copy.reviews?.label || 'Customer reviews'}>
       <div className="site-container">
         {/* Heading — existing copy */}
-        <div className="mx-auto mb-10 max-w-2xl text-center lg:mb-12">
+        <div className="mx-auto mb-0 max-w-2xl text-center lg:mb-12">
           {copy.reviews?.label && (
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
               {copy.reviews.label}

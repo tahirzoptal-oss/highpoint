@@ -172,16 +172,10 @@ export default function OurProcess() {
               background: 'linear-gradient(90deg, rgb(var(--accent) / 0.14), rgb(var(--accent) / 0.42) 18%, rgb(var(--accent) / 0.42) 82%, rgb(var(--accent) / 0.14))',
             }}
           />
-          {/* Mobile: the same rule turned vertical, down the circle centres. */}
-          <div
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 w-px -translate-x-1/2 sm:hidden"
-            style={{
-              top: CIRCLE_MID,
-              bottom: CIRCLE_MID,
-              background: 'linear-gradient(180deg, rgb(var(--accent) / 0.14), rgb(var(--accent) / 0.38) 12%, rgb(var(--accent) / 0.38) 88%, rgb(var(--accent) / 0.14))',
-            }}
-          />
+          {/* There is deliberately NO vertical connector on tablet/mobile. The
+              steps stack with generous spacing and read in order without it,
+              and the rule only added a line for the eye to fight. The
+              horizontal connector above is desktop-only (lg:block). */}
 
           <ul className="relative m-0 grid list-none grid-cols-1 gap-y-12 p-0 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-14 lg:grid-cols-5 lg:gap-x-5">
             {steps.map((step, i) => (

@@ -150,19 +150,25 @@ export default function Founder({ showCta = true }) {
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -left-16 top-8 h-56 w-56 rounded-full blur-3xl" style={{ background: 'rgb(var(--accent) / 0.13)' }} />
         <div className="absolute -right-10 bottom-0 h-64 w-64 rounded-full blur-3xl" style={{ background: 'rgb(var(--accent-light) / 0.2)' }} />
-        {/* thin architectural verticals */}
-        <div className="absolute inset-y-0 left-[16%] w-px" style={{ background: 'linear-gradient(180deg, transparent, rgba(24,60,120,0.09), transparent)' }} />
-        
+                
         {/* roof-peak chevron — a square showing only two borders, rotated 45° */}
         
         
       </div>
 
       <div className="site-container relative">
-        <div className={`grid items-center gap-10 lg:gap-12 ${showPhoto ? 'lg:grid-cols-[minmax(0,0.64fr)_minmax(0,1fr)]' : ''}`}>
-          {/* ════ LEFT — portrait, framed and layered ════ */}
+        {/* MOBILE reading order for this image-text section is eyebrow →
+            heading → image → copy → CTA, so the head block, the portrait and
+            the body are three separate grid items with explicit `order`. From
+            lg the orders are dropped and explicit row/column placement rebuilds
+            the original two-column layout exactly: portrait on the left
+            spanning both rows, head above body on the right, zero row gap
+            between them so desktop spacing is untouched. */}
+        <div className={`grid items-center gap-x-10 gap-y-6 lg:gap-x-12 lg:gap-y-0 ${showPhoto ? 'lg:grid-cols-[minmax(0,0.64fr)_minmax(0,1fr)]' : ''}`}>
+          {/* ════ Portrait — LEFT column on desktop, spanning both rows;
+                 between heading and copy on mobile ════ */}
           {showPhoto && (
-            <div className="relative mx-auto w-full max-w-[440px] lg:mx-0">
+            <div className="relative order-2 mx-auto w-full max-w-[440px] lg:order-none lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mx-0">
               {/* architectural corner bracket */}
               <span
                 aria-hidden
@@ -218,8 +224,8 @@ export default function Founder({ showCta = true }) {
             </div>
           )}
 
-          {/* ════ RIGHT — label, heading, story, feature cards, CTA ════ */}
-          <div>
+          {/* ════ Head — label + heading (RIGHT column, row 1 on desktop) ════ */}
+          <div className="order-1 lg:order-none lg:col-start-2 lg:row-start-1">
             <p className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
               <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
               {c.label}
@@ -229,8 +235,11 @@ export default function Founder({ showCta = true }) {
               {c.heading}
             </h2>
 
-            <span className="mb-5 mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+            <span className="mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+          </div>
 
+          {/* ════ Body — story, feature cards, CTA (RIGHT column, row 2) ════ */}
+          <div className="order-3 lg:order-none lg:col-start-2 lg:row-start-2 lg:mt-5">
             <div>
               <p className="text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>{c.para1}</p>
               <p className="mt-3.5 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>{c.para2}</p>

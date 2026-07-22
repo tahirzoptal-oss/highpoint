@@ -22,7 +22,7 @@ export default function OwnerCard({ name, role, statValue, statLabel, className 
 
   return (
     <div
-      className={`relative overflow-hidden rounded-[12px] px-4 py-4 sm:px-4 sm:py-[18px] ${className}`}
+      className={`relative overflow-hidden rounded-[12px] px-2.5 py-2.5 sm:px-4 sm:py-[18px] ${className}`}
       style={{
         background: 'linear-gradient(158deg, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.78) 100%)',
         backdropFilter: 'blur(22px) saturate(1.35)',
@@ -36,14 +36,14 @@ export default function OwnerCard({ name, role, statValue, statLabel, className 
       <div className="relative flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div
-            className="truncate text-[18px] font-bold uppercase leading-none"
+            className="truncate sm:text-[18px] font-bold uppercase leading-none"
             style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))', letterSpacing: '0.005em' }}
           >
             {name}
           </div>
 
           <div
-            className="truncate text-[11px] mt-2 font-semibold uppercase leading-none tracking-[0.16em]"
+            className="truncate text-[11px] mt-1 sm:mt-2 font-semibold uppercase leading-none tracking-[0.16em]"
             style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}
           >
             {role}

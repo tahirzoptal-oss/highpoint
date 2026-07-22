@@ -15,12 +15,11 @@ const glassBtnTextStyle = {
 };
 
 const serviceIcons = {
-  // Wrench — repair
+  // Wrench — repair. One continuous outline (the previous three-path version
+  // overlapped itself and rendered as a tangle at 24px).
   'roof-repair': (
     <svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M11.4 15.2 17.3 21a2.65 2.65 0 0 0 3.7-3.7l-5.9-5.9" />
-      <path d="M11.4 15.2 6.8 20.8a2.55 2.55 0 1 1-3.6-3.6l6.9-5.6" />
-      <path d="M13.9 12.1c.3-.4.7-.6 1.2-.8.6-.2 1.2-.2 1.7-.1a4.5 4.5 0 0 0 4.5-6.3l-3.3 3.3a3 3 0 0 1-2.2-2.3l3.3-3.3a4.5 4.5 0 0 0-6.4 4.5c.1 1.1-.1 2.3-.9 3l-.1.1" />
+      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
     </svg>
   ),
   // Cycle arrows — replacement
@@ -158,10 +157,16 @@ function ServiceCard({ service, className = '' }) {
           style={{ background: 'linear-gradient(105deg, transparent 38%, rgba(255,255,255,0.75) 50%, transparent 62%)' }}
         />
 
+        {/* Icon tile — the site's blue glass medallion, as before. The only
+            change is a hairline light rim and a soft accent shadow, so the tile
+            reads as a raised object rather than a flat swatch. Size, radius,
+            spacing and alignment are untouched. */}
         <span
           className="relative flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[13px] transition-transform duration-[280ms] ease-out"
           style={{
             background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
+            border: '1px solid rgba(255,255,255,0.55)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5), 0 8px 18px -10px rgb(var(--accent) / 0.55)',
             color: 'rgb(var(--on-accent))',
           }}
         >
@@ -226,10 +231,16 @@ export default function Services() {
       </div>
 
       <div className="site-container relative py-14 lg:py-20">
-        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:gap-14">
-          {/* ════ LEFT — label, heading, intro, service grid, CTA ════ */}
-          <div>
-
+        {/* MOBILE reading order for this image-text section is eyebrow →
+            heading → image → copy → CTA, so the head block, the photo and the
+            body are three separate grid items with explicit `order`. From lg
+            the orders are dropped and explicit row/column placement rebuilds
+            the original two-column layout exactly: photo on the right spanning
+            both rows, head above body on the left, zero row gap between them so
+            desktop spacing is untouched. */}
+        <div className="grid items-center gap-x-10 gap-y-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.62fr)] lg:gap-x-14 lg:gap-y-0">
+          {/* ════ Head — label + heading (LEFT column, row 1 on desktop) ════ */}
+          <div className="order-1 lg:order-none lg:col-start-1 lg:row-start-1">
             <p className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]" style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}>
               <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
               {c.label}
@@ -239,8 +250,11 @@ export default function Services() {
               {c.heading}
             </h2>
 
-            <span className="mb-5 mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+            <span className="mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+          </div>
 
+          {/* ════ Body — intro, service grid, CTA (LEFT column, row 2) ════ */}
+          <div className="order-3 lg:order-none lg:col-start-1 lg:row-start-2 lg:mt-5">
             <p className="max-w-[62ch] text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>{c.body}</p>
 
             {/* 2-up from sm; the odd seventh tile spans the row so the grid
@@ -265,8 +279,9 @@ export default function Services() {
             </a>
           </div>
 
-          {/* ════ RIGHT — existing project photo, framed and layered ════ */}
-          <div className="relative mx-auto w-full max-w-[460px] lg:mx-0 lg:max-w-none">
+          {/* ════ Photo — RIGHT column on desktop, spanning both rows; between
+                 heading and copy on mobile ════ */}
+          <div className="relative order-2 mx-auto w-full max-w-[460px] lg:order-none lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:mx-0 lg:max-w-none">
             <span
               aria-hidden
               className="absolute -right-3.5 -top-3.5 hidden h-20 w-20 rounded-tr-[24px] sm:block"

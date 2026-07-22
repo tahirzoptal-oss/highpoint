@@ -140,7 +140,7 @@ export default function CTABanner() {
           <FadeOnEnter delay={140}>
             <div
               id="cta-fields"
-              className="scroll-mt-24 rounded-[20px] bg-white p-8 sm:p-9 lg:p-10"
+              className="scroll-mt-24 rounded-[20px] bg-white p-5 sm:p-9 lg:p-10"
               style={{
                 border: '1px solid #EAEAEA',
                 boxShadow: '0 2px 8px -2px rgba(8,18,38,0.2), 0 32px 64px -24px rgba(8,18,38,0.6)',
@@ -156,7 +156,7 @@ export default function CTABanner() {
                 {brandDNA.copy.formSubtext}
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-7 grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <form onSubmit={handleSubmit} className="mt-7 grid grid-cols-1 gap-3 md:gap-5 sm:grid-cols-2">
                 {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
                 <input {...honeypotProps} />
                 <input name="name" className={FIELD_CLASS} placeholder="Your Name" style={{ fontFamily: INTER }} />
