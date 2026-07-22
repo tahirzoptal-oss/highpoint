@@ -34,7 +34,7 @@ export default function MobileCtaBar() {
       {/* Dual sticky CTAs. Rule 61: visually distinct halves, both always
           render. Left = light treatment (white bg, navy text), right =
           metallic accent (gold gradient, white text). */}
-      <div className="grid grid-cols-2" style={{ borderTop: '1px solid rgba(15,23,42,0.2)' }}>
+      <div className="grid grid-cols-2">
         <a
           href={`tel:${brandDNA.contact.phoneTelLink}`}
           className="relative flex items-center justify-center gap-2 py-2 font-heading font-bold text-sm uppercase tracking-wider"
