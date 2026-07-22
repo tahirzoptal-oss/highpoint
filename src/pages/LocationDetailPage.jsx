@@ -12,6 +12,7 @@ import { Band, SectionHead, CallNow, Medallion, CheckIcon, StickyRail, SiloBody 
 import { PRIMARY_SERVICES } from '../config/primary-services';
 import { buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
+import { cityQuoteFormId } from '../config/form-ids';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -131,7 +132,7 @@ export default function LocationDetailPage() {
                content. From lg it is `absolute inset-0` over the whole stack,
                so its position in the document has no effect on the desktop
                layout at all. ── */}
-        <StickyRail formId={`city-${slug}`} />
+        <StickyRail formId={cityQuoteFormId(slug)} />
 
         {/* ── One band per copy-deck heading. The first carries whatever ran
                before the first heading and keeps the page title; the rest take

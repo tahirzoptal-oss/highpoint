@@ -1,4 +1,5 @@
 import { useLeadForm } from '../lib/leadForm';
+import { HOME_HERO_FORM } from '../config/form-ids';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -16,8 +17,9 @@ const inputStyle = {
  * Floating lead-generation form. Rendered on the homepage BETWEEN the hero and
  * the logo slider; a negative top margin lifts it so it floats over the bottom
  * of the hero WITHOUT covering the hero content (review badges etc.).
- * Keeps `id="quote"` so the header CTA still scrolls here, and reuses the
- * existing `useLeadForm('hero')` handler.
+ * Keeps `id="quote"` on the SECTION so the header CTA still scrolls here. That
+ * is a scroll anchor, not the form's identity: the <form> inside carries its
+ * own `formId` (HOME_HERO_FORM), which is what identifies the submission.
  *
  * The SECTION itself has no background. A single tint layer starts exactly
  * where the hero ends (top-16 / lg:top-32 == the negative top margin) and runs
@@ -25,8 +27,8 @@ const inputStyle = {
  * hero artwork stays fully visible behind the upper part of the card and the
  * card genuinely straddles the hero → logo-slider seam. No white block.
  */
-export default function LeadFormBanner() {
-  const { honeypotProps, onSubmit } = useLeadForm('hero');
+export default function LeadFormBanner({ formId = HOME_HERO_FORM }) {
+  const { honeypotProps, onSubmit } = useLeadForm(formId);
 
   return (
     <section id="quote" className="relative z-30 -mt-16 lg:-mt-32">
@@ -49,6 +51,7 @@ export default function LeadFormBanner() {
 
           {/* Desktop: single row (5 fields + button). Tablet: two rows (3 cols). Mobile: stacked. */}
           <form
+            id={formId}
             onSubmit={onSubmit}
             className="grid grid-cols-1 gap-2.5 md:grid-cols-3 md:gap-3.5 lg:grid-cols-[repeat(5,minmax(0,1fr))_auto] lg:items-stretch"
           >

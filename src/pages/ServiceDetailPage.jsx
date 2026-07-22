@@ -10,6 +10,7 @@ import SEO from '../components/SEO';
 import { Band, SectionHead, CallNow, Medallion, CheckIcon, StickyRail, SiloBody } from '../components/SiloSection';
 import { buildService, buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
+import { serviceQuoteFormId } from '../config/form-ids';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -85,7 +86,7 @@ export default function ServiceDetailPage() {
                content. From lg it is `absolute inset-0` over the whole stack,
                so its position in the document has no effect on the desktop
                layout at all. ── */}
-        <StickyRail formId={`service-${slug}`} />
+        <StickyRail formId={serviceQuoteFormId(slug)} />
 
         {/* ── Overview ── */}
         <Band tone="white">

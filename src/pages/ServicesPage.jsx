@@ -4,6 +4,7 @@ import LogoSlider from '../components/LogoSlider';
 import BeltSlider from '../components/BeltSlider';
 import ServiceAreas from '../components/ServiceAreas';
 import CTABanner from '../components/CTABanner';
+import { CTA_FORM } from '../config/form-ids';
 import SEO from '../components/SEO';
 // Same layout primitives as the service detail pages, so the index and the
 // pages it links to read as one family.
@@ -132,7 +133,7 @@ export default function ServicesPage() {
       <ServiceAreas variant="light" />
 
       {/* ── Global CTA banner ── */}
-      <CTABanner />
+      <CTABanner formId={CTA_FORM.services} />
     </>
   );
 }

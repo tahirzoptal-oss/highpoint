@@ -43,8 +43,12 @@ const CheckIcon = (props) => (
   </svg>
 );
 
-export default function CTABanner() {
-  const { honeypotProps, onSubmit: handleSubmit } = useLeadForm('cta');
+// `formId` identifies THIS instance of the banner. The component renders on
+// seven different pages, so the ID cannot live in here — each page passes its
+// own from CTA_FORM, and the value is both the <form> id and the identifier
+// that rides along in the submission payload.
+export default function CTABanner({ formId = 'cta-form' }) {
+  const { honeypotProps, onSubmit: handleSubmit } = useLeadForm(formId);
   const c = brandDNA.copy.cta;
 
   return (
@@ -156,7 +160,7 @@ export default function CTABanner() {
                 {brandDNA.copy.formSubtext}
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-7 grid grid-cols-1 gap-3 md:gap-5 sm:grid-cols-2">
+              <form id={formId} onSubmit={handleSubmit} className="mt-7 grid grid-cols-1 gap-3 md:gap-5 sm:grid-cols-2">
                 {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
                 <input {...honeypotProps} />
                 <input name="name" className={FIELD_CLASS} placeholder="Your Name" style={{ fontFamily: INTER }} />

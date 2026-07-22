@@ -10,6 +10,7 @@ import { Band, StickyRail, SiloBody } from '../components/SiloSection';
 import { buildArticle, buildBreadcrumb } from '../lib/schema';
 import { blogPosts } from './BlogPage';
 import { brandDNA } from '../config/brand-dna';
+import { blogQuoteFormId } from '../config/form-ids';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -109,7 +110,7 @@ export default function BlogPostPage() {
                article. From lg it is `absolute inset-0` over the whole stack,
                so its position in the document has no effect on the desktop
                layout at all. ── */}
-        <StickyRail formId={`blog-${slug}`} />
+        <StickyRail formId={blogQuoteFormId(slug)} />
 
         <Band tone="white">
           <article>

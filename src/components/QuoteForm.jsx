@@ -25,7 +25,10 @@ const fieldStyle = {
  * inside a `.sticky-rail` wrapper to get the sticky quote rail — that class
  * owns the offset that clears the fixed header (see index.css).
  */
-export default function QuoteForm({ formId = 'quote', title, subtitle }) {
+// `formId` is required in practice: this form appears once per service, service
+// area and blog post, so the caller passes a slug-derived ID (see
+// src/config/form-ids.js). The default is only a fallback for a bare render.
+export default function QuoteForm({ formId = 'quote-form', title, subtitle }) {
   const { honeypotProps, onSubmit } = useLeadForm(formId);
   return (
     <div
@@ -54,7 +57,7 @@ export default function QuoteForm({ formId = 'quote', title, subtitle }) {
         </span>
       </div>
 
-      <form onSubmit={onSubmit} className="flex flex-col gap-3.5 p-6">
+      <form id={formId} onSubmit={onSubmit} className="flex flex-col gap-3.5 p-6">
         {/* Anti-spam honeypot: hidden from humans, bots fill it. */}
         <input {...honeypotProps} />
 

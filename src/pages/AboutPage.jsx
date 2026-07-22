@@ -6,6 +6,7 @@ import BeltSlider from '../components/BeltSlider';
 import Testimonials from '../components/Testimonials';
 import ServiceAreas from '../components/ServiceAreas';
 import CTABanner from '../components/CTABanner';
+import { CTA_FORM } from '../config/form-ids';
 import SEO from '../components/SEO';
 import { buildBreadcrumb } from '../lib/schema';
 import { QUOTE_HASH, goToQuote } from '../lib/scrollToQuote';
@@ -322,7 +323,7 @@ export default function AboutPage() {
       <ServiceAreas variant="light" />
 
       {/* ════ 9. Global CTA ════ */}
-      <CTABanner />
+      <CTABanner formId={CTA_FORM.about} />
     </>
   );
 }

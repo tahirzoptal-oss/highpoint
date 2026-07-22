@@ -12,6 +12,7 @@ import Blog from '../components/Blog';
 import FAQ from '../components/FAQ';
 import ServiceAreas from '../components/ServiceAreas';
 import CTABanner from '../components/CTABanner';
+import { CTA_FORM } from '../config/form-ids';
 import SEO from '../components/SEO';
 import { buildLocalBusiness, buildFAQ } from '../lib/schema';
 
@@ -32,7 +33,7 @@ export default function HomePage() {
       <OurWork />
       <OurProcess />
       <Blog />
-      <CTABanner />
+      <CTABanner formId={CTA_FORM.home} />
       <FAQ />
       <ServiceAreas />
     </>

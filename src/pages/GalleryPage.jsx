@@ -5,6 +5,7 @@ import LogoSlider from '../components/LogoSlider';
 import BeltSlider from '../components/BeltSlider';
 import Lightbox from '../components/Lightbox';
 import CTABanner from '../components/CTABanner';
+import { CTA_FORM } from '../config/form-ids';
 import SEO from '../components/SEO';
 import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
@@ -235,7 +236,7 @@ export default function GalleryPage() {
 
 
       {/* ════ 4. Global CTA ════ */}
-      <CTABanner />
+      <CTABanner formId={CTA_FORM.gallery} />
     </>
   );
 }

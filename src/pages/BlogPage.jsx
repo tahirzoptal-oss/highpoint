@@ -3,6 +3,7 @@ import InnerBanner from '../components/InnerBanner';
 import LogoSlider from '../components/LogoSlider';
 import BeltSlider from '../components/BeltSlider';
 import CTABanner from '../components/CTABanner';
+import { CTA_FORM } from '../config/form-ids';
 import SEO from '../components/SEO';
 // The listing reuses the homepage blog card verbatim — same cover ratio, meta
 // row, title treatment and "Read More" affordance — so the two never drift.
@@ -195,7 +196,7 @@ export default function BlogPage() {
       </section>
 
       {/* ════ 5. Global CTA ════ */}
-      <CTABanner />
+      <CTABanner formId={CTA_FORM.blog} />
     </>
   );
 }
