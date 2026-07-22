@@ -1,7 +1,12 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useMemo, useRef } from 'react';
+import InnerBanner from '../components/InnerBanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
 import CTABanner from '../components/CTABanner';
 import SEO from '../components/SEO';
+// The listing reuses the homepage blog card verbatim — same cover ratio, meta
+// row, title treatment and "Read More" affordance — so the two never drift.
+import { PostCard } from '../components/Blog';
 import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
@@ -9,18 +14,59 @@ export const blogPosts = brandDNA.blog_posts;
 
 const categories = brandDNA.blog_categories;
 
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+
+const POSTS_PER_PAGE = 6;
+
+const Chevron = ({ dir, ...props }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <path d={dir === 'left' ? 'M15 5l-7 7 7 7' : 'M9 5l7 7-7 7'} />
+  </svg>
+);
+
+// Prev / Next control. Disabled at the ends rather than hidden, so the row
+// keeps its shape on every page.
+const PageArrow = ({ dir, label, disabled, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    disabled={disabled}
+    aria-label={label}
+    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-white px-4 text-[11px] font-bold uppercase tracking-[0.1em] text-[rgb(var(--primary))] shadow-[0_1px_2px_rgba(16,40,79,0.04),0_10px_24px_-16px_rgba(16,40,79,0.24)] transition-[background-color,color] duration-300 ease-out enabled:hover:bg-[rgb(var(--primary))] enabled:hover:text-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2"
+    style={{ border: '1px solid rgba(16,40,79,0.1)', fontFamily: INTER }}
+  >
+    {dir === 'left' && <Chevron dir="left" className="h-3.5 w-3.5" />}
+    <span className="hidden sm:inline">{label}</span>
+    {dir === 'right' && <Chevron dir="right" className="h-3.5 w-3.5" />}
+  </button>
+);
+
 export default function BlogPage() {
   const [activeCategory, setActiveCategory] = useState('All');
-  const isAll = activeCategory === 'All';
+  const [page, setPage] = useState(1);
+  const gridRef = useRef(null);
 
-  const featured = blogPosts.find((p) => p.featured);
-  // "All" keeps the featured card up top and grids the rest. Selecting a
-  // category drops the featured card and grids every post that matches,
-  // including the featured one.
-  const gridPosts = isAll
-    ? blogPosts.filter((p) => !p.featured)
-    : blogPosts.filter((p) => p.category === activeCategory);
-  const showFeatured = isAll && Boolean(featured);
+  const featuredSlug = (blogPosts.find((p) => p.featured) || {}).slug;
+
+  // Filtered set, featured story first so it opens the grid.
+  const filtered = useMemo(() => {
+    const list = activeCategory === 'All'
+      ? blogPosts
+      : blogPosts.filter((p) => p.category === activeCategory);
+    return list.slice().sort((a, b) => (a.slug === featuredSlug ? -1 : b.slug === featuredSlug ? 1 : 0));
+  }, [activeCategory, featuredSlug]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE));
+  const current = Math.min(page, pageCount);
+  const visible = filtered.slice((current - 1) * POSTS_PER_PAGE, current * POSTS_PER_PAGE);
+
+  // Paging keeps the grid in view instead of leaving the reader mid-page.
+  const goTo = (next) => {
+    setPage(Math.min(Math.max(1, next), pageCount));
+    if (gridRef.current) gridRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const pickCategory = (cat) => { setActiveCategory(cat); setPage(1); };
 
   return (
     <>
@@ -29,145 +75,126 @@ export default function BlogPage() {
         title={`Roofing Blog | ${brandDNA.company.name}`}
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog' }])}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '45vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt={`${brandDNA.company.name} Blog`}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-            onError={(e) => { e.target.src = '/work/project1.webp'; }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.88) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">Blog</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{brandDNA.pages.blog.label}</p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {brandDNA.pages.blog.heading}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>
-            {brandDNA.pages.blog.intro}
-          </p>
-        </div>
-      </section>
 
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8">
+      {/* ════ 1. Banner — shared InnerBanner component ════ */}
+      <InnerBanner
+        title={brandDNA.pages.blog.heading}
+        subtitle={brandDNA.pages.blog.intro}
+        breadcrumb={[{ label: 'Blog' }]}
+        minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
+      />
 
-          {/* Featured post */}
-          {showFeatured && (
-            <div className="mb-12">
-              <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">{brandDNA.copy.blog.featuredLabel}</p>
-              <Link to={`/blog/${featured.slug}`} className="group card-elevated-dark block overflow-hidden bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="grid grid-cols-1 lg:grid-cols-2">
-                  <div className="relative overflow-hidden" style={{ minHeight: 300 }}>
-                    <img
-                      src={featured.cover}
-                      alt={featured.title}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      onError={(e) => { e.target.src = '/work/project1.webp'; }}
-                    />
-                  </div>
-                  <div className="p-8 flex flex-col justify-center">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 text-gold" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.2)' }}>
-                        {featured.category}
-                      </span>
-                      <span className="text-steel text-xs">{featured.readTime}</span>
-                    </div>
-                    <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-3 group-hover:text-gold transition-colors">
-                      {featured.title}
-                    </h2>
-                    <p className="text-cool text-sm leading-relaxed mb-5">{featured.excerpt}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-steel text-xs">{featured.date}</span>
-                      <span className="text-gold text-sm font-bold flex items-center gap-1">
-                        Read more
-                        <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
+      {/* ════ 2 & 3. Global logo slider + brand belt ════ */}
+      <LogoSlider />
+      <BeltSlider />
+
+      {/* ════ 4. Blog grid ════ */}
+      <section ref={gridRef} className="relative overflow-hidden py-14 lg:py-20">
+        {/* Soft mesh base — the same palette the homepage blog strip sits on. */}
+        <div
+          aria-hidden
+          className="absolute inset-0"
+          style={{
+            background:
+              'radial-gradient(48% 44% at 90% 10%, rgba(110,143,196,0.18) 0%, transparent 62%),' +
+              'radial-gradient(44% 40% at 8% 16%, rgba(44,90,166,0.12) 0%, transparent 64%),' +
+              'radial-gradient(52% 48% at 50% 100%, rgba(24,60,120,0.10) 0%, transparent 62%),' +
+              'linear-gradient(170deg, #FFFFFF 0%, #F6F9FD 52%, #E9F0F9 100%)',
+          }}
+        />
+        <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -right-16 bottom-8 h-64 w-64 rounded-full blur-3xl" style={{ background: 'rgb(var(--accent-light) / 0.18)' }} />
+          <div className="absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent) / 0.3), transparent)' }} />
+        </div>
+
+        <div className="site-container relative">
+          {/* Category filter — existing behaviour, restyled for the light page. */}
+          {categories && categories.length > 1 && (
+            <div className="mb-8 flex flex-wrap gap-2 lg:mb-10">
+              {categories.map((cat) => {
+                const active = cat === activeCategory;
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => pickCategory(cat)}
+                    aria-pressed={active}
+                    className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-[background-color,color,border-color] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 ${
+                      active ? '' : 'text-ink/65 hover:text-[rgb(var(--primary))]'
+                    }`}
+                    style={{
+                      fontFamily: INTER,
+                      background: active
+                        ? 'linear-gradient(150deg, rgb(var(--accent-light)), rgb(var(--accent)) 55%, rgb(var(--primary)))'
+                        : 'rgba(255,255,255,0.9)',
+                      border: active ? '1px solid rgb(var(--accent) / 0.4)' : '1px solid rgba(16,40,79,0.1)',
+                      color: active ? 'rgb(var(--on-accent))' : undefined,
+                    }}
+                  >
+                    {cat}
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          {/* Category filter */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            {categories.map((cat) => {
-              const active = cat === activeCategory;
-              return (
-                <button
-                  key={cat}
-                  type="button"
-                  onClick={() => setActiveCategory(cat)}
-                  aria-pressed={active}
-                  className={`font-heading font-bold text-xs uppercase tracking-widest px-4 py-2 transition-all bg-navy-slate ${active ? 'text-gold' : 'text-cool hover:text-white hover:border-gold'}`}
-                  style={{ border: active ? '1px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.35)' }}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
+          {visible.length === 0 ? (
+            <p className="py-10 text-[15px] leading-[1.72] text-ink/70" style={{ fontFamily: INTER }}>
+              No articles in this category yet. Check back soon.
+            </p>
+          ) : (
+            /* 3 / 2 / 1 columns. Grid items stretch and the card is `h-full`,
+               so every card in a row ends flush regardless of copy length. */
+            <ul className="m-0 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+              {visible.map((post) => (
+                <li key={post.slug} className="flex">
+                  <PostCard post={post} featured={post.slug === featuredSlug} />
+                </li>
+              ))}
+            </ul>
+          )}
 
-          {/* Blog grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {gridPosts.map((post) => (
-              <Link
-                key={post.slug}
-                to={`/blog/${post.slug}`}
-                className="card-elevated-dark group overflow-hidden flex flex-col bg-navy-slate"
-                style={{ border: '1px solid rgba(100,116,139,0.25)' }}
-              >
-                <div className="relative overflow-hidden" style={{ paddingBottom: '60%' }}>
-                  <img
-                    src={post.cover}
-                    alt={post.title}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => { e.target.src = '/work/project1.webp'; }}
-                  />
-                </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 text-gold" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.2)' }}>
-                      {post.category}
-                    </span>
-                    <span className="text-steel text-[10px]">{post.readTime}</span>
-                  </div>
-                  <h3 className="font-heading font-bold text-white uppercase text-lg leading-tight mb-2 group-hover:text-gold transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-cool text-xs leading-relaxed flex-1 mb-4">{post.excerpt}</p>
-                  <div className="flex items-center justify-between mt-auto pt-3" style={{ borderTop: '1px solid rgba(100,116,139,0.2)' }}>
-                    <span className="text-steel text-xs">{post.date}</span>
-                    <span className="text-gold text-xs font-bold flex items-center gap-1">
-                      Read more
-                      <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          {/* ── Pagination — 6 posts per page ── */}
+          {pageCount > 1 && (
+            <nav aria-label="Blog pagination" className="mt-10 flex flex-wrap items-center justify-center gap-2 lg:mt-14">
+              <PageArrow dir="left" label="Previous" disabled={current === 1} onClick={() => goTo(current - 1)} />
 
-          {gridPosts.length === 0 && (
-            <p className="text-cool text-sm font-body">No articles in this category yet. Check back soon.</p>
+              {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => {
+                const active = n === current;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => goTo(n)}
+                    aria-label={`Page ${n}`}
+                    aria-current={active ? 'page' : undefined}
+                    className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-[13px] font-bold transition-[background-color,color] duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 ${
+                      active ? '' : 'hover:text-[rgb(var(--primary))]'
+                    }`}
+                    style={{
+                      fontFamily: INTER,
+                      background: active
+                        ? 'linear-gradient(150deg, rgb(var(--accent-light)), rgb(var(--accent)) 55%, rgb(var(--primary)))'
+                        : 'rgba(255,255,255,0.9)',
+                      border: active ? '1px solid rgb(var(--accent) / 0.4)' : '1px solid rgba(16,40,79,0.1)',
+                      color: active ? 'rgb(var(--on-accent))' : 'rgb(var(--ink) / 0.7)',
+                      boxShadow: active
+                        ? '0 10px 24px -14px rgb(var(--accent) / 0.7)'
+                        : '0 1px 2px rgba(16,40,79,0.04)',
+                    }}
+                  >
+                    {n}
+                  </button>
+                );
+              })}
+
+              <PageArrow dir="right" label="Next" disabled={current === pageCount} onClick={() => goTo(current + 1)} />
+            </nav>
           )}
         </div>
       </section>
 
+      {/* ════ 5. Global CTA ════ */}
       <CTABanner />
     </>
   );

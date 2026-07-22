@@ -54,9 +54,9 @@ export default {
         // The actual font family string is rewritten by inject-theme.mjs (it
         // edits the @import url(...) at the top of src/index.css) so the
         // first family name in each stack here just needs to match
-        // brandDNA.typography.heading / .body. Capstone defaults shown.
-        heading: ['Oswald', 'Impact', 'sans-serif'],
-        body: ['Montserrat', 'sans-serif'],
+        // brandDNA.typography.heading / .body.
+        heading: ['Josefin Sans', 'sans-serif'],
+        body: ['Inter', 'sans-serif'],
       },
       // Wave 1: named line-height tokens for explicit application by class
       lineHeight: {
@@ -81,6 +81,7 @@ export default {
       },
       // Wave 1: max-width tokens
       maxWidth: {
+        '7xl': '90rem',             // 1440px — site-wide container cap (override Tailwind's 80rem default)
         'prose-tight': '65ch',      // body-text columns (premium read)
         'prose-wide': '75ch',       // looser body columns
       },

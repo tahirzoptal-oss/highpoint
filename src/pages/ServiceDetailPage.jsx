@@ -1,21 +1,22 @@
-import { useParams, Link, Navigate } from 'react-router-dom';
-import CTABanner from '../components/CTABanner';
-import Ticker from '../components/Ticker';
+import { useParams, Navigate } from 'react-router-dom';
+import InnerBanner from '../components/InnerBanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
 import FAQAccordion from '../components/FAQAccordion';
-import CornerOverlay from '../components/CornerOverlay';
-import QuoteForm from '../components/QuoteForm';
+import ServiceAreas from '../components/ServiceAreas';
 import SEO from '../components/SEO';
+// Shared layout primitives — the same bands, headings, buttons, medallions,
+// body renderer and sticky rail the service-area detail pages use.
+import { Band, SectionHead, CallNow, Medallion, CheckIcon, StickyRail, SiloBody } from '../components/SiloSection';
 import { buildService, buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
-// Per-service rich detail (heroTitle / subtitle / description / image / benefits /
-// included / process / faq / related) lives in brandDNA.services[i]. The optional
-// fields below render only when populated. Per-client builds can ship services
-// with only the base { slug, name, blurb } and the page degrades gracefully.
-const serviceNames = brandDNA.services.reduce((acc, s) => {
-  acc[s.slug] = s.name.split(' ').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' ');
-  return acc;
-}, {});
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+const CARD =
+  'rounded-[18px] bg-white shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-20px_rgba(16,40,79,0.22)]';
+const CARD_BORDER = { border: '1px solid rgba(16,40,79,0.07)' };
 
 export default function ServiceDetailPage() {
   const { slug } = useParams();
@@ -27,7 +28,6 @@ export default function ServiceDetailPage() {
   const service = {
     title: found.name.split(' ').map((w) => w.charAt(0) + w.slice(1).toLowerCase()).join(' '),
     heroTitle: found.heroTitle || found.name,
-    subtitle: found.subtitle || `Serving ${brandDNA.company.serviceRegion}`,
     description: found.description || found.description_short || '',
     benefits: found.benefits || [],
     included: found.included || [],
@@ -38,121 +38,19 @@ export default function ServiceDetailPage() {
       ? found.process
       : brandDNA.process_steps.map((s) => ({ num: s.n, title: s.title, desc: s.body })),
     faq: found.faq || [],
-    related: found.related || [],
-    reviews: found.reviews || [],
     body: found.body || '',
-  };
-
-  // Render Stage 6 copy-deck body into the page. Recognises:
-  //   - <!-- SUBSERVICE_START: Title --> ... <!-- SUBSERVICE_END --> markers
-  //     wrap each enclosed range in a visually-distinct sub-service zone
-  //     (gold rule above, eyebrow label, larger heading) so an umbrella
-  //     service page reads as zones, not one stacked stream.
-  //   - ## headings, - bulleted lists, *emphasis* spans, **bold** runs.
-  //   - Defensively SKIPS any h2 whose text matches faq / frequently asked /
-  //     common questions / service faq. Even if the parser missed stripping
-  //     the FAQ block, the renderer drops the heading so the FAQAccordion
-  //     below remains the single source of truth.
-  const FAQ_HEADING_RE = /^(faq|frequently asked questions?|common questions?|service faq)\s*$/i;
-  const SUB_START_RE = /^<!--\s*SUBSERVICE_START:\s*(.+?)\s*-->$/;
-  const SUB_END_RE = /^<!--\s*SUBSERVICE_END\s*-->$/;
-
-  const renderBlock = (block, key) => {
-    const t = block.trim();
-    if (!t) return null;
-    if (t.startsWith('## ')) {
-      const heading = t.replace(/^##\s+/, '').replace(/\*([^*]+)\*/g, '$1').trim();
-      if (FAQ_HEADING_RE.test(heading)) return null;
-      return (
-        <h2 key={key} className="font-heading font-bold text-white uppercase text-2xl mt-10 mb-4 leading-tight">
-          {heading}
-        </h2>
-      );
-    }
-    if (t.startsWith('- ')) {
-      const items = t.split(/\n- /).map((s) => s.replace(/^- /, '').trim()).filter(Boolean);
-      return (
-        <ul key={key} className="flex flex-col gap-2 mb-6">
-          {items.map((item, j) => (
-            <li key={j} className="flex items-start gap-3 text-cool text-sm leading-relaxed">
-              <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-1 bg-navy-slate" style={{ border: '1px solid rgb(var(--accent) / 0.5)' }}>
-                <svg className="w-2.5 h-2.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      );
-    }
-    // Paragraph: support both *italic* emphasis and **bold** runs.
-    const parts = t.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).filter(Boolean);
-    return (
-      <p key={key} className="text-cool text-sm leading-relaxed mb-5">
-        {parts.map((seg, k) => {
-          if (seg.startsWith('**') && seg.endsWith('**')) {
-            return <strong key={k} className="text-white font-semibold">{seg.slice(2, -2)}</strong>;
-          }
-          if (seg.startsWith('*') && seg.endsWith('*')) {
-            return <em key={k} className="text-white font-semibold not-italic">{seg.slice(1, -1)}</em>;
-          }
-          return seg;
-        })}
-      </p>
-    );
-  };
-
-  const renderBodyBlocks = () => {
-    if (!service.body) return null;
-    const rawBlocks = service.body.trim().split(/\n\s*\n/);
-    // Walk blocks once, grouping any range between SUBSERVICE_START and
-    // SUBSERVICE_END into a single styled sub-service zone.
-    const out = [];
-    let i = 0;
-    let zoneIdx = 0;
-    while (i < rawBlocks.length) {
-      const t = rawBlocks[i].trim();
-      const startMatch = t.match(SUB_START_RE);
-      if (startMatch) {
-        const title = startMatch[1];
-        const inner = [];
-        i += 1;
-        while (i < rawBlocks.length && !SUB_END_RE.test(rawBlocks[i].trim())) {
-          inner.push(renderBlock(rawBlocks[i], `sub-${zoneIdx}-${i}`));
-          i += 1;
-        }
-        // Skip the END marker if found
-        if (i < rawBlocks.length) i += 1;
-        out.push(
-          <div
-            key={`zone-${zoneIdx}`}
-            className="mt-12 pt-10"
-            style={{ borderTop: '1px solid rgb(var(--accent) / 0.3)' }}
-          >
-            <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">SUB-SERVICE</p>
-            <h2 className="font-heading font-bold text-white uppercase text-3xl mb-6 leading-tight">
-              {title}
-            </h2>
-            {inner}
-          </div>
-        );
-        zoneIdx += 1;
-        continue;
-      }
-      // Defensively swallow stray END markers
-      if (SUB_END_RE.test(t)) { i += 1; continue; }
-      out.push(renderBlock(rawBlocks[i], `b-${i}`));
-      i += 1;
-    }
-    return out;
+    // Optional per-service head overrides and a service-specific paragraph for
+    // the closing Where We Work band. Absent on the generated services, which
+    // keep the derived title and the shared service-area copy.
+    metaTitle: found.metaTitle || '',
+    whereWeWork: found.whereWeWork || '',
   };
 
   return (
     <>
       <SEO
         path={`/services/${slug}`}
-        title={`${service.title} | ${brandDNA.company.name}`}
+        title={service.metaTitle || `${service.title} | ${brandDNA.company.name}`}
         description={service.description}
         jsonLd={[
           buildService(found),
@@ -163,221 +61,156 @@ export default function ServiceDetailPage() {
           ]),
         ]}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '52vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt={service.title}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-            onError={(e) => { e.target.src = '/work/project1.webp'; }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.92) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <Link to="/services" className="hover:text-white transition-colors">Services</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">{service.title}</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{service.subtitle}</p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {service.heroTitle}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>{service.description}</p>
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Link to="/contact" className="btn-gold font-heading font-bold text-sm uppercase px-6 py-3 tracking-widest text-navy">
-              {brandDNA.copy.buttonText}
-            </Link>
-            <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="btn-outline font-heading font-bold text-sm uppercase px-6 py-3 tracking-wider">
-              CALL {brandDNA.contact.phone}
-            </a>
-          </div>
-        </div>
-      </section>
 
-      {/* Main content: service overview + copy-deck body + reviews, beside a
-          sticky quote rail (the site's inner-page convention). */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Body column */}
-            <div className="lg:col-span-2">
-              <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">SERVICE OVERVIEW</p>
-              <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-4">{service.title}</h2>
-              <span className="line-gold block w-12 mb-6" />
-              {service.description && (
-                <p className="text-cool text-sm leading-relaxed mb-2">{service.description}</p>
-              )}
+      {/* ════ 1. Banner — shared InnerBanner component ════ */}
+      <InnerBanner
+        title={service.heroTitle}
+        subtitle={service.description}
+        breadcrumb={[{ label: 'Services', to: '/services' }, { label: service.title }]}
+      />
 
-              {/* Rich copy-deck body (renders only when a service ships one). */}
-              {renderBodyBlocks()}
+      {/* ════ 2 & 3. Global logo slider + brand belt ════ */}
+      <LogoSlider />
+      <BeltSlider />
 
-              {/* Why us + scope of work, STACKED in the main column so the sticky
-                  quote rail has a tall body to stay pinned beside. */}
-              {service.benefits.length > 0 && (
-                <div className="mt-12">
-                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">WHY {brandDNA.company.shortName.toUpperCase()}</p>
-                  <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-6">
-                    WHY {brandDNA.company.shortName.toUpperCase()} FOR {service.title.toUpperCase()}
-                  </h2>
-                  <div className="flex flex-col gap-4">
-                    {service.benefits.map((b, i) => (
-                      <div key={i} className="card-elevated-dark flex items-start gap-4 p-4 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0 font-heading font-bold text-sm text-white" style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.45)', background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                          {i + 1}
-                        </div>
-                        <p className="text-cool text-sm leading-relaxed pt-1">{b}</p>
+      {/* ════ SILO — 70/30. Content runs down the left in full-bleed bands;
+             the quote form floats over the right third and stays pinned until
+             the last band ends. Below lg the rail drops into normal flow and
+             every band goes full width. ════ */}
+      <div className="relative">
+
+        {/* ── Sticky quote rail. DOM position matters ONLY below lg, where the
+               rail is in normal flow — first child, so on tablet/mobile the
+               form is the first thing under the belt slider, ahead of the page
+               content. From lg it is `absolute inset-0` over the whole stack,
+               so its position in the document has no effect on the desktop
+               layout at all. ── */}
+        <StickyRail formId={`service-${slug}`} />
+
+        {/* ── Overview ── */}
+        <Band tone="white">
+          <SectionHead eyebrow="SERVICE OVERVIEW" title={service.title} />
+          {service.description && (
+            <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+              {service.description}
+            </p>
+          )}
+          <div className="mt-2"><SiloBody body={service.body} /></div>
+          <CallNow className="mt-4" />
+        </Band>
+
+        {/* ── Why us ── */}
+        {service.benefits.length > 0 && (
+          <Band tone="light">
+            <SectionHead title={`WHY ${brandDNA.company.shortName.toUpperCase()} FOR ${service.title.toUpperCase()}`} />
+            {/* A benefit is either a plain string (the generated services) or a
+                { title, body } pair (the copy-deck services, one card per "###"
+                heading). `items-center` keeps the medallion on a one-line row's
+                optical centre; titled cards top-align so the medallion sits with
+                the heading. Padding is identical either way. */}
+            <ul className="m-0 mt-8 flex list-none flex-col gap-4 p-0">
+              {service.benefits.map((b, i) => {
+                const titled = b && typeof b === 'object';
+                return (
+                  <li
+                    key={i}
+                    className={`flex gap-4 px-5 py-4 ${titled ? 'items-start' : 'items-center'} ${CARD}`}
+                    style={CARD_BORDER}
+                  >
+                    <Medallion>
+                      <CheckIcon className="relative h-[18px] w-[18px]" />
+                    </Medallion>
+                    {titled ? (
+                      <div className="min-w-0">
+                        <h3
+                          className="text-[15px] font-bold uppercase leading-[1.35] tracking-[0.04em]"
+                          style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+                        >
+                          {b.title}
+                        </h3>
+                        <p className="mt-2 text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>{b.body}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                    ) : (
+                      <p className="text-[15px] leading-[1.7] text-ink/75" style={{ fontFamily: INTER }}>{b}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            <CallNow className="mt-8" />
+          </Band>
+        )}
 
-              {service.included.length > 0 && (
-                <div className="mt-12">
-                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">SCOPE OF WORK</p>
-                  <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-6">
-                    WHAT'S INCLUDED
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {service.included.map((item, i) => (
-                      <div key={i} className="card-elevated-dark flex items-start gap-3 p-4 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                        <div className="w-4 h-4 flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgb(var(--accent) / 0.15)', border: '1px solid rgb(var(--accent) / 0.3)' }}>
-                          <svg className="w-2.5 h-2.5 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span className="text-cool text-sm leading-snug">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+        {/* ── What's included ── */}
+        {service.included.length > 0 && (
+          <Band tone="white">
+            <SectionHead eyebrow="SCOPE OF WORK" title="WHAT'S INCLUDED" />
+            <ul className="m-0 mt-8 grid list-none grid-cols-1 gap-3 p-0 sm:grid-cols-2">
+              {service.included.map((item, i) => (
+                <li key={i} className={`flex items-start gap-3 p-4 ${CARD}`} style={CARD_BORDER}>
+                  <span
+                    className="mt-[2px] flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full"
+                    style={{ background: 'rgb(var(--accent) / 0.12)', color: 'rgb(var(--accent))' }}
+                  >
+                    <CheckIcon className="h-3 w-3" />
+                  </span>
+                  <span className="text-[14.5px] leading-[1.6] text-ink/75" style={{ fontFamily: INTER }}>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <CallNow className="mt-8" />
+          </Band>
+        )}
 
-              {/* Service reviews (renders only when present). */}
-              {service.reviews.length > 0 && (
-                <div className="mt-10">
-                  <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-4">WHAT HOMEOWNERS SAY</p>
-                  <div className="flex flex-col gap-4">
-                    {service.reviews.map((r, i) => (
-                      <figure
-                        key={i}
-                        className="card-elevated-dark p-5 bg-navy-slate"
-                        style={{ border: '1px solid rgba(100,116,139,0.25)' }}
-                      >
-                        <div className="flex gap-1 mb-3">
-                          {[0, 1, 2, 3, 4].map((s) => (
-                            <svg key={s} className="w-4 h-4 text-gold" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
-                        </div>
-                        <blockquote className="text-cool text-sm leading-relaxed mb-3">&ldquo;{r.quote}&rdquo;</blockquote>
-                        <figcaption className="text-white text-xs font-semibold uppercase tracking-wide">{r.reviewer}</figcaption>
-                      </figure>
-                    ))}
+        {/* ── How it works ── */}
+        {service.process.length > 0 && (
+          <Band tone="light">
+            <SectionHead eyebrow="THE PROCESS" title="HOW IT WORKS" />
+            <ol className="m-0 mt-8 flex list-none flex-col gap-4 p-0">
+              {service.process.map((step, i) => (
+                <li key={step.num ?? i} className={`flex items-start gap-4 p-5 ${CARD}`} style={CARD_BORDER}>
+                  <Medallion>
+                    <span className="relative text-[15px] font-bold leading-none" style={{ fontFamily: JOSEFIN }}>
+                      {String(step.num ?? i + 1).padStart(2, '0')}
+                    </span>
+                  </Medallion>
+                  <div className="min-w-0">
+                    <h3
+                      className="text-[15px] font-bold uppercase leading-[1.35] tracking-[0.04em]"
+                      style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+                    >
+                      {step.title}
+                    </h3>
+                    <p className="mt-2 text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>{step.desc}</p>
                   </div>
-                </div>
-              )}
+                </li>
+              ))}
+            </ol>
+            <CallNow className="mt-8" />
+          </Band>
+        )}
+
+        {/* ── FAQ ── */}
+        {service.faq.length > 0 && (
+          <Band tone="white">
+            <SectionHead eyebrow={brandDNA.copy.faq.label} title="COMMON QUESTIONS" />
+            <div className="mt-8">
+              <FAQAccordion items={service.faq} />
             </div>
+            <CallNow className="mt-8" />
+          </Band>
+        )}
 
-            {/* Sticky quote rail */}
-            <div>
-              <div className="lg:sticky lg:top-24">
-                <QuoteForm formId={`service-${slug}`} title="Get Your Free Estimate" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Process */}
-      {service.process.length > 0 && (
-      <section className="relative overflow-hidden py-20 bg-grid bg-navy-slate">
-        {/* Rule 58: per-client corner overlays. */}
-        <CornerOverlay position="top-left" size={320} />
-        <CornerOverlay position="bottom-right" size={320} />
-
-        <div className="relative max-w-5xl mx-auto px-8">
-          <div className="text-center mb-12">
-            <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">THE PROCESS</p>
-            <h2 className="font-heading font-bold text-white uppercase text-5xl leading-tight mb-3">
-              HOW IT WORKS
-            </h2>
-            <span className="line-gold block w-12 mx-auto mt-3 mb-4" />
-            <p className="text-cool text-sm max-w-lg mx-auto">Simple, transparent, owner-managed from the first call to the final handshake.</p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {service.process.map((step) => (
-              <div key={step.num} className="card-elevated-dark flex flex-col gap-3 p-5 bg-navy" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="w-10 h-10 flex items-center justify-center font-heading font-bold text-sm text-white" style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.45)', background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                  {step.num}
-                </div>
-                <div className="font-heading font-bold text-white uppercase text-base tracking-wide leading-tight">{step.title}</div>
-                <p className="text-cool text-xs leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      )}
-
-      {/* FAQ */}
-      {service.faq.length > 0 && (
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-3xl mx-auto px-8">
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3 text-center">{brandDNA.copy.faq.label}</p>
-          <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2 text-center">
-            COMMON QUESTIONS
-          </h2>
-          <span className="line-gold block w-12 mx-auto mt-3 mb-8" />
-          <FAQAccordion items={service.faq} />
-        </div>
-      </section>
-      )}
-
-      <Ticker />
-
-      {/* Related Services */}
-      {service.related.length > 0 && (
-      <section className="relative py-16 bg-navy-slate">
-        <div className="max-w-5xl mx-auto px-8">
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3 text-center">EXPLORE MORE</p>
-          <h2 className="font-heading font-bold text-white uppercase text-3xl leading-tight mb-8 text-center">
-            YOU MAY ALSO NEED
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {service.related.map((relSlug) => (
-              <Link
-                key={relSlug}
-                to={`/services/${relSlug}`}
-                className="group flex flex-col gap-2 p-6 transition-all bg-navy"
-                style={{ border: '1px solid rgba(100,116,139,0.25)' }}
-                onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgb(var(--accent))'}
-                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(100,116,139,0.25)'}
-              >
-                <div className="font-heading font-bold text-white uppercase group-hover:text-gold transition-colors">
-                  {serviceNames[relSlug] || relSlug}
-                </div>
-                <div className="text-xs text-gold font-semibold mt-auto flex items-center gap-1">
-                  Learn more
-                  <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-      )}
-
-      <CTABanner />
+        {/* ── Where we work — existing component, forced into stacked mode and
+               rendered bare so this band owns the width and background. The
+               band is deep navy (the site's premium surface) and the component
+               runs its dark variant, so headings go white and the white
+               location cards carry the heavier shadow tuned for dark. This is
+               the page's closing section — there is no CTA banner. ── */}
+        <Band tone="dark">
+          <ServiceAreas variant="dark" layout="stacked" as="div" body={service.whereWeWork || undefined} />
+        </Band>
+      </div>
     </>
   );
 }

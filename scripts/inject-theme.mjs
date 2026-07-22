@@ -13,7 +13,7 @@
  */
 
 import { readFile, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, resolve } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -61,11 +61,16 @@ function pickOnAccent(hex) {
 }
 
 async function loadBrandDNA() {
-  const mod = await import(BRAND_DNA);
+  const mod = await import(pathToFileURL(BRAND_DNA).href);
+
   const brandDNA = mod.brandDNA;
+
   if (!brandDNA) {
-    throw new Error("inject-theme: src/config/brand-dna.js does not export `brandDNA`");
+    throw new Error(
+      "inject-theme: src/config/brand-dna.js does not export `brandDNA`"
+    );
   }
+
   return brandDNA;
 }
 

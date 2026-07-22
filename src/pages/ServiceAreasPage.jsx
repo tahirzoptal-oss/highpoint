@@ -1,52 +1,73 @@
 import { Link } from 'react-router-dom';
+import InnerBanner from '../components/InnerBanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
+import ServiceAreas from '../components/ServiceAreas';
 import CTABanner from '../components/CTABanner';
-import Ticker from '../components/Ticker';
-import CornerOverlay from '../components/CornerOverlay';
-import QuoteForm from '../components/QuoteForm';
 import SEO from '../components/SEO';
+// Same layout primitives as the service-area detail pages, so the index and
+// the pages it links to read as one family.
+import { Band, SectionHead, CallNow, Medallion, Prose } from '../components/SiloSection';
 import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
-// Cities served. brandDNA.serviceAreas is a flat array of uppercase strings
-// populated by Stage 10.1 from research / strategy data. We render them under
-// a single heading and let the responsive grid handle visual hierarchy. No
-// fake region grouping (the schema doesn't carry region metadata).
-const cities = brandDNA.serviceAreas || [];
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+const CARD =
+  'rounded-[18px] bg-white shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-20px_rgba(16,40,79,0.22)]';
+const CARD_BORDER = { border: '1px solid rgba(16,40,79,0.07)' };
 
 const founder = (brandDNA.team && brandDNA.team.founder) || null;
 const founderLabel = founder ? (founder.displayName || founder.name) : null;
 
+const Ic = ({ children, ...props }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    {children}
+  </svg>
+);
+const ClockIcon = (p) => <Ic {...p}><circle cx="12" cy="12" r="8.8" /><path d="M12 7.2V12l3.4 2" /></Ic>;
+const ShieldIcon = (p) => <Ic {...p}><path d="M12 2.8C9.9 4.7 7.2 5.9 4.2 5.9c-.4 1.1-.6 2.3-.6 3.5 0 5.4 3.6 9.9 8.4 11.1 4.8-1.2 8.4-5.7 8.4-11.1 0-1.2-.2-2.4-.6-3.5-3 0-5.7-1.2-7.8-3.1Z" /><path d="m9.2 12 2.1 2.1 3.6-4.8" /></Ic>;
+const UserIcon = (p) => <Ic {...p}><circle cx="12" cy="8" r="3.6" /><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0" /></Ic>;
+
+// Existing coverage promises — copy unchanged.
 const coverageHighlights = [
   {
     title: 'Same-Day Response',
     text: 'We schedule inspections within 24 to 48 hours across our entire service area. Emergency calls get a same-day response.',
-    icon: (
-      <svg className="w-6 h-6" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ),
+    icon: ClockIcon,
   },
   {
     title: 'No Travel Fees',
     text: 'Inspections, estimates, and site visits anywhere in our service area are free. No surprise charges for driving to you.',
-    icon: (
-      <svg className="w-6 h-6" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
-    ),
+    icon: ShieldIcon,
   },
   {
     title: 'Owner Makes Every Visit',
     text: founderLabel
       ? `${founderLabel} personally attends every inspection and project walkthrough, not a subcontractor or third-party rep.`
       : 'The owner personally attends every inspection and project walkthrough, not a subcontractor or third-party rep.',
-    icon: (
-      <svg className="w-6 h-6" style={{ color: '#ffffff' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-      </svg>
-    ),
+    icon: UserIcon,
   },
 ];
+
+function HighlightCard({ icon, title, text }) {
+  const Icon = icon;
+  return (
+    <div className={`flex h-full flex-col p-6 lg:p-7 ${CARD}`} style={CARD_BORDER}>
+      <Medallion>
+        <Icon className="relative h-[18px] w-[18px]" />
+      </Medallion>
+      <h3
+        className="mt-5 text-[16px] font-bold uppercase leading-[1.3] tracking-[0.04em]"
+        style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+      >
+        {title}
+      </h3>
+      <p className="mt-3 text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>{text}</p>
+    </div>
+  );
+}
 
 export default function ServiceAreasPage() {
   return (
@@ -56,163 +77,84 @@ export default function ServiceAreasPage() {
         title={`Service Areas | ${brandDNA.company.name}`}
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Service Areas', path: '/service-areas' }])}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt={`${brandDNA.address.city} service area`}
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.88) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">Service Areas</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">{brandDNA.copy.serviceAreas.label}</p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {brandDNA.copy.serviceAreas.heading}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>
-            {brandDNA.copy.serviceAreas.body}
+
+      {/* ════ 1. Banner — shared InnerBanner component ════ */}
+      <InnerBanner
+        title={brandDNA.copy.serviceAreas.heading}
+        subtitle={brandDNA.copy.serviceAreas.body}
+        breadcrumb={[{ label: 'Service Areas' }]}
+        minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
+      />
+
+      {/* ════ 2 & 3. Global logo slider + brand belt ════ */}
+      <LogoSlider />
+      <BeltSlider />
+
+      {/* ════ Content — full-width bands, alternating white / pale blue. The
+             global CTA banner closes the page. No sticky sidebar here — that
+             belongs to the individual service / service-area pages. ════ */}
+
+      {/* ── Who we cover ──
+             The copy is capped at a readable measure, so left-aligning it in a
+             1440px container stranded the whole right half of the row empty.
+             Centring the block inside the standard container balances that
+             whitespace without touching the container width, the horizontal
+             padding, the copy or the type. ── */}
+      <Band tone="white" width="full">
+        <div className="mx-auto flex w-full max-w-[74ch] flex-col items-center text-center">
+          <SectionHead eyebrow="OUR SERVICE AREA" title="WHERE WE WORK" align="center" />
+          <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+            We serve homeowners across the Tri-Cities and the nearby towns of Eastern Washington. Not sure if you&apos;re covered? Just call and we&apos;ll let you know.
           </p>
-        </div>
-      </section>
-
-      {/* Coverage Highlights */}
-      <section className="py-12 bg-navy-slate" style={{ borderBottom: '1px solid rgba(100,116,139,0.2)' }}>
-        <div className="max-w-5xl mx-auto px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-            {coverageHighlights.map((h) => (
-              <div key={h.title} className="card-elevated-dark flex flex-col items-center text-center gap-3 p-6 bg-navy" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="w-12 h-12 flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                  {h.icon}
-                </div>
-                <div className="font-heading font-bold text-white uppercase text-base">{h.title}</div>
-                <p className="text-cool text-xs leading-relaxed">{h.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Map + Areas */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Left: content + map */}
-            <div className="lg:col-span-2">
-              <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">OUR SERVICE AREA</p>
-              <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-4">
-                WHERE WE WORK
-              </h2>
-              <span className="line-gold block w-12 mb-5" />
-              <p className="text-cool text-sm mb-4 leading-relaxed max-w-2xl">
-                We serve homeowners across the Tri-Cities and the nearby towns of Eastern Washington. Not sure if you're covered? Just call and we'll let you know.
-              </p>
-              <p className="text-cool text-sm mb-8 leading-relaxed max-w-2xl">
-                High Point is a local contractor, not a storm-chasing crew that rolls into town after a big wind and disappears before winter. {founderLabel || 'The owner'} lives and works here, so you get a real name, a real number, and a reputation to protect on every job.
-              </p>
-
-              {/* Cities we serve, single grouped grid */}
-              <div className="font-heading font-bold text-white uppercase text-sm tracking-wider mb-3 flex items-center gap-2">
-                <div className="w-1 h-4 flex-shrink-0 bg-gold" />
-                Cities We Serve
-              </div>
-              {cities.length > 0 ? (
-                <ul className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1.5">
-                  {cities.map((city) => {
-                    const citySlug = String(city).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                    const hasPage = (brandDNA.location_pages || []).some((p) => p.slug === citySlug);
-                    const inner = (
-                      <>
-                        <svg className="w-3 h-3 flex-shrink-0 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        {city}
-                      </>
-                    );
-                    return (
-                      <li key={city} className="flex items-center gap-2 text-cool text-xs">
-                        {hasPage ? (
-                          <Link to={`/service-areas/${citySlug}`} className="flex items-center gap-2 hover:text-gold transition-colors">
-                            {inner}
-                          </Link>
-                        ) : inner}
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <p className="text-cool text-xs">
-                  Call us to confirm if you're in our service area.
-                </p>
-              )}
-
-              <div className="mt-8 p-4" style={{ background: 'rgb(var(--accent) / 0.08)', border: '1px solid rgb(var(--accent) / 0.2)' }}>
-                <p className="text-xs text-cool font-semibold leading-relaxed">
-                  Don't see your city? Call us at{' '}
-                  <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="text-gold hover:text-white transition-colors">{brandDNA.contact.phone}</a>{' '}
-                  and we'll confirm if you're in our service area.
-                </p>
-              </div>
-
-              {/* Map */}
-              <div className="overflow-hidden mt-10" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)', height: 420, border: '1px solid rgba(100,116,139,0.25)' }}>
-                <iframe
-                  title={`${brandDNA.company.name} Service Area`}
-                  src={brandDNA.contact.mapsEmbedUrl}
-                  className="w-full h-full border-0"
-                  allowFullScreen
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            </div>
-
-            {/* Right: sticky quote form */}
-            <div>
-              <div className="lg:sticky lg:top-24">
-                <QuoteForm formId="areas" title="Get Your Free Estimate" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <Ticker />
-
-      {/* Ready to Start */}
-      <section className="relative overflow-hidden py-16 bg-grid bg-navy-slate">
-        {/* Rule 58: per-client corner overlays. */}
-        <CornerOverlay position="top-left" size={320} />
-        <CornerOverlay position="bottom-right" size={320} />
-        <div className="relative max-w-3xl mx-auto px-8 text-center">
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">READY TO START</p>
-          <h2 className="font-heading font-bold text-white uppercase text-5xl leading-tight mb-4">
-            IN YOUR AREA.<br />READY TO HELP.
-          </h2>
-          <span className="line-gold block w-12 mx-auto mb-5" />
-          <p className="text-cool text-sm leading-relaxed mb-8 max-w-lg mx-auto">
-            Request your free inspection today. We'll be at your property within 24 to 48 hours, give you an honest assessment, and tell you exactly what your roof needs.
+          <p className="mt-4 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+            High Point is a local contractor, not a storm-chasing crew that rolls into town after a big wind and disappears before winter. {founderLabel || 'The owner'} lives and works here, so you get a real name, a real number, and a reputation to protect on every job.
           </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link to="/contact" className="btn-gold font-heading font-bold text-base uppercase px-8 py-3.5 tracking-widest text-navy">
-              {brandDNA.copy.buttonText}
-            </Link>
-            <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="btn-outline font-heading font-bold text-base uppercase px-8 py-3.5 tracking-wider">
-              CALL {brandDNA.contact.phone}
-            </a>
-          </div>
+          <p
+            className="mt-6 w-full rounded-[14px] p-4 text-[14px] font-medium leading-[1.7]"
+            style={{ fontFamily: INTER, background: 'rgb(var(--accent) / 0.08)', border: '1px solid rgb(var(--accent) / 0.2)', color: 'rgb(var(--ink) / 0.8)' }}
+          >
+            Don&apos;t see your city? Call us at{' '}
+            <a href={`tel:${brandDNA.contact.phoneTelLink}`} className="font-bold text-[rgb(var(--primary))] transition-colors hover:text-[rgb(var(--accent))]">
+              {brandDNA.contact.phone}
+            </a>{' '}
+            and we&apos;ll confirm if you&apos;re in our service area.
+          </p>
+          <CallNow className="mt-8" />
         </div>
-      </section>
+      </Band>
 
+      {/* ── What coverage means — centred within the standard container, to
+             match the intro band above it. The card grid still runs the full
+             width; only the heading, the closing line and the buttons centre. ── */}
+      <Band tone="light" width="full">
+        <SectionHead eyebrow="WHAT COVERAGE MEANS" title="IN YOUR AREA. READY TO HELP." align="center" />
+        <ul className="m-0 mt-8 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
+          {coverageHighlights.map((h) => (
+            <li key={h.title} className="flex">
+              <HighlightCard icon={h.icon} title={h.title} text={h.text} />
+            </li>
+          ))}
+        </ul>
+        <p className="mx-auto mt-8 max-w-[74ch] text-center text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+          Request your free inspection today. We&apos;ll be at your property within 24 to 48 hours, give you an honest assessment, and tell you exactly what your roof needs.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <Link
+            to="/contact"
+            className="btn-gold inline-flex items-center gap-2.5 px-7 py-4 text-[13px] uppercase tracking-[0.08em]"
+            style={{ fontFamily: JOSEFIN, fontWeight: 700, color: '#FFFFFF', textShadow: '0 1px 2px rgba(0,0,0,0.18)' }}
+          >
+            {brandDNA.copy.buttonText}
+          </Link>
+          <CallNow />
+        </div>
+      </Band>
+
+      {/* ── Every city we cover, plus the live map — the shared stacked
+             section, bare and on a light band. ── */}
+      <ServiceAreas variant="light" />
+
+      {/* ── Global CTA banner ── */}
       <CTABanner />
     </>
   );

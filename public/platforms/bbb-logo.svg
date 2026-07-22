@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" aria-label="BBB A+ Accredited Business">
-  <rect width="100" height="100" rx="6" fill="#005A9C"/>
+  <rect width="100" height="100" rx="6" fill="#183C78"/>
   <text x="50" y="38" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="20" font-weight="bold" letter-spacing="1">BBB</text>
   <line x1="20" y1="48" x2="80" y2="48" stroke="#FFFFFF" stroke-width="1" stroke-opacity="0.4"/>
   <text x="50" y="68" text-anchor="middle" fill="#FFFFFF" font-family="Arial, sans-serif" font-size="22" font-weight="bold">A+</text>

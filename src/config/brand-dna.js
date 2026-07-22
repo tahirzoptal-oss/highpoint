@@ -1,3 +1,5 @@
+import { SERVICE_PAGES } from './service-pages.js';
+
 export const brandDNA = {
   "meta": {
     "title": "Roofing Contractor Kennewick, WA - 5.0 Star Owner-Operator | High Point Renovation & Roofing",
@@ -16,9 +18,9 @@ export const brandDNA = {
   "contact": {
     "phone": "(509) 518-0747",
     "phoneTelLink": "+15095180747",
-    "email": "highpointrenovation@outlook.com",
+    "email": "terry@highpointrenovation.com",
     "googleMapsUrl": null,
-    "mapsEmbedUrl": "https://maps.google.com/maps?q=Kennewick,+WA+99336&output=embed"
+    "mapsEmbedUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d705894.9993134148!2d-119.44325315!3d46.281980499999996!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xa5f3d747a3ac552f%3A0x9ad14821591f97f0!2sHigh%20Point%20Renovation%20%26%20Roofing!5e0!3m2!1sen!2sin!4v1784624760289!5m2!1sen!2sin"
   },
   "address": {
     "street": "Kennewick",
@@ -74,25 +76,25 @@ export const brandDNA = {
   "nav_treatment": "light",
   "corner_overlay": {
     "motif": "triangle",
-    "color": "#d49a2e",
+    "color": "#2C5AA6",
     "opacity": 0.08
   },
   "palette": {
     "primary": "#183c78",
     "primary_dark": "#10284f",
     "primary_slate": "#183c78",
-    "accent": "#D49A2E",
-    "accent_light": "#DDBD81",
-    "accent_dark": "#7D5915",
+    "accent": "#2C5AA6",
+    "accent_light": "#6E8FC4",
+    "accent_dark": "#12315E",
     "neutral": "#5c6473",
     "neutral_dim": "#5c6473",
     "silver": "#c9ced6",
     "ink": "#1b2436"
   },
   "typography": {
-    "heading": "Oswald",
+    "heading": "Josefin Sans",
     "body": "Inter",
-    "headingFontUrl": "Oswald:wght@400;500;600;700",
+    "headingFontUrl": "Josefin+Sans:wght@400;500;600;700",
     "bodyFontUrl": "Inter:wght@400;500;600;700"
   },
   "reviews": {
@@ -818,8 +820,8 @@ export const brandDNA = {
   "team_members": [],
   "team_group_photo": null,
   "copy": {
-    "buttonText": "Get My Free Estimate",
-    "submitButton": "Get My Free Estimate",
+    "buttonText": "Get a Free Quote",
+    "submitButton": "Get a Free Quote",
     "formHeader": "We call you back in 5 minutes!",
     "formSubtext": "We will never send you unsolicited spam. No obligation. No pressure.",
     "availableNow": "We're Available Now",
@@ -1167,3 +1169,9 @@ export const brandDNA = {
     "url": null
   }
 };
+
+// Hand-authored service copy decks live in ./service-pages.js (this file is
+// generated). Appending them here means every consumer of the services list —
+// the /services/:slug routes and their getStaticPaths, the header dropdown, the
+// footer column, the quote-form select and the services index — sees one list.
+brandDNA.services = [...brandDNA.services, ...SERVICE_PAGES];

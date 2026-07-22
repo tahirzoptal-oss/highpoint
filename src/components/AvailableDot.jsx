@@ -26,6 +26,8 @@ export default function AvailableDot({
   const { available, label: openLabel, nextOpenLabel } = useAvailableNow();
 
   const dotSize = size === 'md' ? 'h-2.5 w-2.5' : 'h-2 w-2';
+  // "We're Available Now" is the one place green is allowed (client request):
+  // green dot + green label within business hours, grey when closed.
   const dotBg = available ? 'bg-green-500' : 'bg-gray-400';
   const pingBg = 'bg-green-400';
 

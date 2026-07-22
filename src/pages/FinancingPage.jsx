@@ -1,12 +1,29 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import InnerBanner from '../components/InnerBanner';
+import LogoSlider from '../components/LogoSlider';
+import BeltSlider from '../components/BeltSlider';
 import CTABanner from '../components/CTABanner';
-import Ticker from '../components/Ticker';
-import CornerOverlay from '../components/CornerOverlay';
-import QuoteForm from '../components/QuoteForm';
+import FAQAccordion from '../components/FAQAccordion';
 import SEO from '../components/SEO';
+// The same layout primitives the service and service-area pages use, so this
+// page sits in the same system rather than carrying its own styling.
+import { Band, SectionHead, Medallion, Prose } from '../components/SiloSection';
 import { buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
+
+const INTER = "'Inter', system-ui, -apple-system, sans-serif";
+const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
+
+const CARD =
+  'rounded-[18px] bg-white shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-20px_rgba(16,40,79,0.22)]';
+const CARD_BORDER = { border: '1px solid rgba(16,40,79,0.07)' };
+
+const ShieldCheckIcon = (props) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
+    <path d="M12 2.8C9.9 4.7 7.2 5.9 4.2 5.9c-.4 1.1-.6 2.3-.6 3.5 0 5.4 3.6 9.9 8.4 11.1 4.8-1.2 8.4-5.7 8.4-11.1 0-1.2-.2-2.4-.6-3.5-3 0-5.7-1.2-7.8-3.1Z" />
+    <path d="m9.2 12 2.1 2.1 3.6-4.8" />
+  </svg>
+);
 
 // brandDNA.financing.offered — boolean
 // brandDNA.financing.providers — array of { name, url }
@@ -110,8 +127,6 @@ const options = financing.options || defaultOptions;
 const faqs = financing.faqs || defaultFaqs;
 
 export default function FinancingPage() {
-  const [openFaq, setOpenFaq] = useState(null);
-
   const financingFaqs = brandDNA.financing?.faqs;
   const financingJsonLd = [
     buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Financing', path: '/financing' }]),
@@ -128,212 +143,176 @@ export default function FinancingPage() {
         title={`Financing | ${brandDNA.company.name}`}
         jsonLd={financingJsonLd}
       />
-      {/* Page Hero */}
-      <section className="relative overflow-hidden flex flex-col justify-end bg-navy theme-keep-dark" style={{ minHeight: '50vh' }}>
-        <div className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }}>
-          <img
-            src="/hero-image.webp"
-            alt="Roofing financing options"
-            className="w-full h-full object-cover"
-            style={{ objectPosition: '50% 40%' }}
-            onError={(e) => { e.target.src = '/work/project1.webp'; }}
-          />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.88) 100%)' }} />
-        </div>
-        <div className="relative px-8 py-14 max-w-7xl mx-auto w-full" style={{ zIndex: 5 }}>
-          <div className="flex items-center gap-2 text-cool text-xs font-semibold uppercase tracking-widest mb-4">
-            <Link to="/" className="hover:text-white transition-colors">Home</Link>
-            <span className="text-gold">›</span>
-            <span className="text-white">Financing</span>
-          </div>
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">
-            {isOffered ? 'FLEXIBLE OPTIONS' : 'PAYMENT OPTIONS'}
-          </p>
-          <h1 className="font-heading font-bold text-white uppercase leading-none text-5xl lg:text-6xl mb-4">
-            {isOffered ? (
-              <>YOUR ROOF SHOULDN'T<br />BREAK THE BANK</>
+
+      {/* ════ 1. Banner — shared InnerBanner component, copy unchanged ════ */}
+      <InnerBanner
+        title={isOffered ? (
+              <>YOUR ROOF SHOULDN&apos;T<br />BREAK THE BANK</>
             ) : (
               <>HOW HOMEOWNERS<br />PAY FOR ROOFS</>
             )}
-          </h1>
-          <span className="line-gold block w-16 mb-4" />
-          <p className="text-white text-sm max-w-xl leading-relaxed font-body" style={{ textShadow: '0 1px 2px rgba(15, 23, 42, 0.6)' }}>
-            {financing.termsDescription || (isOffered
+        subtitle={financing.termsDescription || (isOffered
               ? "We offer flexible financing through trusted lending partners so you can protect your home now and pay on a schedule that works for you."
               : `${brandDNA.company.shortName || brandDNA.company.name} does not offer in-house financing. We focus on roofing and exteriors and let specialised lenders handle the lending. Below is what every homeowner should consider.`
             )}
-          </p>
-          <div className="flex flex-wrap gap-3 mt-6">
-            <Link to="/contact" className="btn-gold font-heading font-bold text-sm uppercase px-6 py-3 tracking-widest text-navy">
-              {brandDNA.copy.buttonText} →
-            </Link>
-          </div>
-        </div>
-      </section>
+        breadcrumb={[{ label: 'Financing' }]}
+        minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
+      />
 
-      {/* How It Works */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-5xl mx-auto px-8">
-          <div className="text-center mb-10">
-            <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">THE PROCESS</p>
-            <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2">
-              HOW IT WORKS
-            </h2>
-            <span className="line-gold block w-12 mx-auto mt-3 mb-4" />
-            <p className="text-cool text-sm max-w-md mx-auto">
-              {isOffered
-                ? "Four steps from inspection to installation, with flexible payment built in."
-                : "Four steps from inspection to a finished roof, with honest payment guidance at every step."
-              }
+      {/* ════ 2 & 3. Global logo slider + brand belt ════ */}
+      <LogoSlider />
+      <BeltSlider />
+
+      {/* ── How it works ── */}
+      <Band tone="white" width="full">
+        <SectionHead eyebrow="THE PROCESS" title="HOW IT WORKS" />
+        <Prose>
+          <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+            {isOffered
+              ? "Four steps from inspection to installation, with flexible payment built in."
+              : "Four steps from inspection to a finished roof, with honest payment guidance at every step."
+            }
+          </p>
+        </Prose>
+        <ol className="m-0 mt-8 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:mt-10 lg:grid-cols-4">
+          {steps.map((s) => (
+            <li key={s.num} className={`flex h-full flex-col p-6 ${CARD}`} style={CARD_BORDER}>
+              <Medallion>
+                <span className="relative text-[15px] font-bold leading-none" style={{ fontFamily: JOSEFIN }}>
+                  {s.num}
+                </span>
+              </Medallion>
+              <h3
+                className="mt-5 text-[15px] font-bold uppercase leading-[1.35] tracking-[0.04em]"
+                style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+              >
+                {s.title}
+              </h3>
+              <p className="mt-3 text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>{s.desc}</p>
+            </li>
+          ))}
+        </ol>
+      </Band>
+
+      {/* ── Financing options. The enquiry form is gone, so the three option
+             cards and the insurance callout run the full width of the band. ── */}
+      <Band tone="light" width="full">
+        <SectionHead
+          eyebrow="YOUR OPTIONS"
+          title={isOffered ? 'FINANCING OPTIONS' : 'WAYS HOMEOWNERS PAY'}
+        />
+        <Prose>
+          <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+            {isOffered
+              ? "Payment plans are offered to every customer, subject to credit approval, so you find the fit for your budget."
+              : "Insurance covers most storm damage. Third-party lenders handle the rest. We do not collect deposits."
+            }
+          </p>
+        </Prose>
+
+        <ul className="m-0 mt-8 grid list-none grid-cols-1 gap-5 p-0 lg:mt-10 lg:grid-cols-3">
+          {options.map((o) => (
+            <li key={o.name} className="flex">
+              <div
+                className={`flex h-full w-full flex-col p-6 lg:p-7 ${CARD}`}
+                style={o.highlight
+                  ? { border: '1px solid rgb(var(--accent) / 0.45)', boxShadow: '0 1px 2px rgba(16,40,79,0.04), 0 20px 44px -22px rgb(var(--accent) / 0.55)' }
+                  : CARD_BORDER}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <h3
+                    className="text-[17px] font-bold uppercase leading-[1.25] sm:text-[18px]"
+                    style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+                  >
+                    {o.name}
+                  </h3>
+                  {o.tag && (
+                    <span
+                      className="inline-flex flex-shrink-0 items-center rounded-full px-2.5 py-1 text-[9.5px] font-bold uppercase leading-none tracking-[0.12em]"
+                      style={o.highlight
+                        ? {
+                            fontFamily: INTER,
+                            background: 'linear-gradient(150deg, rgb(var(--accent-light)), rgb(var(--accent)) 55%, rgb(var(--primary)))',
+                            border: '1px solid rgba(255,255,255,0.5)',
+                            color: 'rgb(var(--on-accent))',
+                          }
+                        : {
+                            fontFamily: INTER,
+                            background: 'rgb(var(--accent) / 0.1)',
+                            border: '1px solid rgb(var(--accent) / 0.2)',
+                            color: 'rgb(var(--accent))',
+                          }}
+                    >
+                      {o.tag}
+                    </span>
+                  )}
+                </div>
+
+                <span className="mt-4 block h-[3px] w-10 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+
+                <p
+                  className="mt-4 text-[15px] font-semibold leading-[1.5]"
+                  style={{ fontFamily: INTER, color: 'rgb(var(--primary))' }}
+                >
+                  {o.headline}
+                </p>
+                <p className="mt-3 text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>{o.details}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        {/* Insurance-backed work callout */}
+        <div
+          className={`mt-8 flex items-start gap-4 p-6 lg:p-7 ${CARD}`}
+          style={{ border: '1px solid rgb(var(--accent) / 0.25)' }}
+        >
+          <Medallion>
+            <ShieldCheckIcon className="relative h-[18px] w-[18px]" />
+          </Medallion>
+          <div className="min-w-0">
+            <h3
+              className="text-[15px] font-bold uppercase leading-[1.35] tracking-[0.04em]"
+              style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+            >
+              STORM DAMAGE? OFTEN ONLY YOUR DEDUCTIBLE.
+            </h3>
+            <p className="mt-2.5 max-w-[74ch] text-[14.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>
+              If your roof was damaged by a covered storm, we document everything to insurance standards and work the claim with your adjuster. Many homeowners end up paying only their deductible.
             </p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {steps.map((s) => (
-              <div key={s.num} className="card-elevated-dark flex flex-col gap-3 p-5 bg-navy-slate" style={{ border: '1px solid rgba(100,116,139,0.25)' }}>
-                <div className="w-10 h-10 flex items-center justify-center font-heading font-bold text-sm flex-shrink-0 text-white" style={{ color: '#ffffff', textShadow: '0 1px 2px rgba(0,0,0,0.45)', background: 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' }}>
-                  {s.num}
-                </div>
-                <div className="font-heading font-bold text-white uppercase text-sm tracking-wide leading-tight">{s.title}</div>
-                <p className="text-cool text-xs leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
         </div>
-      </section>
 
-      {/* Financing Options */}
-      <section className="relative py-16 bg-grid bg-navy-slate">
-        {/* Rule 58: per-client corner overlays, clipped in an inner layer so the
-            section stays overflow-visible and the sticky rail can pin. */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <CornerOverlay position="top-left" size={320} />
-          <CornerOverlay position="bottom-right" size={320} />
+        {/* Existing CTA — same link, same label, site button style */}
+        <div className="mt-10">
+          <Link
+            to="/contact"
+            className="btn-gold inline-flex items-center gap-2.5 px-7 py-4 text-[13px] uppercase tracking-[0.08em]"
+            style={{ fontFamily: JOSEFIN, fontWeight: 700, color: '#FFFFFF', textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)' }}
+          >
+            {brandDNA.copy.buttonText}
+          </Link>
+          <p className="mt-4 text-[13px] leading-[1.6] text-ink/55" style={{ fontFamily: INTER }}>
+            {isOffered
+              ? 'Payment plans subject to credit approval. Ask Terry when he gives you your estimate.'
+              : 'No deposits. Pay on completion. Insurance work coordinated end to end.'}
+          </p>
         </div>
-        <div className="relative max-w-6xl mx-auto px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2">
-              <div className="mb-10">
-                <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3">YOUR OPTIONS</p>
-                <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2">
-                  {isOffered ? "FINANCING OPTIONS" : "WAYS HOMEOWNERS PAY"}
-                </h2>
-                <span className="line-gold block w-12 mt-3 mb-4" />
-                <p className="text-cool text-sm max-w-md">
-                  {isOffered
-                    ? "Payment plans are offered to every customer, subject to credit approval, so you find the fit for your budget."
-                    : "Insurance covers most storm damage. Third-party lenders handle the rest. We do not collect deposits."
-                  }
-                </p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                {options.map((o) => (
-                  <div
-                    key={o.name}
-                    className="card-elevated-dark flex flex-col gap-3 p-6 bg-navy"
-                    style={{
-                      border: o.highlight ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
-                      borderTop: o.highlight ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="font-heading font-bold text-white uppercase text-base leading-tight">{o.name}</div>
-                      {o.tag && (
-                        <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 flex-shrink-0" style={{ background: o.highlight ? 'rgb(var(--accent) / 0.2)' : 'rgba(100,116,139,0.2)', color: o.highlight ? 'rgb(var(--accent))' : '#94A3BB', border: `1px solid ${o.highlight ? 'rgb(var(--accent) / 0.3)' : 'rgba(100,116,139,0.3)'}` }}>
-                          {o.tag}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gold text-sm font-semibold leading-snug">{o.headline}</p>
-                    <p className="text-cool text-xs leading-relaxed">{o.details}</p>
-                  </div>
-                ))}
-              </div>
+      </Band>
 
-              {/* Insurance-backed work callout */}
-              <div className="mt-8 p-5 flex items-start gap-4 bg-navy" style={{ border: '1px solid rgba(100,116,139,0.25)', borderLeft: '2px solid rgb(var(--accent))' }}>
-                <div className="w-9 h-9 flex items-center justify-center flex-shrink-0" style={{ background: 'rgb(var(--accent) / 0.1)', border: '1px solid rgb(var(--accent) / 0.3)' }}>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="rgb(var(--accent))" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 10c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.25-8.25-3.286z" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-heading font-bold text-white uppercase text-sm tracking-wide mb-1">STORM DAMAGE? OFTEN ONLY YOUR DEDUCTIBLE.</div>
-                  <p className="text-cool text-xs leading-relaxed">
-                    If your roof was damaged by a covered storm, we document everything to insurance standards and work the claim with your adjuster. Many homeowners end up paying only their deductible.
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-10">
-                <Link to="/contact" className="btn-gold inline-block font-heading font-bold text-base uppercase px-10 py-3.5 tracking-widest text-navy">
-                  {brandDNA.copy.buttonText}
-                </Link>
-                {isOffered && (
-                  <p className="text-steel text-xs mt-4">Payment plans subject to credit approval. Ask Terry when he gives you your estimate.</p>
-                )}
-                {!isOffered && (
-                  <p className="text-steel text-xs mt-4">No deposits. Pay on completion. Insurance work coordinated end to end.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Sticky quote rail */}
-            <div>
-              <div className="lg:sticky lg:top-24">
-                <QuoteForm formId="financing" title="Get Your Free Estimate" />
-              </div>
-            </div>
-          </div>
+      {/* ── FAQ — the shared accordion, same as the service pages. Heading and
+             eyebrow are centred; the accordion keeps its full 920px measure and
+             is centred in the band rather than narrowed. ── */}
+      <Band tone="white" width="full">
+        <SectionHead
+          eyebrow={brandDNA.copy.faq.label}
+          title={isOffered ? 'FINANCING FAQ' : 'PAYMENT FAQ'}
+          align="center"
+        />
+        <div className="mx-auto mt-8 w-full max-w-[920px] lg:mt-10">
+          <FAQAccordion items={faqs} />
         </div>
-      </section>
-
-      <Ticker />
-
-      {/* FAQ */}
-      <section className="relative py-16 bg-grid bg-navy">
-        <div className="max-w-3xl mx-auto px-8">
-          <p className="text-gold font-body font-semibold text-xs uppercase tracking-[0.2em] mb-3 text-center">{brandDNA.copy.faq.label}</p>
-          <h2 className="font-heading font-bold text-white uppercase text-4xl leading-tight mb-2 text-center">
-            {isOffered ? "FINANCING FAQ" : "PAYMENT FAQ"}
-          </h2>
-          <span className="line-gold block w-12 mx-auto mt-3 mb-8" />
-          <div className="flex flex-col gap-3">
-            {faqs.map((item, i) => (
-              <div
-                key={i}
-                className="overflow-hidden transition-all duration-200 bg-navy-slate"
-                style={{
-                  border: `1px solid ${openFaq === i ? 'rgb(var(--accent))' : 'rgba(100,116,139,0.25)'}`,
-                  borderTop: openFaq === i ? '2px solid rgb(var(--accent))' : '1px solid rgba(100,116,139,0.25)',
-                }}
-              >
-                <button
-                  className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left"
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                >
-                  <span className="font-heading font-bold text-white text-sm uppercase tracking-wide leading-tight">{item.q}</span>
-                  <div
-                    className="w-8 h-8 flex items-center justify-center flex-shrink-0 transition-all duration-200"
-                    style={{
-                      background: openFaq === i ? 'linear-gradient(135deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 40%, rgb(var(--accent-dark)) 65%, rgb(var(--accent-light)) 100%)' : 'rgba(100,116,139,0.2)',
-                      transform: openFaq === i ? 'rotate(45deg)' : 'rotate(0deg)',
-                    }}
-                  >
-                    <svg className="w-4 h-4" style={{ color: openFaq === i ? '#0F172A' : '#94A3BB' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16M4 12h16" />
-                    </svg>
-                  </div>
-                </button>
-                {openFaq === i && (
-                  <div className="px-6 pb-5" style={{ borderTop: '1px solid rgba(100,116,139,0.2)' }}>
-                    <p className="text-cool text-sm leading-relaxed pt-4">{item.a}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      </Band>
 
       <CTABanner />
     </>

@@ -10,6 +10,8 @@ import BlogPostPage from './pages/BlogPostPage'
 import FinancingPage from './pages/FinancingPage'
 import ContactPage from './pages/ContactPage'
 import ThankYouPage from './pages/ThankYouPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsConditionsPage from './pages/TermsConditionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import Layout from './components/Layout'
 import { brandDNA } from './config/brand-dna'
@@ -59,6 +61,10 @@ export const routes = [
       },
       { path: 'contact', element: <ContactPage /> },
       { path: 'thank-you', element: <ThankYouPage /> },
+      // Footer legal pages. The footer has always linked these; they now have
+      // routes and prerender like every other static page.
+      { path: 'privacy-policy', element: <PrivacyPolicyPage /> },
+      { path: 'terms-conditions', element: <TermsConditionsPage /> },
       // Prerenders to 404.html so Vercel returns a real HTTP 404 for unknown paths.
       { path: '404', element: <NotFoundPage /> },
       // Client-side catch-all (not prerendered): stray in-app navigation lands here.
