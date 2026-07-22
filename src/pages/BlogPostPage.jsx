@@ -73,7 +73,6 @@ export default function BlogPostPage() {
       <InnerBanner
         title={post.title}
         image={coverOf(post)}
-        objectPosition="50% 40%"
         overlayOpacity={0.92}
         breadcrumb={[{ label: 'Blog', to: '/blog' }, { label: post.category }]}
         minHeightClass="min-h-[44vh] lg:min-h-[50vh]"

@@ -66,7 +66,6 @@ export default function ServiceDetailPage() {
       <InnerBanner
         title={service.heroTitle}
         subtitle={service.description}
-        objectPosition="50% 40%"
         breadcrumb={[{ label: 'Services', to: '/services' }, { label: service.title }]}
       />
 

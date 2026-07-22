@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import { bannerImageFor } from '../config/banner-images';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -17,9 +18,14 @@ const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
  * Props
  *   title            string      required — the <h1>
  *   subtitle         node        optional supporting line under the rule
- *   image            string      background photo (default /hero-image.webp)
+ *   image            string      background photo. Omit it and the banner picks
+ *                                the photo mapped to the current route in
+ *                                src/config/banner-images.js, so every page
+ *                                gets its own without any per-page wiring. Pass
+ *                                one to override (the blog posts pass their
+ *                                cover).
  *   imageFallback    string      swapped in via onError if `image` 404s
- *   objectPosition   string      focal point for the photo, e.g. '50% 32%'
+ *   objectPosition   string      focal point for the photo; defaults to centre
  *   breadcrumb       [{ label, to? }]  optional; the final crumb renders plain.
  *                                A leading Home crumb is added automatically.
  *   overlayOpacity   number      0–1 multiplier on the dark scrim (default 1)
@@ -29,14 +35,20 @@ const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
 export default function InnerBanner({
   title,
   subtitle,
-  image = '/work/project2.webp',
+  image,
   imageFallback = '/work/project1.webp',
-  objectPosition = '50% 32%',
+  objectPosition = '50% 50%',
   breadcrumb,
   overlayOpacity = 1,
   minHeightClass = 'min-h-[46vh] lg:min-h-[52vh]',
   children,
 }) {
+  // No `image` prop? Take the one mapped to this route. Doing the lookup here
+  // rather than in every page keeps the banner a single component with no
+  // duplicated wiring, and a new page picks up a photo automatically.
+  const { pathname } = useLocation();
+  const src = image || bannerImageFor(pathname);
+
   // One scrim, scaled by `overlayOpacity`, so a page with a busy photo can dial
   // it up and a page with a soft one can dial it down without redefining the
   // gradient. Clamped so text never loses its floor.
@@ -52,13 +64,18 @@ export default function InnerBanner({
 
   return (
     <section className={`relative flex flex-col justify-end overflow-hidden ${minHeightClass}`}>
+      {/* Rendered as an <img> rather than a CSS background: `object-fit: cover`
+          + `object-position: 50% 50%` on a full-bleed element is the exact
+          equivalent of `background-size: cover; background-position: center;
+          background-repeat: no-repeat`, and it additionally gives us the
+          onError fallback and lets the browser prioritise the fetch. */}
       <img
-        src={image}
+        src={src}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
         style={{ objectPosition }}
-        onError={(e) => { if (imageFallback) e.target.src = imageFallback; }}
+        onError={(e) => { if (imageFallback && e.target.src !== imageFallback) e.target.src = imageFallback; }}
       />
       <div aria-hidden className="absolute inset-0" style={{ background: scrim }} />
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">

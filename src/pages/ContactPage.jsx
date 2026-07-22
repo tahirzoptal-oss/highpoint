@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import InnerBanner from '../components/InnerBanner';
 import LogoSlider from '../components/LogoSlider';
 import BeltSlider from '../components/BeltSlider';
@@ -39,15 +40,108 @@ const glassBtnTextStyle = {
   textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)',
 };
 
+// ── Band surfaces, alternating down the page ──
+const BAND_WHITE =
+  'radial-gradient(46% 42% at 10% 8%, rgba(110,143,196,0.16) 0%, transparent 62%),' +
+  'radial-gradient(42% 40% at 92% 14%, rgba(44,90,166,0.10) 0%, transparent 64%),' +
+  'linear-gradient(170deg, #FFFFFF 0%, #FBFCFE 60%, #F4F8FD 100%)';
+const BAND_LIGHT =
+  'radial-gradient(46% 42% at 8% 10%, rgba(110,143,196,0.16) 0%, transparent 62%),' +
+  'radial-gradient(42% 40% at 96% 16%, rgba(44,90,166,0.10) 0%, transparent 64%),' +
+  'linear-gradient(170deg, #F6F9FD 0%, #EFF4FB 55%, #E9F0F9 100%)';
+
+// The site's glass surface: translucent white over the band, blurred, with a
+// hairline rim and a soft lift. Same treatment as the homepage service tiles.
+const GLASS_CARD =
+  'relative overflow-hidden rounded-[22px] bg-white/70 p-5 lg:p-7 shadow-[0_1px_2px_rgba(16,40,79,0.04),0_18px_44px_-24px_rgba(16,40,79,0.28)] backdrop-blur-md lg:p-9';
+const GLASS_BORDER = { border: '1px solid rgba(255,255,255,0.75)' };
+
+// brandDNA.serviceAreas ships uppercase ("WEST RICHLAND"); render it in prose
+// case so it reads as a sentence rather than a shout.
+const titleCase = (s) =>
+  String(s)
+    .toLowerCase()
+    .split(/\s+/)
+    .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+    .join(' ');
+
+// hours.display is empty in brand-dna, so derive the weekday line from the
+// structured hours — the same derivation the footer uses.
+const hoursLine = (() => {
+  const w = brandDNA.hours?.weekday;
+  if (!w?.opens || !w?.closes) return null;
+  const to12 = (hhmm) => {
+    const [h, m] = String(hhmm).split(':').map(Number);
+    const period = h >= 12 ? 'PM' : 'AM';
+    const hour = h % 12 === 0 ? 12 : h % 12;
+    return `${hour}:${String(m).padStart(2, '0')} ${period}`;
+  };
+  const days = w.dayOfWeek || [];
+  const span = days.length > 1 ? `${days[0]} to ${days[days.length - 1]}` : days[0];
+  return `${span}, ${to12(w.opens)} to ${to12(w.closes)}`;
+})();
+
 // ── Info icons (24px, 1.5 stroke — the site's icon idiom) ──
 const Ic = ({ children, ...props }) => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
     {children}
   </svg>
 );
-const PhoneIcon = (p) => <Ic {...p}><path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h2.2a1 1 0 0 1 .95.68l1.2 3.6a1 1 0 0 1-.5 1.2l-1.7.85a11 11 0 0 0 5.02 5.02l.85-1.7a1 1 0 0 1 1.2-.5l3.6 1.2a1 1 0 0 1 .68.95v2.2A2.5 2.5 0 0 1 16.5 19h-.5C9.37 19 5 14.63 5 8v-.5z" /></Ic>;
+const PhoneIcon = (p) => <Ic {...p}><path d="M2.5 5.2c0-1 .8-1.8 1.8-1.8h2a1.8 1.8 0 0 1 1.8 1.5l.5 2.6a1.8 1.8 0 0 1-.9 1.9l-1.3.7a13.5 13.5 0 0 0 6 6l.7-1.3a1.8 1.8 0 0 1 1.9-.9l2.6.5a1.8 1.8 0 0 1 1.5 1.8v2c0 1-.8 1.8-1.8 1.8h-.9A15.7 15.7 0 0 1 2.5 6.1v-.9Z" /></Ic>;
 const MailIcon = (p) => <Ic {...p}><rect x="3" y="5" width="18" height="14" rx="2.4" /><path d="M3.6 6.6 12 12.6l8.4-6" /></Ic>;
 const PinIcon = (p) => <Ic {...p}><path d="M20 10.5c0 5.2-6.3 10.3-7.5 11.2a.8.8 0 0 1-1 0C10.3 20.8 4 15.7 4 10.5a8 8 0 1 1 16 0z" /><circle cx="12" cy="10.3" r="2.9" /></Ic>;
+
+const ClockIcon = (p) => <Ic {...p}><circle cx="12" cy="12" r="8.8" /><path d="M12 7.2V12l3.4 2" /></Ic>;
+const MapIcon = (p) => <Ic {...p}><path d="m9 4.5 6 2.4 5.2-2.1a.6.6 0 0 1 .8.55v12.1a.6.6 0 0 1-.38.56L15 19.5l-6-2.4-5.2 2.1a.6.6 0 0 1-.8-.55V6.55a.6.6 0 0 1 .38-.56L9 4.5Z" /><path d="M9 4.5v12.6M15 6.9v12.6" /></Ic>;
+const HandshakeIcon = (p) => <Ic {...p}><path d="m11 17.5-2 2a1.6 1.6 0 0 1-2.3-2.2l.6-.6" /><path d="M3.5 12.5 7 9a2 2 0 0 1 2.6-.2l1.6 1.2a2 2 0 0 0 2.5-.1L17 7.2" /><path d="m13.4 15.4 2.6 2.6a1.6 1.6 0 0 0 2.3-2.3l-4.8-4.8" /><path d="M20.5 12.6 17 9M3 6.5 6.5 4h3L12 6M22 6.5 18.5 4h-3" /></Ic>;
+
+/**
+ * Glass medallion — the site's global icon container, static.
+ */
+function Medallion({ icon }) {
+  const Icon = icon;
+  return (
+    <span
+      className="relative flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[16px]"
+      style={{
+        background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
+        border: '1px solid rgba(255,255,255,0.6)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -10px 18px -10px rgba(16,40,79,0.5), 0 12px 26px -14px rgb(var(--accent) / 0.55)',
+        color: 'rgb(var(--on-accent))',
+      }}
+    >
+      <span aria-hidden className="pointer-events-none absolute inset-x-[4px] top-[4px] h-[44%] rounded-[14px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.45), transparent)' }} />
+      <Icon className="relative h-6 w-6" />
+    </span>
+  );
+}
+
+/**
+ * One glass box in the three-up row. All three share this shell, so padding,
+ * radius, rim, medallion size and type scale are identical, and `h-full` keeps
+ * the row level whatever the copy length.
+ */
+function GlassBox({ icon, title, children }) {
+  return (
+    <div className={`${GLASS_CARD} flex h-full w-full flex-col`} style={GLASS_BORDER}>
+      {/* Top-light wash so the box reads as glass rather than flat white */}
+      <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-24" style={{ background: 'linear-gradient(180deg, rgba(44,90,166,0.06), transparent)' }} />
+
+      <Medallion icon={icon} />
+
+      <h3
+        className="relative mt-5 text-[17px] font-bold uppercase leading-[1.3] tracking-[0.03em]"
+        style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+      >
+        {title}
+      </h3>
+
+      <span className="relative mt-3.5 block h-[3px] w-10 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+
+      <div className="relative mt-4 flex flex-1 flex-col">{children}</div>
+    </div>
+  );
+}
 
 /**
  * Company info card — icon tile, uppercase label, value. One shell for every
@@ -57,7 +151,7 @@ function InfoCard({ icon, label, children }) {
   const Icon = icon;
   return (
     <div
-      className="group flex h-full w-full flex-col rounded-[20px] bg-white p-7 shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-18px_rgba(16,40,79,0.2)] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(16,40,79,0.05),0_22px_46px_-20px_rgba(16,40,79,0.28)] lg:p-8"
+      className="group flex h-full w-full flex-col rounded-[20px] bg-white p-5 shadow-[0_1px_2px_rgba(16,40,79,0.04),0_14px_34px_-18px_rgba(16,40,79,0.2)] transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_2px_4px_rgba(16,40,79,0.05),0_22px_46px_-20px_rgba(16,40,79,0.28)] lg:p-8"
       style={{ border: '1px solid rgba(16,40,79,0.07)' }}
     >
       {/* Glass medallion — identical to the site's global icon container
@@ -66,7 +160,7 @@ function InfoCard({ icon, label, children }) {
           with no hover transform. */}
       <span className="relative inline-flex flex-shrink-0">
         <span
-          className="relative flex h-[58px] w-[58px] items-center justify-center rounded-[18px]"
+          className="relative flex h-[50px] w-[50px] lg:h-[58px] lg:w-[58px] items-center justify-center rounded-[12px] lg:rounded-[18px]"
           style={{
             background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
             border: '1px solid rgba(255,255,255,0.6)',
@@ -106,10 +200,10 @@ export default function ContactPage() {
       />
 
       {/* ════ 1. Banner — shared InnerBanner component ════ */}
+      {/* The intro paragraph moved into the section below, so the banner is
+          title + breadcrumb only and the copy is not printed twice. */}
       <InnerBanner
         title={brandDNA.pages.contact.heading}
-        subtitle={brandDNA.pages.contact.intro}
-        objectPosition="50% 60%"
         breadcrumb={[{ label: 'Contact' }]}
         minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
       />
@@ -133,12 +227,29 @@ export default function ContactPage() {
         <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent) / 0.3), transparent)' }} />
 
         <div className="site-container relative">
+          {/* ── Intro: eyebrow, heading, lead paragraph. All three come from
+                 brand-dna (pages.contact), so nothing new is authored here. The
+                 paragraph is the page intro, which now lives with the contact
+                 details instead of only under the banner. ── */}
           <FadeOnEnter>
-            <div className="max-w-[62ch]">
+            <div className="mx-auto max-w-[70ch] text-center">
+              <p
+                className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}
+              >
+                <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
+                GET IN TOUCH
+              </p>
+
               <h2 className="section-h2 uppercase" style={{ color: 'rgb(var(--primary))' }}>
                 {brandDNA.pages.contact.contactHeading}
               </h2>
-              <span className="mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+
+              <span className="mx-auto mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+
+              <p className="mt-6 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+                {brandDNA.pages.contact.intro}
+              </p>
             </div>
           </FadeOnEnter>
 
@@ -178,6 +289,154 @@ export default function ContactPage() {
               </InfoCard>
             </FadeOnEnter>
           </ul>
+
+        </div>
+      </section>
+
+      {/* ════ 5. Coverage, hours and approach — ONE section, one heading, three
+             glass boxes in a responsive row (3 across on desktop, 2 on tablet,
+             stacked on mobile). Copy unchanged; every fact comes from the
+             published service-area list, the structured hours and the owner's
+             role. ════ */}
+      <section className="relative overflow-hidden py-12 lg:py-16">
+        <div aria-hidden className="absolute inset-0" style={{ background: BAND_LIGHT }} />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent) / 0.25), transparent)' }} />
+
+        <div className="site-container relative">
+          <FadeOnEnter>
+            <div className="mx-auto max-w-[70ch] text-center">
+              <p
+                className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}
+              >
+                <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
+                GOOD TO KNOW
+              </p>
+              <h2
+                className="section-h2 uppercase"
+                style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary))' }}
+              >
+                Coverage, Hours &amp; Approach
+              </h2>
+              <span className="mx-auto mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+            </div>
+          </FadeOnEnter>
+
+          <ul className="m-0 mt-9 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:mt-11 lg:grid-cols-3 lg:gap-6">
+            <FadeOnEnter as="li" className="flex">
+              <GlassBox icon={MapIcon} title="Where We Work">
+                <p className="text-[14.5px] leading-[1.75] text-ink/75" style={{ fontFamily: INTER }}>
+                  We cover {brandDNA.company.serviceRegion}. That means{' '}
+                  {(brandDNA.serviceAreas || []).slice(0, -1).map(titleCase).join(', ')} and{' '}
+                  {titleCase((brandDNA.serviceAreas || [])[(brandDNA.serviceAreas || []).length - 1] || '')}.
+                  If your town is not on that list, call and ask. It is a short
+                  conversation, and we would rather tell you straight than have
+                  you wonder.
+                </p>
+                <Link
+                  to="/service-areas"
+                  className="mt-auto inline-flex items-center gap-1.5 pt-5 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-300 ease-out hover:text-[rgb(var(--primary))]"
+                  style={{ fontFamily: INTER, color: 'rgb(var(--accent))' }}
+                >
+                  See every area we serve →
+                </Link>
+              </GlassBox>
+            </FadeOnEnter>
+
+            <FadeOnEnter as="li" className="flex" delay={80}>
+              <GlassBox icon={ClockIcon} title="When We Answer">
+                <p className="text-[14.5px] leading-[1.75] text-ink/75" style={{ fontFamily: INTER }}>
+                  Our office hours are {hoursLine}. Call during those hours and
+                  you will reach us directly. Send the form and we call you back
+                  in 5 minutes during business hours, and the same business day
+                  otherwise. You will not sit in a queue waiting on a call
+                  centre. The number you ring is answered by the people who do
+                  the work.
+                </p>
+              </GlassBox>
+            </FadeOnEnter>
+
+            <FadeOnEnter as="li" className="flex" delay={160}>
+              <GlassBox icon={HandshakeIcon} title="How We Work With You">
+                <p className="text-[14.5px] leading-[1.75] text-ink/75" style={{ fontFamily: INTER }}>
+                  {brandDNA.team.founder.name} is the {brandDNA.team.founder.title.toLowerCase()},
+                  so the person who inspects and prices your roof is the person
+                  who builds it. Inspections and written estimates are free, the
+                  written estimate is the price you pay, and we tell you when a
+                  repair will hold and when it will not.
+                </p>
+              </GlassBox>
+            </FadeOnEnter>
+          </ul>
+        </div>
+      </section>
+
+      {/* ════ 6. What happens next — the published company process, as glass
+             step cards with the number carried in a medallion so it reads as
+             the primary marker rather than a caption. ════ */}
+      <section className="relative overflow-hidden py-12 lg:py-16">
+        <div aria-hidden className="absolute inset-0" style={{ background: BAND_WHITE }} />
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-px" style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--accent) / 0.25), transparent)' }} />
+
+        <div className="site-container relative">
+          <FadeOnEnter>
+            <div className="mx-auto max-w-[70ch] text-center">
+              <p
+                className="mb-2.5 inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em]"
+                style={{ color: 'rgb(var(--accent))', fontFamily: INTER }}
+              >
+                <span className="h-1.5 w-1.5 rotate-45 rounded-[2px]" style={{ background: 'rgb(var(--accent))' }} />
+                AFTER YOU SEND THE FORM
+              </p>
+              <h2
+                className="section-h2 uppercase"
+                style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary))' }}
+              >
+                What Happens Next
+              </h2>
+              <span className="mx-auto mt-4 block h-[3px] w-12 rounded-full" style={{ background: 'linear-gradient(90deg, rgb(var(--accent)), rgb(var(--accent-light)))' }} />
+            </div>
+          </FadeOnEnter>
+
+          <ol className="m-0 mt-9 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:mt-11 lg:grid-cols-5">
+            {brandDNA.process_steps.map((step, i) => (
+              <FadeOnEnter as="li" key={step.n ?? i} className="flex" delay={i * 70}>
+                <div
+                  className="group relative flex h-full w-full flex-col overflow-hidden rounded-[22px] bg-white/70 p-5 lg:p-6 shadow-[0_1px_2px_rgba(16,40,79,0.04),0_18px_44px_-24px_rgba(16,40,79,0.28)] backdrop-blur-md transition-[transform,box-shadow] duration-300 ease-out hover:-translate-y-1"
+                  style={GLASS_BORDER}
+                >
+                  {/* Top-light wash so the card reads as glass, not flat white */}
+                  <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-24" style={{ background: 'linear-gradient(180deg, rgba(44,90,166,0.06), transparent)' }} />
+
+                  {/* Prominent step number in the site's glass medallion */}
+                  <span
+                    className="relative flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-[16px]"
+                    style={{
+                      background: 'linear-gradient(150deg, rgb(var(--accent-light)) 0%, rgb(var(--accent)) 52%, rgb(var(--primary)) 100%)',
+                      border: '1px solid rgba(255,255,255,0.6)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -10px 18px -10px rgba(16,40,79,0.5), 0 12px 26px -14px rgb(var(--accent) / 0.55)',
+                      color: 'rgb(var(--on-accent))',
+                    }}
+                  >
+                    <span aria-hidden className="pointer-events-none absolute inset-x-[4px] top-[4px] h-[44%] rounded-[14px]" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.45), transparent)' }} />
+                    <span className="relative text-[19px] font-bold leading-none" style={{ fontFamily: JOSEFIN, letterSpacing: '0.02em' }}>
+                      {String(step.n ?? i + 1).padStart(2, '0')}
+                    </span>
+                  </span>
+
+                  <h3
+                    className="relative mt-5 text-[14.5px] font-bold uppercase leading-[1.35] tracking-[0.04em]"
+                    style={{ fontFamily: JOSEFIN, color: 'rgb(var(--primary-dark))' }}
+                  >
+                    {step.title}
+                  </h3>
+                  <p className="relative mt-2.5 text-[13.5px] leading-[1.7] text-ink/70" style={{ fontFamily: INTER }}>
+                    {step.body}
+                  </p>
+                </div>
+              </FadeOnEnter>
+            ))}
+          </ol>
         </div>
       </section>
 
@@ -202,7 +461,7 @@ export default function ContactPage() {
             <FadeOnEnter>
               <div
                 id={QUOTE_SECTION_ID}
-                className="h-full scroll-mt-24 rounded-[20px] bg-white p-7 sm:p-9 lg:p-10"
+                className="h-full scroll-mt-24 rounded-[20px] bg-white p-5 sm:p-9 lg:p-10"
                 style={{
                   border: '1px solid #EAEAEA',
                   boxShadow: '0 2px 8px -2px rgba(0,0,0,0.4), 0 32px 64px -26px rgba(0,0,0,0.75)',

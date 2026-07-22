@@ -49,9 +49,25 @@ const TONES = {
   },
 };
 
+// Handset outline. The previous path was hand-rolled and read as a smear at
+// 18px; this is the standard single-path handset, which stays legible down to
+// 14px. `stroke="currentColor"` inherits the button's white label colour, and
+// `flex-shrink-0` stops the flex row squashing it next to the number.
 const PhoneIcon = (props) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
-    <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3h2.2a1 1 0 0 1 .95.68l1.2 3.6a1 1 0 0 1-.5 1.2l-1.7.85a11 11 0 0 0 5.02 5.02l.85-1.7a1 1 0 0 1 1.2-.5l3.6 1.2a1 1 0 0 1 .68.95v2.2A2.5 2.5 0 0 1 16.5 19h-.5C9.37 19 5 14.63 5 8v-.5z" />
+  <svg
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+    {...props}
+  >
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z" />
   </svg>
 );
 
@@ -73,7 +89,7 @@ export function CallNow({ className = '', label }) {
       className={`btn-gold inline-flex items-center gap-2.5 px-7 py-4 text-[13px] uppercase tracking-[0.08em] ${className}`}
       style={{ fontFamily: JOSEFIN, fontWeight: 700, color: '#FFFFFF', textShadow: '0 1px 2px rgba(0, 0, 0, 0.18)' }}
     >
-      <PhoneIcon className="h-[18px] w-[18px]" />
+      <PhoneIcon className="h-[18px] w-[18px] flex-shrink-0" />
       {label || brandDNA.contact.phone}
     </a>
   );

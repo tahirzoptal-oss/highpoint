@@ -113,7 +113,6 @@ export default function LocationDetailPage() {
       <InnerBanner
         title={heroTitle}
         subtitle={page.subheadline}
-        objectPosition="50% 40%"
         breadcrumb={[{ label: 'Service Areas', to: '/service-areas' }, { label: cityName }]}
       />
 

@@ -46,10 +46,15 @@ const VARIANTS = {
   },
 };
 
-// One belt unit: logo chip + site name + diamond separator.
+// One belt unit: logo chip + site name.
+//
+// There is no separator element. The spacing it used to contribute lives on the
+// item itself as right padding — 28+7+28 = 63px on mobile, 36+7+36 = 79px at
+// sm, 48+7+48 = 103px at lg — so the gap between items, the width of one loop
+// copy and therefore the marquee timing are all identical to before.
 function BeltItem({ logo, name, v }) {
   return (
-    <li className="flex flex-shrink-0 items-center" aria-hidden="true">
+    <li className="flex flex-shrink-0 items-center pr-[40px]" aria-hidden="true">
       <span
         className="flex h-11 w-[60px] flex-shrink-0 items-center justify-center rounded-[8px] sm:h-12 sm:w-[84px] lg:h-[45px] lg:w-[85px]"
         style={{ background: v.chip, border: `1px solid ${v.chipBorder}`, boxShadow: v.chipShadow }}
@@ -71,11 +76,6 @@ function BeltItem({ logo, name, v }) {
         {name}
       </span>
 
-      {/* Separator — the site's existing rotated-square accent motif */}
-      <span
-        className="mx-7 h-[7px] w-[7px] flex-shrink-0 rotate-45 rounded-[1px] sm:mx-9 lg:mx-12"
-        style={{ background: v.diamond }}
-      />
     </li>
   );
 }

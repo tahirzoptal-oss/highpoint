@@ -194,18 +194,26 @@ export default function Blog() {
   const [pos, setPos] = useState(count);
   const [animate, setAnimate] = useState(true);
   const [paused, setPaused] = useState(false);
+  // Manual navigation wins: the first arrow, dot, swipe or arrow-key input
+  // retires autoplay for the rest of the visit.  is the temporary
+  // hover state; this one is permanent, so the carousel never yanks itself
+  // out from under someone who has taken control.
+  const [autoplayOff, setAutoplayOff] = useState(false);
   const touchX = useRef(null);
   const trackRef = useRef(null);
 
-  const step = useCallback((delta) => setPos((p) => { setAnimate(true); return p + delta; }), []);
+  const step = useCallback((delta) => {
+    setAutoplayOff(true);
+    setPos((p) => { setAnimate(true); return p + delta; });
+  }, []);
 
   // Autoplay. `paused` is a dependency, so hovering tears the timer down
   // immediately and leaving rebuilds a full-length interval.
   useEffect(() => {
-    if (count <= perView || paused) return undefined;
+    if (count <= perView || paused || autoplayOff) return undefined;
     const id = setInterval(() => { setAnimate(true); setPos((p) => p + 1); }, AUTOPLAY_MS);
     return () => clearInterval(id);
-  }, [count, perView, paused]);
+  }, [count, perView, paused, autoplayOff]);
 
   const onTransitionEnd = (e) => {
     if (e.target !== trackRef.current || e.propertyName !== 'transform') return;

@@ -80,7 +80,6 @@ export default function BlogPage() {
       <InnerBanner
         title={brandDNA.pages.blog.heading}
         subtitle={brandDNA.pages.blog.intro}
-        objectPosition="50% 40%"
         breadcrumb={[{ label: 'Blog' }]}
         minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
       />

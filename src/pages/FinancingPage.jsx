@@ -155,7 +155,6 @@ export default function FinancingPage() {
               ? "We offer flexible financing through trusted lending partners so you can protect your home now and pay on a schedule that works for you."
               : `${brandDNA.company.shortName || brandDNA.company.name} does not offer in-house financing. We focus on roofing and exteriors and let specialised lenders handle the lending. Below is what every homeowner should consider.`
             )}
-        objectPosition="50% 40%"
         breadcrumb={[{ label: 'Financing' }]}
         minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
       />

@@ -50,7 +50,6 @@ export default function ServicesPage() {
       <InnerBanner
         title={brandDNA.copy.services.heading}
         subtitle={brandDNA.copy.services.body}
-        objectPosition="50% 40%"
         breadcrumb={[{ label: 'Services' }]}
       />
 

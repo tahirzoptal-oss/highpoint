@@ -513,6 +513,50 @@ p { margin: 0; }
     0 6px 16px -6px rgba(44, 90, 166, 0.5);
 }
 
+/* ================================================================
+   .mobile-menu-panel — the open mobile/tablet nav drawer.
+
+   The header is `position: sticky`, so once the drawer grows past the viewport
+   its lower items scroll off with nothing to scroll: the page cannot reveal
+   them. Capping the panel and letting it scroll internally fixes that.
+
+   Height budget = viewport minus everything above the panel:
+     < 1024px : 3px accent bar + 80px nav row            = 83px
+     >= 1024px: 46px top bar + 88px nav row              = 134px
+   (The drawer itself is hidden from 1360px up, so there is no third case.)
+
+   `dvh` is declared after `vh` so iOS Safari uses the dynamic viewport — with
+   `vh` alone the panel sits under the collapsing URL bar and the last item is
+   still unreachable. Browsers without `dvh` keep the `vh` line.
+
+   `overscroll-behavior: contain` stops the scroll chaining to the page when
+   the panel hits either end.
+   ================================================================ */
+.mobile-menu-panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 83px;
+  bottom: 0;
+  overflow-y: auto;
+  /* `contain` keeps a scroll that reaches either end of the drawer from
+     chaining to the document behind it. This is the ONLY scroll containment in
+     play — nothing locks or moves the document, so opening and closing the menu
+     can never shift the reader's position. See the note in Navbar.jsx. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* Clearance for the sticky bottom CTA bar (~62px) plus the iOS home
+     indicator, so the LAST nav item can always scroll clear of it. Generous on
+     purpose: the bar's height is set by its own content, and a fixed pixel
+     budget here would silently break if that content ever changed. */
+  padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 1024px) {
+  .mobile-menu-panel {
+    top: 134px;
+  }
+}
+
 /* ── .btn-flat — opt-in modifier for .btn-gold ──
    The MOBILE STICKY CTA BAR variant. Strips the lift, the shadows (outer glow
    and the inset depth pair) and the corner radius. Background gradient, gloss

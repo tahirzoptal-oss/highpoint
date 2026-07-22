@@ -95,6 +95,40 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // ── Deliberately NO scroll manipulation of any kind here ──
+  //
+  // Two techniques were tried and both moved the page:
+  //
+  //   `body { overflow: hidden }` collapses the scrollable height, so the
+  //   browser clamps scrollTop to 0 and the page snaps to the top on open.
+  //
+  //   `body { position: fixed; top: -Y }` holds the position but has to put it
+  //   back with `window.scrollTo` on close — and because index.css sets
+  //   `html { scroll-behavior: smooth }`, that restore ANIMATES. The page
+  //   visibly scrolled itself after the menu closed.
+  //
+  // Neither is needed. The drawer is a fixed overlay covering the whole
+  // viewport below the header, so there is nothing behind it to see moving, and
+  // `.mobile-menu-panel` carries `overscroll-behavior: contain`, which stops a
+  // scroll inside the drawer from chaining to the document. The document's
+  // scroll offset is therefore never read, never written and never clamped:
+  // opening and closing the menu is a pure render, and the reader stays exactly
+  // where they were. That also means `position: sticky` keeps working normally
+  // on the header, with no special-case pinning.
+  //
+  // If a hard background lock is ever wanted, it MUST be paired with a restore
+  // that neutralises `scroll-behavior` first, or this bug comes straight back.
+
+  // Close the drawer if the viewport grows past the breakpoint that hides it,
+  // so its state can never disagree with what is on screen.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(min-width: 1360px)');
+    const onChange = (e) => { if (e.matches) setMobileOpen(false); };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
   // Scrolls to the CTA banner, or routes home to it when the current page has
   // no banner (/404, /thank-you).
   const scrollToForm = () => goToQuote(null, navigate);
@@ -145,6 +179,7 @@ export default function Navbar() {
       return (
         <div className="relative">
           <button
+            type="button"
             onClick={() => setOpenDropdown(open ? null : link.dropdown)}
             aria-current={active ? 'page' : undefined}
             aria-expanded={open}
@@ -252,6 +287,7 @@ export default function Navbar() {
               <DesktopLink key={link.label} link={link} />
             ))}
             <button
+              type="button"
               onClick={scrollToForm}
               className="btn-gold ml-2 whitespace-nowrap px-5 py-3 text-[12px] uppercase tracking-[0.07em]"
               style={navCtaTextStyle}
@@ -283,7 +319,11 @@ export default function Navbar() {
             </svg>
           </a>
 
+          {/* `type="button"` is explicit: a bare <button> defaults to type
+              "submit", which would navigate (and therefore scroll) if this ever
+              ended up inside a form. */}
           <button
+            type="button"
             className="ml-auto inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl border border-black/10 text-ink transition-colors hover:border-[rgb(var(--accent))] hover:text-gold min-[1360px]:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
@@ -296,9 +336,15 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── Mobile menu ── */}
+      {/* ── Mobile menu ──
+          `.mobile-menu-panel` (index.css) makes this a FIXED overlay running
+          from just below the header to the bottom of the viewport, so opening
+          it never pushes, shifts or resizes the page beneath. It scrolls
+          internally, with bottom padding that clears the sticky CTA bar and the
+          iOS home indicator so the last item is always reachable. The nav row
+          and toggle sit outside it and stay visible while it scrolls. */}
       {mobileOpen && (
-        <div className="border-t border-black/5 bg-white px-5 pb-5 pt-3 min-[1360px]:hidden" style={{ fontFamily: INTER }}>
+        <div className="mobile-menu-panel border-t border-black/5 bg-white px-5 pb-5 pt-3 min-[1360px]:hidden" style={{ fontFamily: INTER }}>
           
           {navLinks.map((link) => {
             if (link.dropdown) {
@@ -307,6 +353,7 @@ export default function Navbar() {
               return (
                 <div key={link.label} className="border-b border-black/5">
                   <button
+                    type="button"
                     onClick={() => setMobileOpenDropdown(open ? null : link.dropdown)}
                     aria-current={isActive(link.to) ? 'page' : undefined}
                     aria-expanded={open}

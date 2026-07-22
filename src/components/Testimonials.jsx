@@ -164,6 +164,11 @@ export default function Testimonials() {
   const perView = useSyncExternalStore(subscribeResize, getColumns, () => 3);
   const [page, setPage] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Manual navigation wins: the first arrow, dot, swipe or arrow-key input
+  // retires autoplay for the rest of the visit.  is the temporary
+  // hover state; this one is permanent, so the carousel never yanks itself
+  // out from under someone who has taken control.
+  const [autoplayOff, setAutoplayOff] = useState(false);
   const touchX = useRef(null);
 
   const pageCount = Math.max(1, Math.ceil(REVIEWS.length / perView));
@@ -171,15 +176,18 @@ export default function Testimonials() {
   // out of range — no clamp-in-effect needed.
   const activePage = Math.min(page, pageCount - 1);
 
-  const go = useCallback((next) => setPage(((next % pageCount) + pageCount) % pageCount), [pageCount]);
+  const go = useCallback((next) => {
+    setAutoplayOff(true);
+    setPage(((next % pageCount) + pageCount) % pageCount);
+  }, [pageCount]);
 
   // Autoplay. `paused` is a dependency, so hovering tears the timer down
   // immediately and leaving it rebuilds a full-length interval.
   useEffect(() => {
-    if (pageCount <= 1 || paused) return undefined;
+    if (pageCount <= 1 || paused || autoplayOff) return undefined;
     const id = setInterval(() => setPage((p) => (p + 1) % pageCount), 6000);
     return () => clearInterval(id);
-  }, [pageCount, paused]);
+  }, [pageCount, paused, autoplayOff]);
 
   const onTouchStart = (e) => { touchX.current = e.touches[0].clientX; };
   const onTouchEnd = (e) => {

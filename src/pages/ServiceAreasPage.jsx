@@ -82,7 +82,6 @@ export default function ServiceAreasPage() {
       <InnerBanner
         title={brandDNA.copy.serviceAreas.heading}
         subtitle={brandDNA.copy.serviceAreas.body}
-        objectPosition="50% 40%"
         breadcrumb={[{ label: 'Service Areas' }]}
         minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
       />
@@ -124,9 +123,11 @@ export default function ServiceAreasPage() {
         </div>
       </Band>
 
-      {/* ── What coverage means ── */}
+      {/* ── What coverage means — centred within the standard container, to
+             match the intro band above it. The card grid still runs the full
+             width; only the heading, the closing line and the buttons centre. ── */}
       <Band tone="light" width="full">
-        <SectionHead eyebrow="WHAT COVERAGE MEANS" title="IN YOUR AREA. READY TO HELP." />
+        <SectionHead eyebrow="WHAT COVERAGE MEANS" title="IN YOUR AREA. READY TO HELP." align="center" />
         <ul className="m-0 mt-8 grid list-none grid-cols-1 gap-5 p-0 sm:grid-cols-2 lg:grid-cols-3">
           {coverageHighlights.map((h) => (
             <li key={h.title} className="flex">
@@ -134,12 +135,10 @@ export default function ServiceAreasPage() {
             </li>
           ))}
         </ul>
-        <Prose>
-          <p className="mt-8 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
-            Request your free inspection today. We&apos;ll be at your property within 24 to 48 hours, give you an honest assessment, and tell you exactly what your roof needs.
-          </p>
-        </Prose>
-        <div className="mt-8 flex flex-wrap items-center gap-4">
+        <p className="mx-auto mt-8 max-w-[74ch] text-center text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
+          Request your free inspection today. We&apos;ll be at your property within 24 to 48 hours, give you an honest assessment, and tell you exactly what your roof needs.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
           <Link
             to="/contact"
             className="btn-gold inline-flex items-center gap-2.5 px-7 py-4 text-[13px] uppercase tracking-[0.08em]"

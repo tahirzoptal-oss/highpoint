@@ -38,7 +38,6 @@ export default function LegalPage({ title, path, intro, sections = [] }) {
       <InnerBanner
         title={title}
         breadcrumb={[{ label: title }]}
-        objectPosition="50% 40%"
         minHeightClass="min-h-[38vh] lg:min-h-[44vh]"
       />
 
