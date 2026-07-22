@@ -17,14 +17,16 @@
  */
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, "..");
 const DIST = resolve(ROOT, "dist");
 const BRAND_DNA = resolve(ROOT, "src/config/brand-dna.js");
 
-const { brandDNA } = await import(BRAND_DNA);
+// pathToFileURL, not the bare path: on Windows an absolute path starts "c:\",
+// which the ESM loader reads as an unsupported URL scheme.
+const { brandDNA } = await import(pathToFileURL(BRAND_DNA).href);
 const base = String(brandDNA.company?.url || "").replace(/\/+$/, "");
 const today = new Date().toISOString().slice(0, 10);
 

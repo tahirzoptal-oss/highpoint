@@ -419,10 +419,10 @@ export const brandDNA = {
     "PASCO",
     "RICHLAND",
     "WEST RICHLAND",
+    "FINLEY",
     "WALLA WALLA",
     "YAKIMA",
-    "BENTON CITY",
-    "SPOKANE"
+    "BENTON CITY"
   ],
   "trust_badges": [
     {
@@ -676,31 +676,32 @@ export const brandDNA = {
       ]
     },
     {
-      "slug": "spokane",
-      "city": "Spokane",
-      "headline": "Roofing in Spokane, WA",
-      "subheadline": "Honest roofing for Spokane's older homes and true four-season winters.",
-      "body": "Spokane is real winter country, a very different job than the dry Tri-Cities. Heavy snow, ice dams along the eaves, and pine-shaded roofs make Spokane roofing its own discipline. The older brick Craftsman bungalows around the South Hill and Manito Park, the Victorians in Browne's Addition, and the established homes through the Perry District and Lincoln Heights have steep, detailed roofs that punish shortcuts. Under the pines, shade and damp invite moss and rot, and every winter the freeze-thaw and the snow load work at the flashings. Ice-and-water protection is not a nice extra here, it is the whole ballgame. High Point serves Spokane homeowners who want the same honest pricing and careful work we are known for, sized for a climate that gets four full seasons.\n\n## Our roofing & renovation services in Spokane\nA Spokane roof fights snow, ice, and shade, so we build every layer for the winter it has to survive.\n- Free roof inspections that check for ice-dam damage, moss, and lifted flashing on older South Hill and Browne's Addition homes.\n- Roof installation as a full system, with heavy-duty ice-and-water shield where snow and ice back up along the eaves.\n- Roof repairs for winter leaks, worn valleys, and flashing that freeze-thaw has loosened, done carefully on steep older roofs.\n- Home renovation and remodeling for the rest of the house, from windows and siding to interior work, by one local team.\n\n## Why Spokane homeowners choose High Point\nBecause an owner-led shop with a 5.0 Google rating and a no-upselling reputation is worth a look, wherever you are. Terry inspects thoroughly, traces a leak to its real source, quotes the true scope in writing, and holds to it. He does the work himself, so there is no salesman and no vanishing crew. Every review is five stars, naming honesty and careful work. For a Spokane roof that has to fight ice dams all winter, the hidden materials matter more, not less, and a roofer who builds them right is the one to call.\n\n## Spokane roofs: what we see and how we build for it\nSpokane carries a lot of older, steep-roofed homes built for snow, from brick Craftsman bungalows to Victorians, plus newer builds across the suburbs. The number one failure point in this climate is ice dams and flashing, where snow melts, refreezes at the cold eaves, and pushes water back up under the shingles, while shade under the pines lets moss and rot take hold in the valleys. So ice-and-water shield along the eaves and valleys is essential, not optional. We seal those spots heavily, flash every joint in metal, and respect the steep roof line. The best window to re-roof in Spokane is summer into early fall, well before the snow.\n\n## Areas we serve near Spokane\nSpokane is our farthest service area, and we roof and renovate there for homeowners who want honest work. We also serve the Tri-Cities, including Kennewick and Richland.\n- Kennewick, Richland",
+      "slug": "finley",
+      "city": "Finley",
+      "headline": "Roofing in Finley, WA",
+      "subheadline": "Roofing for Finley's rural acreage and the outbuildings that come with it.",
+      "body": "Finley sits just southeast of Kennewick on the south bank of the Columbia, close enough to our base that it is one of the shortest drives in our whole service area. It is unincorporated Benton County, so the pattern here is farm ground, larger lots, and homes set well back from the road, usually with a shop or a barn standing alongside the house. The weather is the same high desert we build for in Kennewick every day: months of hard summer sun, wind that comes up off the open river and the flat farm ground with nothing to slow it down, and a handful of freezing nights in winter. What is different is the roof. There is more of it, it is more exposed, and there is often more than one building on the property. High Point treats a Finley address the way we treat a Kennewick street, with the same written price, the same materials, and the same owner on the roof.\n\n## Our roofing & renovation services in Finley\nFinley properties are wide roofs on open ground, and frequently more than one, so we look at the whole place rather than just the house.\n- Free roof inspections covering the house and the outbuildings, documented with photos so you see the real condition of each one.\n- Roof installation as a full system, fastened for the open wind exposure off the river and the farm ground, tear-off through to the final shingle.\n- Roof repairs for wind-lifted shingles, worn valleys, and flashing the sun has dried out, with an honest call on repair versus replacement.\n- Home renovation and remodeling across the property, from siding and windows to kitchens, flooring, and custom builds, all by one local team.\n\n## Why Finley homeowners choose High Point\nBecause we are a few minutes down the road and we still put the price in writing. Living outside the city limits usually means waiting longer for a contractor and paying more when one finally turns up, and an unincorporated address is exactly where a careless outfit assumes nobody is checking the work. Terry does the inspection and the work himself, quotes the real scope up front, and that written estimate is the price you pay. Inspections and estimates in Finley are free, with no travel charge for being outside Kennewick. Every Google review is five stars, naming honesty, thoroughness, and a fair price.\n\n## Finley roofs: what we see and how we build for it\nFinley roofs are mostly standard asphalt on wide, low-pitched spans, with detached shops and barns sitting next to the house. The number one failure point out here is wind and sun rather than ice. Gusts off the open ground work at ridge caps, edges, and any flashing that has already loosened, while the summer sun bakes the field of the roof and dries the sealant out years before anyone thinks to look. Blowing dust and sand settle in the valleys and hold what little water we get. So we fasten to the wind spec rather than the minimum, flash every joint in metal, seal the eaves and valleys with heavy-duty shield, and clear the valleys out before we close them up. The best window to re-roof in Finley is late spring into early fall, in the dry, calmer stretch between the spring wind and the first freeze.\n\n## Areas we serve near Finley\nFinley is a short drive from our Kennewick base, at the near end of our service area rather than the far end. We also serve nearby Kennewick, Pasco, and Richland.\n- Kennewick, Pasco, Richland",
       "faq": [
         {
-          "q": "How much does a new roof cost in Spokane?",
-          "a": "Every roof is different, so treat this as a general market range and not a quote. Most full asphalt shingle replacements run between $9,000 and $22,000, depending on size, pitch, and shingle, and a steep older roof built for snow can sit at the higher end. Your free inspection gives you a written price that is the price you pay."
+          "q": "What does a new roof cost in Finley?",
+          "a": "Every roof is different, so treat this as a general Tri-Cities market range and not a quote. Most full asphalt shingle replacements run between $9,000 and $22,000, and a larger rural roof with a shop or a barn alongside it can sit at the higher end. Your free inspection turns that into a written price that is the price you pay."
         },
         {
-          "q": "Can you protect my roof against ice dams?",
-          "a": "Yes. That is the heart of a Spokane roof. We size heavy-duty ice-and-water shield for the eaves and valleys where ice backs water up, so the winter melt cannot find its way in."
+          "q": "Do you charge extra to come out to Finley?",
+          "a": "No. Finley is one of the closest stops in our service area, a few minutes from our Kennewick base. The inspection and the written estimate are free, and there is no travel charge for being outside the city limits."
         },
         {
-          "q": "Spokane is far from Kennewick. Do you still serve it?",
-          "a": "Yes. Spokane is our farthest service area, and we roof and renovate there for homeowners who want honest, careful work. The distance does not change the written price you were quoted."
+          "q": "Can you re-roof my shop or barn as well as the house?",
+          "a": "Yes. We inspect every building on the property and quote them together or separately, whichever suits you. Outbuildings take the same wind and sun as the house, so they get the same materials and the same workmanship."
         },
         {
-          "q": "Do you offer payment plans?",
+          "q": "Are payment plans available?",
           "a": "Yes. Ask about our affordable payment plans, built to keep a new or repaired roof inside your budget."
         }
       ],
       "adjacent_cities": [
         "kennewick",
+        "pasco",
         "richland"
       ]
     }
@@ -1064,7 +1065,7 @@ export const brandDNA = {
     },
     {
       "q": "What areas do you serve?",
-      "a": "Kennewick, Pasco, Richland, West Richland, and Benton City are the core. We also reach Walla Walla, Yakima, and Spokane. Call and tell us where you are."
+      "a": "Kennewick, Pasco, Richland, West Richland, Finley, and Benton City are the core. We also reach Walla Walla and Yakima. Call and tell us where you are."
     }
   ],
   "blog_posts": [

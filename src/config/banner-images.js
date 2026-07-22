@@ -56,7 +56,7 @@ const BY_ROUTE = {
   '/service-areas/walla-walla': img(22),
   '/service-areas/yakima': img(1),
   '/service-areas/benton-city': img(2),
-  '/service-areas/spokane': img(3),
+  '/service-areas/finley': img(3),
 };
 
 // Stable string hash, so an unmapped route keeps the same photo on every build
