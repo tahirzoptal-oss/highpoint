@@ -27,7 +27,7 @@ export const brandDNA = {
     "city": "Kennewick",
     "state": "WA",
     "zip": "99336",
-    "full": "8350 W Grandridge Blvd Ste200 #463 Kennewick, WA 99336",
+    "full": "8350 W Grandridge Blvd, Ste200 #463 Kennewick, WA 99336",
     "lat": null,
     "lng": null
   },
