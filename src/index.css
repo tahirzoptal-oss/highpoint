@@ -413,6 +413,33 @@ body {
   width: 100%;
 }
 
+/* ================================================================
+   Mobile / tablet: keep the LeadConnector chat widget clear of the fixed
+   bottom CTA bar (MobileCtaBar, `lg:hidden`) and the footer.
+
+   The actual lift of the widget's launcher is driven from JS
+   (src/components/ChatWidgetOffset.jsx): the launcher is a position:fixed
+   element inside the widget's Stencil shadow DOM, and `:host{all:initial}`
+   makes the host display:inline (non-transformable), so page CSS cannot move it
+   — that is why an earlier static `transform` on <chat-widget> had no effect.
+   The controller measures the CTA height live and injects a style into the
+   widget's shadow root instead.
+
+   This rule only reserves footer-coloured space beneath the bottom bar's
+   content so the fixed CTA and the lifted launcher float over an extension of
+   the footer — no white/transparent spacer, and the copyright / "Website
+   Designed With…" line stays fully visible. `--hpr-footer-clearance` is set by
+   ChatWidgetOffset from the live measurements; the static 176px is the pre-JS /
+   SSR fallback. Scoped to `max-width: 1023px` (exactly where the sticky bar
+   shows) so desktop is untouched. Vertical only — no horizontal scroll. */
+@media (max-width: 1023px) {
+  .footer-cta-clearance {
+    padding-bottom: calc(
+      var(--hpr-footer-clearance, 176px) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Josefin Sans', sans-serif;
   margin: 0;
@@ -1246,6 +1273,30 @@ p { margin: 0; }
   border-color: rgb(var(--primary)) !important;
   box-shadow: 0 0 0 4px rgb(var(--accent) / 0.18);
   outline: none;
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
 }
 
 :root[data-theme-mode="dark"] .btn-gold,

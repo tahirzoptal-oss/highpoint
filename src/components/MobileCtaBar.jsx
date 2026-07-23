@@ -20,7 +20,7 @@ export default function MobileCtaBar() {
   const scrollToForm = () => goToQuote(null, navigate);
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 shadow-2xl bg-navy">
+    <div data-mobile-cta className="lg:hidden fixed bottom-0 left-0 right-0 z-50 shadow-2xl bg-navy">
       {/* Available-now strip. Rule 56 (refresh): always renders. Driven by
           the shared useAvailableNow hook so TopBar, Navbar, and MobileCtaBar
           stay in sync (timezone-aware via brandDNA.businessHours.tz). */}

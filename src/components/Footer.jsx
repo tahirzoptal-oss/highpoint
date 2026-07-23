@@ -276,7 +276,12 @@ export default function Footer() {
       </div>
 
       {/* ════ Bottom bar — slightly darker for separation ════ */}
-      <div className="relative" style={{ background: '#EEF2F7', borderTop: '1px solid #d2d2d2' }}>
+      {/* `.footer-cta-clearance` (index.css) extends THIS bar's own #EEF2F7
+          background downward on mobile/tablet, reserving footer-coloured space
+          so the fixed sticky CTA (MobileCtaBar) and the LeadConnector chat
+          widget float over what reads as more footer — never over the copyright
+          or "Website Designed With…" line. No effect at lg+ (no sticky bar). */}
+      <div className="footer-cta-clearance relative" style={{ background: '#EEF2F7', borderTop: '1px solid #d2d2d2' }}>
         <div className="site-container flex flex-col items-center justify-between gap-3 pt-5 pb-6 lg:py-5 text-center md:flex-row md:text-left">
           <p className="text-[12.5px] text-ink/75" style={{ fontFamily: INTER }}>
             {brandDNA.copy.copyright}

@@ -34,6 +34,19 @@
   <!-- End Google Tag Manager (noscript) -->
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+  <!-- CallRail dynamic number swap. Baked into the SSG template so it loads once
+       per full page load on every route and is never re-injected on SPA
+       navigation. `async` keeps it off the render path. swap.js self-initialises
+       and attaches its own MutationObserver to document.body, so it re-swaps
+       phone numbers automatically as React renders each client-side route — no
+       manual re-init needed. Coexists with GTM/GA and the LeadConnector widget
+       (it only registers the global `window.CallTrk`). -->
+  <script type="text/javascript" async src="//cdn.callrail.com/companies/164056385/40773248e88a73909807/12/swap.js"></script>
+  <!-- LeadConnector chat widget. Lives in the SSG template so it is baked into
+       every prerendered page and executes exactly once per full page load;
+       client-side (SPA) route changes never re-inject it, so it can't duplicate.
+       Placed last in <body> so it never blocks render or hurts Core Web Vitals. -->
+  <script src="https://widgets.leadconnectorhq.com/loader.js" data-resources-url="https://widgets.leadconnectorhq.com/chat-widget/loader.js" data-widget-id="6a29696fc85a68345daf1b08"></script>
 </body>
 
 </html>

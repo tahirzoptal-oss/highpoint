@@ -4,6 +4,7 @@ import TopBar from './TopBar';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import MobileCtaBar from './MobileCtaBar';
+import ChatWidgetOffset from './ChatWidgetOffset';
 
 /**
  * ScrollManager — on route change scroll to the hash anchor when present, else
@@ -34,7 +35,7 @@ function ScrollManager() {
 export default function Layout() {
   const { pathname } = useLocation();
   return (
-    <div className="w-full pb-16 lg:pb-0">
+    <div className="w-full">
       <ScrollManager />
       <header className="sticky top-0 z-50">
         <TopBar />
@@ -47,6 +48,9 @@ export default function Layout() {
       </main>
       <Footer />
       <MobileCtaBar />
+      {/* Keeps the LeadConnector chat widget lifted above the sticky CTA and
+          clear of the footer on mobile/tablet. Headless; renders nothing. */}
+      <ChatWidgetOffset />
     </div>
   );
 }
