@@ -74,6 +74,7 @@ export default function BlogPage() {
       <SEO
         path="/blog"
         title={`Roofing Blog | ${brandDNA.company.name}`}
+        description="Roofing tips, cost guides, and storm-damage advice for Kennewick and Tri-Cities homeowners, straight from High Point's owner-operator."
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog' }])}
       />
 

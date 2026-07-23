@@ -142,6 +142,7 @@ export default function FinancingPage() {
       <SEO
         path="/financing"
         title={`Financing | ${brandDNA.company.name}`}
+        description="Roofing payment plans in Kennewick, WA. Flexible options, offered to every customer, to keep your new roof or repair within budget. Ask High Point today."
         jsonLd={financingJsonLd}
       />
 

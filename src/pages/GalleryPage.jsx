@@ -49,6 +49,7 @@ export default function GalleryPage() {
       <SEO
         path="/gallery"
         title={`Project Gallery | ${brandDNA.company.name}`}
+        description="See completed roofing and renovation projects by High Point across Kennewick and the Tri-Cities, WA — roofs, kitchens, siding, and flooring."
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Gallery', path: '/gallery' }])}
       />
 

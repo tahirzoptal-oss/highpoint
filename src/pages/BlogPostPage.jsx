@@ -55,7 +55,7 @@ export default function BlogPostPage() {
     <>
       <SEO
         path={`/blog/${slug}`}
-        title={`${post.title} | ${brandDNA.company.name}`}
+        title={post.metaTitle || `${post.title} | ${brandDNA.company.name}`}
         description={post.excerpt}
         image={coverOf(post)}
         jsonLd={[

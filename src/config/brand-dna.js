@@ -2,7 +2,7 @@ import { SERVICE_PAGES } from './service-pages.js';
 
 export const brandDNA = {
   "meta": {
-    "title": "Roofing Contractor Kennewick, WA - 5.0 Star Owner-Operator | High Point Renovation & Roofing",
+    "title": "Roofing Contractor in Kennewick, WA | High Point",
     "description": "Need a roofing contractor in Kennewick, WA? High Point offers honest, owner-operator roofs and payment plans. Call (509) 518-0747 for your free estimate."
   },
   "company": {
@@ -347,6 +347,7 @@ export const brandDNA = {
     {
       "name": "Home Renovation & Remodeling",
       "slug": "home-renovation-remodeling",
+      "metaTitle": "Home Renovation & Remodeling | Kennewick, WA",
       "url": "https://www.highpointrenovation.com/",
       "description_short": "Full home renovation and remodeling beyond roofing: kitchens, window replacement, siding, flooring, bathroom vanities and custom builds such as gazebos.",
       "source": "intake form + Facebook intro + Google reviews (no dedicated on-site service section)",
@@ -1072,6 +1073,7 @@ export const brandDNA = {
     {
       "slug": "signs-you-need-roof-replacement-kennewick",
       "title": "5 Signs You Need a Roof Replacement in Kennewick",
+      "metaTitle": "5 Signs You Need a Roof Replacement | Kennewick",
       "excerpt": "A roof usually fails quietly, long before you see a stain on the ceiling. Here are the five signs it is time to stop patching and start planning, and how to tell which camp your roof is really in.",
       "date": "June 2026",
       "category": "Roof Replacement",
@@ -1084,6 +1086,7 @@ export const brandDNA = {
     {
       "slug": "new-roof-cost-kennewick",
       "title": "How Much Does a New Roof Cost in Kennewick? (Real 2026 Numbers)",
+      "metaTitle": "New Roof Cost in Kennewick, WA | High Point",
       "excerpt": "Ask three roofers what a new roof costs and you get three dodges. Here is a straight answer instead: what most Kennewick re-roofs run, and exactly what moves the number.",
       "date": "June 2026",
       "category": "Pricing & Costs",
@@ -1096,6 +1099,7 @@ export const brandDNA = {
     {
       "slug": "storm-wind-damage-roof-repair-tri-cities",
       "title": "Storm and Wind Damage Roof Repair: What Tri-Cities Homeowners Should Know",
+      "metaTitle": "Storm & Wind Damage Roof Repair | Tri-Cities",
       "excerpt": "The wind off the Columbia Basin does more roof damage than most homeowners realize. Here is what to check after a big blow, and when a quick repair keeps a small problem from becoming a soaked ceiling.",
       "date": "May 2026",
       "category": "Storm & Wind Damage",
@@ -1108,6 +1112,7 @@ export const brandDNA = {
     {
       "slug": "asphalt-shingles-vs-metal-roofing-kennewick",
       "title": "Asphalt Shingles vs Metal Roofing: Which Fits Your Kennewick Home?",
+      "metaTitle": "Asphalt Shingles vs Metal Roofing | Kennewick",
       "excerpt": "Metal roofs get a lot of hype, and for some Kennewick homes they are worth it. For plenty of others, quality asphalt shingles are the smarter buy. An honest side-by-side from a roofer who installs both.",
       "date": "May 2026",
       "category": "Roofing Materials",
@@ -1120,6 +1125,7 @@ export const brandDNA = {
     {
       "slug": "spot-bad-roofing-contractor",
       "title": "How to Spot a Bad Roofing Contractor (Before It Costs You)",
+      "metaTitle": "How to Spot a Bad Roofing Contractor | High Point",
       "excerpt": "After a big wind storm, unfamiliar roofers show up with a clipboard and a deal that expires today. Some are fine. Some take a deposit and vanish. Here is the checklist that tells the difference.",
       "date": "April 2026",
       "category": "Hiring a Contractor",
@@ -1132,6 +1138,7 @@ export const brandDNA = {
     {
       "slug": "what-to-expect-free-roof-inspection-kennewick",
       "title": "What to Expect During a Free Roof Inspection in Kennewick",
+      "metaTitle": "Free Roof Inspection in Kennewick | High Point",
       "excerpt": "A free roof inspection can sound like a sales trap. Here is what it actually looks like when Terry does it: what he checks, how long it takes, and the written report you keep afterward, whether you hire him or not.",
       "date": "April 2026",
       "category": "Roof Inspections",

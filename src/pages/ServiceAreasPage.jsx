@@ -76,6 +76,7 @@ export default function ServiceAreasPage() {
       <SEO
         path="/service-areas"
         title={`Service Areas | ${brandDNA.company.name}`}
+        description="High Point Renovation & Roofing serves Kennewick, Pasco, Richland, West Richland, and the greater Tri-Cities, WA. Find owner-led roofing near you."
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Service Areas', path: '/service-areas' }])}
       />
 

@@ -11,7 +11,7 @@
     "dev": "vite",
     "prebuild": "node scripts/inject-theme.mjs",
     "build": "vite-react-ssg build",
-    "postbuild": "node scripts/gen-discovery.mjs",
+    "postbuild": "node scripts/gen-discovery.mjs && node scripts/seo-audit.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "validate": "node scripts/inject-theme.mjs"

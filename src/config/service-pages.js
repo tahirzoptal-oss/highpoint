@@ -28,7 +28,7 @@ export const SERVICE_PAGES = [
     name: 'Roof Replacement',
     slug: 'roof-replacement',
     heroTitle: 'Roof Replacement',
-    metaTitle: 'Roof Replacement in Kennewick & the Tri-Cities | High Point',
+    metaTitle: 'Roof Replacement in Kennewick, WA | High Point',
     description:
       'High Point Renovation & Roofing provides professional roof replacement in Kennewick, Pasco, Richland, and the Tri-Cities with honest assessments, quality materials, and careful installation.',
     description_short:
@@ -94,7 +94,7 @@ export const SERVICE_PAGES = [
     name: 'Emergency Roofing',
     slug: 'emergency-roofing',
     heroTitle: 'Emergency Roofing',
-    metaTitle: 'Emergency Roofing in Kennewick & the Tri-Cities | High Point',
+    metaTitle: 'Emergency Roofing in Kennewick, WA | High Point',
     description:
       'High Point Renovation & Roofing responds to urgent roof leaks and storm damage across Kennewick, Pasco, Richland, and the Tri-Cities with inspections, temporary protection, and repair planning.',
     description_short:
@@ -160,7 +160,7 @@ export const SERVICE_PAGES = [
     name: 'Insurance Claims',
     slug: 'insurance-claims',
     heroTitle: 'Insurance Claims',
-    metaTitle: 'Roofing Insurance Claim Assistance in the Tri-Cities | High Point',
+    metaTitle: 'Roofing Insurance Claims in the Tri-Cities',
     description:
       'High Point Renovation & Roofing helps Tri-Cities property owners with roof inspections, storm-damage photos, repair estimates, and clear roofing information during an insurance claim.',
     description_short:
@@ -226,7 +226,7 @@ export const SERVICE_PAGES = [
     name: 'Storm Damage Repair',
     slug: 'storm-damage-repair',
     heroTitle: 'Storm Damage Repair',
-    metaTitle: 'Storm Damage Roof Repair in the Tri-Cities | High Point',
+    metaTitle: 'Storm Damage Roof Repair | Tri-Cities, WA',
     description:
       'High Point Renovation & Roofing inspects and repairs roof damage caused by wind, hail, rain, and debris throughout Kennewick, Pasco, Richland, and the greater Tri-Cities.',
     description_short:

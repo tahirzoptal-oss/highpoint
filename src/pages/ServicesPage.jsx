@@ -44,6 +44,7 @@ export default function ServicesPage() {
       <SEO
         path="/services"
         title={`Our Services | ${brandDNA.company.name}`}
+        description="Roof inspections, repairs, installation, replacement, and home renovation in Kennewick and the Tri-Cities, WA. Honest, owner-operator work."
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Services', path: '/services' }])}
       />
 

@@ -197,6 +197,7 @@ export default function ContactPage() {
       <SEO
         path="/contact"
         title={`Contact | ${brandDNA.company.name}`}
+        description="Contact High Point Renovation & Roofing in Kennewick, WA for a free roof inspection and honest written estimate. Call (509) 518-0747 or send a message."
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }])}
       />
 

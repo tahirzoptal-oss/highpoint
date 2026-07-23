@@ -98,9 +98,13 @@ export function buildBreadcrumb(items) {
   };
 }
 
-// Service schema for a service detail page.
+// Service schema for a service detail page. The `provider` is a LocalBusiness
+// (RoofingContractor), so it MUST carry a PostalAddress or validators flag the
+// LocalBusiness as invalid. We reuse the same verified business address the
+// homepage LocalBusiness uses (see buildLocalBusiness) so the two never drift.
 export function buildService(service) {
   const base = baseUrl();
+  const address = brandDNA.address || {};
   return clean({
     '@context': 'https://schema.org',
     '@type': 'Service',
@@ -108,7 +112,20 @@ export function buildService(service) {
     serviceType: service.name || service.title,
     description: service.blurb || service.description,
     url: base + '/services/' + service.slug,
-    provider: { '@type': brandDNA.company?.schemaType || 'RoofingContractor', name: brandDNA.company?.name, url: base },
+    provider: {
+      '@type': brandDNA.company?.schemaType || 'RoofingContractor',
+      name: brandDNA.company?.name,
+      url: base,
+      telephone: brandDNA.contact?.phoneTelLink,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: address.street,
+        addressLocality: address.city,
+        addressRegion: address.state,
+        postalCode: address.zip,
+        addressCountry: 'US',
+      },
+    },
     areaServed: (brandDNA.serviceAreas || []).map((a) => (typeof a === 'string' ? a : a.name || a.city)).filter(Boolean),
   });
 }

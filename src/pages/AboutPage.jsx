@@ -83,6 +83,7 @@ export default function AboutPage() {
       <SEO
         path="/about"
         title={`About | ${brandDNA.company.name}`}
+        description="Meet Terry Preston, the owner-operator behind High Point Renovation & Roofing in Kennewick, WA. He inspects, prices, and builds every roof himself."
         jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'About', path: '/about' }])}
       />
 
