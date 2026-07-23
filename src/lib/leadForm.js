@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CONTACT_PAGE_FORM } from '../config/form-ids';
 
 // Control characters are written as \xNN escapes (never raw bytes) so the built
 // bundle stays plain text and greppable. Raw control bytes make bundles read as
@@ -46,6 +47,28 @@ export function validateLead(raw) {
 }
 
 /**
+ * pushLeadSubmit — the ADDITIONAL, custom GTM dataLayer event, separate from and
+ * on top of GTM's native `gtm.formSubmit` listener (which we do not touch).
+ *
+ * It fires ONE `lead_submit` event per confirmed-good lead. The two form_id
+ * buckets the analytics tags expect:
+ *   - the Contact page's own form  → 'contact-form'
+ *   - every other lead/quote form  → 'quote-form'
+ * The full-detail per-form id still rides along on the onLead payload; this push
+ * carries only the coarse bucket GTM asked for.
+ *
+ * `window.dataLayer` is created by the GTM head snippet, but we guard with
+ * `|| []` in case this ever runs before GTM (the push is then queued and GTM
+ * consumes it on load).
+ */
+function pushLeadSubmit(formId) {
+  if (typeof window === 'undefined') return;
+  const form_id = formId === CONTACT_PAGE_FORM ? 'contact-form' : 'quote-form';
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({ event: 'lead_submit', form_id });
+}
+
+/**
  * useLeadForm — one shared submit handler for every lead form in the template.
  * Layers: honeypot field, input sanitisation, field validation, and cheap bot
  * heuristics, all fail-silent (a bot sees the same success view, no signal).
@@ -58,6 +81,10 @@ export function validateLead(raw) {
 export function useLeadForm(formId = 'lead') {
   const navigate = useNavigate();
   const honeypotRef = useRef(null);
+  // Guards against a second `lead_submit` for the same submission (e.g. a rapid
+  // double-click firing submit twice before navigate unmounts the form), so one
+  // successful submission always yields exactly one event.
+  const hasPushedRef = useRef(false);
 
   // Off-screen hidden field a human never sees but bots fill in. Off-screen
   // (not display:none, which some bots skip), aria-hidden, untabbable, no
@@ -116,10 +143,18 @@ export function useLeadForm(formId = 'lead') {
       return;
     }
 
-    // Clean, valid submissions fire onLead. Bots reach the thank-you page with
-    // no lead recorded and no signal that they were caught.
-    if (!honeypotHit && !looksLikeSpam(fields) && typeof onLead === 'function') {
-      onLead({ ...fields, formId });
+    // Clean, valid submissions are the SUCCESS point: we are past the validation
+    // gate above and past the honeypot/spam checks, so the lead is confirmed
+    // good. Only here do we fire the custom GTM `lead_submit` event — never on
+    // click, on submit-with-invalid-input, or for bot/spam submissions (bots
+    // still reach the thank-you page silently, with no event). Bots reach the
+    // thank-you page with no lead recorded and no signal that they were caught.
+    if (!honeypotHit && !looksLikeSpam(fields)) {
+      if (!hasPushedRef.current) {
+        hasPushedRef.current = true;
+        pushLeadSubmit(formId);
+      }
+      if (typeof onLead === 'function') onLead({ ...fields, formId });
     }
     navigate('/thank-you');
   }
