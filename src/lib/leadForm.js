@@ -69,6 +69,60 @@ function pushLeadSubmit(formId) {
 }
 
 /**
+ * Page + campaign context that rides along with every lead, read from the URL
+ * at submit time. Kept here (not in the form components) so all forms send the
+ * same shape. Guarded for SSG: during prerender there is no window, so it
+ * returns empty strings and the client fills them in on the real submission.
+ */
+function collectContext() {
+  if (typeof window === 'undefined') return {};
+  const params = new URLSearchParams(window.location.search);
+  const q = (k) => params.get(k) || '';
+  return {
+    page_path: window.location.pathname,
+    page_url: window.location.href,
+    referrer: document.referrer || '',
+    utm_source: q('utm_source'),
+    utm_medium: q('utm_medium'),
+    utm_campaign: q('utm_campaign'),
+    utm_term: q('utm_term'),
+    utm_content: q('utm_content'),
+    gclid: q('gclid'),
+  };
+}
+
+/**
+ * sendLead — POST the confirmed-good lead to the site's own serverless relay at
+ * /api/lead, which reads GHL_WEBHOOK_URL server-side and forwards to the GHL
+ * inbound webhook. The webhook URL is NEVER referenced here, so it stays out of
+ * the client bundle.
+ *
+ * Fire-and-forget with `keepalive: true`: the handler navigates to /thank-you
+ * immediately after (preserving the existing UX), and keepalive lets the request
+ * complete even though React unmounts the form. Failures are logged but never
+ * surfaced to the visitor, matching the existing success/error handling.
+ */
+function sendLead(fields) {
+  if (typeof window === 'undefined' || typeof fetch !== 'function') return;
+  const payload = { ...collectContext(), ...fields, form_name: fields.formId };
+  // formId is carried as form_id (the name the relay/CRM expects); drop the camelCase alias.
+  delete payload.formId;
+  payload.form_id = fields.formId;
+  try {
+    fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    }).catch((err) => {
+      if (typeof console !== 'undefined') console.error('[lead] relay post failed', err);
+    });
+  } catch (err) {
+    if (typeof console !== 'undefined') console.error('[lead] relay post threw', err);
+  }
+}
+
+/**
  * useLeadForm — one shared submit handler for every lead form in the template.
  * Layers: honeypot field, input sanitisation, field validation, and cheap bot
  * heuristics, all fail-silent (a bot sees the same success view, no signal).
@@ -154,6 +208,10 @@ export function useLeadForm(formId = 'lead') {
         hasPushedRef.current = true;
         pushLeadSubmit(formId);
       }
+      // Deliver the lead to the CRM via the server-side relay (/api/lead →
+      // GHL_WEBHOOK_URL). This is the wiring the onLead comment always referred
+      // to; onLead is still invoked below for any caller that also wants it.
+      sendLead({ ...fields, formId });
       if (typeof onLead === 'function') onLead({ ...fields, formId });
     }
     navigate('/thank-you');
