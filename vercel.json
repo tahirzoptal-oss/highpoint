@@ -6,6 +6,13 @@
   "installCommand": "npm install",
   "cleanUrls": true,
   "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/services/home-renovation-remodeling",
+      "destination": "/services",
+      "permanent": true
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

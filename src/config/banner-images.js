@@ -45,7 +45,6 @@ const BY_ROUTE = {
   '/services/emergency-roofing': img(14),
   '/services/insurance-claims': img(15),
   '/services/storm-damage-repair': img(16),
-  '/services/home-renovation-remodeling': img(17),
 
   // ── Service-area detail. The last three reuse a top-level page's photo,
   //    which is where the 25-routes-into-22-photos overlap lands. ──

@@ -101,7 +101,7 @@ export default function Hero() {
       {/* ── Full-bleed right composition — completed-project photo + owner (lg only) ── */}
       <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden w-[56%] lg:block" style={{ zIndex: 2 }}>
         <div className="absolute inset-0 overflow-hidden" style={{ clipPath: 'polygon(20% 0, 100% 0, 100% 100%, 0 100%)' }}>
-          <img src="/work/project16.webp" alt="" className="h-full w-full object-cover" style={{ objectPosition: '50% 42%' }} />
+          <img src="/work/project22.webp" alt="" className="h-full w-full object-cover" style={{ objectPosition: '50% 42%' }} />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(118deg, rgba(11,20,42,0.82) 0%, rgba(16,40,79,0.52) 44%, rgba(11,30,66,0.32) 100%)' }} />
           <div className="absolute inset-x-0 bottom-0 h-2/5" style={{ background: 'linear-gradient(to top, rgba(8,12,20,0.78), transparent)' }} />
         </div>

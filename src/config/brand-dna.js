@@ -207,8 +207,7 @@ export const brandDNA = {
       ],
       "related": [
         "roof-repairs",
-        "roof-installation",
-        "home-renovation-remodeling"
+        "roof-installation"
       ]
     },
     {
@@ -276,8 +275,7 @@ export const brandDNA = {
       ],
       "related": [
         "roof-inspections",
-        "roof-repairs",
-        "home-renovation-remodeling"
+        "roof-repairs"
       ]
     },
     {
@@ -340,78 +338,7 @@ export const brandDNA = {
       ],
       "related": [
         "roof-inspections",
-        "roof-installation",
-        "home-renovation-remodeling"
-      ]
-    },
-    {
-      "name": "Home Renovation & Remodeling",
-      "slug": "home-renovation-remodeling",
-      "metaTitle": "Home Renovation & Remodeling | Kennewick, WA",
-      "url": "https://www.highpointrenovation.com/",
-      "description_short": "Full home renovation and remodeling beyond roofing: kitchens, window replacement, siding, flooring, bathroom vanities and custom builds such as gazebos.",
-      "source": "intake form + Facebook intro + Google reviews (no dedicated on-site service section)",
-      "reviews": [
-        {
-          "reviewer": "patrick burdette",
-          "quote": "He went to work and re-did the Kitchen, the roofing, replaced all the windows, replaced the old bathroom Vanity, replaced the damaged outside house siding & removed the inside carpet in the house with new flooring.",
-          "date": "2024-06-27"
-        },
-        {
-          "reviewer": "Betty Thomas",
-          "quote": "Once for roofing and another time to install wood flooring… very professional, meticulous in his work and very reliable.",
-          "date": "2026-04-22"
-        },
-        {
-          "reviewer": "Bob Sjerven",
-          "quote": "He takes time to make sure the job is done right, and that's why I chose him to build my gazebo.",
-          "date": "2024-05-25"
-        }
-      ],
-      "description": "Beyond the roof, full home renovation and remodeling including kitchens, windows, siding, and flooring, handled by the same owner to the same standard.",
-      "body": "High Point started on roofs, but Terry's tools do not stop at the eaves. Homeowners who trusted him with a roof kept asking him to fix the rest of the house, so he does. Kitchens, windows, siding, flooring, and custom builds, handled by the same owner, to the same standard, at a price you agreed to before the first day of work.\n\n## What we renovate\n\nFull kitchen remodels. Window replacement that seals out our summer heat and winter cold. New siding to protect and refresh the exterior. Flooring, including tearing out tired carpet and replacing it. And custom builds when you have something specific in mind. One homeowner had Terry redo the kitchen, the roofing, all the windows, the bathroom vanity, the exterior siding, and the flooring, then wrote that he would trust Terry with any future work on the house. Another chose him to build a backyard gazebo.\n\n## How we work a renovation\n\nThe same way we work a roof. We look at what you want, give you an honest written estimate, and stick to it. Terry is hands-on and detail-driven, the two things renovation customers mention most about his work. You deal with the owner, not a rotating crew of subs and a salesman.\n\n## Why one team for the roof and the remodel\n\nBecause it is simpler for you and the standard stays the same. The person who protected the top of your house is the person renovating the inside of it. One number in your phone, one reputation on the line, one price you can count on.\n\n## What a renovation costs\n\nRenovation pricing depends entirely on scope, so there is no honest one-size range to quote here. The right way to price it is to walk the project with you and put a real number in writing. That first estimate is free, and the number we write is the number you pay.",
-      "faq": [
-        {
-          "q": "Do you do full kitchen remodels or just small jobs?",
-          "a": "Both. High Point has handled full kitchen remodels along with windows, siding, flooring, and more. Tell us the scope and we will give you an honest estimate."
-        },
-        {
-          "q": "Can you handle the roof and an interior remodel together?",
-          "a": "Yes. Many customers use High Point for the roof first, then bring us back for renovation work. Same owner, same standard."
-        },
-        {
-          "q": "Do renovation projects come with a written estimate?",
-          "a": "Always. We price the scope in writing before work starts, and the estimate is the price you pay."
-        },
-        {
-          "q": "Do you build custom projects like decks or gazebos?",
-          "a": "Yes. Terry has done custom builds, including a gazebo for a customer who wanted the job done right. Tell us what you have in mind."
-        },
-        {
-          "q": "Are payment plans available for renovation work?",
-          "a": "Yes. Ask about our affordable payment plans to keep a bigger project inside your budget."
-        }
-      ],
-      "benefits": [
-        "Same owner and same standard as our roofing work",
-        "You deal with Terry, not a rotating crew of subs and a salesman",
-        "An honest written estimate up front, and it is the price you pay",
-        "Hands-on and detail-driven, the two things renovation customers mention most",
-        "One local team for the roof and the rest of the house",
-        "Affordable payment plans for bigger projects"
-      ],
-      "included": [
-        "Full kitchen remodels",
-        "Window replacement that seals out summer heat and winter cold",
-        "New siding to protect and refresh the exterior",
-        "Flooring, including carpet tear-out and replacement",
-        "Bathroom vanity and interior updates",
-        "Custom builds such as decks and gazebos"
-      ],
-      "related": [
-        "roof-installation",
-        "roof-repairs",
-        "roof-inspections"
+        "roof-installation"
       ]
     }
   ],
@@ -777,46 +704,6 @@ export const brandDNA = {
       "filename": "project14.webp",
       "type": "image",
       "alt": "Project 14 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project15.webp",
-      "type": "image",
-      "alt": "Project 15 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project16.webp",
-      "type": "image",
-      "alt": "Project 16 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project17.webp",
-      "type": "image",
-      "alt": "Project 17 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project18.webp",
-      "type": "image",
-      "alt": "Project 18 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project19.webp",
-      "type": "image",
-      "alt": "Project 19 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project20.webp",
-      "type": "image",
-      "alt": "Project 20 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project21.webp",
-      "type": "image",
-      "alt": "Project 21 by High Point Renovation & Roofing"
-    },
-    {
-      "filename": "project22.webp",
-      "type": "image",
-      "alt": "Project 22 by High Point Renovation & Roofing"
     }
   ],
   "team_members": [],
