@@ -61,7 +61,7 @@ export const brandDNA = {
       "name": "Terry Preston",
       "displayName": "TERRY PRESTON",
       "title": "Owner-Operator",
-      "yearsExp": 4,
+      "yearsExp": 25,
       "expLabel": "YEARS OF EXPERIENCE"
     },
     "founders": [
