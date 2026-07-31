@@ -63,7 +63,7 @@ export default function GalleryPage() {
 
       {/* ════ 2. Logo slider ════ */}
       <LogoSlider />
-       <BeltSlider />
+      <BeltSlider />
 
       {/* ════ 3. What You Are Looking At — the page's first content section,
              a standalone glass panel between the belt slider and the grid.
@@ -115,12 +115,7 @@ export default function GalleryPage() {
             </p>
 
             <p className="relative mt-4 text-[15px] leading-[1.72] text-ink/75" style={{ fontFamily: INTER }}>
-              We photograph jobs as they finish rather than staging them, so what
-              you see here is the same standard of work you would get on your own
-              property. {brandDNA.team.founder.name} is the{' '}
-              {brandDNA.team.founder.title.toLowerCase()}, so the person who
-              inspects and prices a roof is the person who builds it. That is why
-              the finish is consistent from one project to the next.
+              We photograph jobs as they finish rather than staging them, so what you see here is the same standard of work you would get on your own property. {brandDNA.team.founder.name} is the owner-operator, so the person who inspects and prices a roof is the person who personally manages and oversees the crew that builds it. That is why the finish is consistent from one project to the next.
             </p>
           </div>
         </div>

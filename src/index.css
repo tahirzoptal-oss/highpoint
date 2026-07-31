@@ -1706,3 +1706,9 @@ p { margin: 0; }
 :root[data-theme-mode="dark"] .btn-gold .text-navy {
   color: rgb(var(--on-accent));
 }
+
+:root[data-theme-mode="dark"] .btn-gold,
+:root[data-theme-mode="dark"] .btn-gold.text-navy,
+:root[data-theme-mode="dark"] .btn-gold .text-navy {
+  color: rgb(var(--on-accent));
+}

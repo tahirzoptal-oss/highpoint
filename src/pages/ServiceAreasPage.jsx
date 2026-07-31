@@ -46,8 +46,8 @@ const coverageHighlights = [
   {
     title: 'Owner Makes Every Visit',
     text: founderLabel
-      ? `${founderLabel} personally attends every inspection and project walkthrough, not a subcontractor or third-party rep.`
-      : 'The owner personally attends every inspection and project walkthrough, not a subcontractor or third-party rep.',
+      ? `${founderLabel} personally attends every inspection and project walkthrough and personally manages and oversees the work, so you always deal with the owner rather than a third-party sales rep.`
+      : 'The owner personally attends every inspection and project walkthrough and personally manages and oversees the work, so you always deal with the owner rather than a third-party sales rep.',
     icon: UserIcon,
   },
 ];

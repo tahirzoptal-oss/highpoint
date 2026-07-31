@@ -17,11 +17,11 @@ import { useSyncExternalStore } from 'react';
 
 // Placeholder certification / partner logos (existing project assets).
 const DEFAULT_LOGOS = [
-  { src: '/badges/iko-roofpro-select.webp', alt: 'IKO RoofPro Select' },
-  { src: '/badges/owens-corning.png', alt: 'Owens Corning Preferred Contractor' },
+  { src: '/badges/iko-roofpro-select.webp', alt: 'IKO ROOFPRO Select Contractor' },
+  { src: '/badges/owens-corning.png', alt: 'Owens Corning shingles' },
   { src: '/badges/google-ratingimage.webp', alt: '5.0 Google Rating' },
-  { src: '/badges/iko-roofpro-select.webp', alt: 'IKO RoofPro Select' },
-  { src: '/badges/owens-corning.png', alt: 'Owens Corning Preferred Contractor' },
+  { src: '/badges/iko-roofpro-select.webp', alt: 'IKO ROOFPRO Select Contractor' },
+  { src: '/badges/owens-corning.png', alt: 'Owens Corning shingles' },
   { src: '/badges/google-ratingimage.webp', alt: '5.0 Google Rating' },
 ];
 
@@ -58,7 +58,7 @@ export default function LogoSlider({ logos = DEFAULT_LOGOS, speed = 34, classNam
   return (
     <section
       className={`relative overflow-hidden bg-[#F4F7FC] py-9 lg:py-12 ${className}`}
-      aria-label="Certifications and partners"
+      aria-label="Certifications and the materials we use"
     >
       {/* Soft edge fades so logos ease in/out at the container edges */}
       <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 sm:w-20" style={{ background: `linear-gradient(90deg, ${FADE}, transparent)` }} />
