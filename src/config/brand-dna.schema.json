@@ -277,12 +277,36 @@
         "properties": {
           "slug": { "type": "string", "pattern": "^[a-z0-9-]+$" },
           "title": { "type": "string" },
+          "metaTitle": { "type": "string" },
+          "metaDescription": {
+            "type": "string",
+            "description": "Authored <meta name=description>. Falls back to `excerpt` when absent."
+          },
           "excerpt": { "type": "string" },
-          "date": { "type": "string" },
+          "date": { "type": "string", "description": "Human display date, e.g. \"August 2026\"." },
+          "publishedAt": {
+            "type": "string",
+            "description": "Optional schedule. ISO-8601 instant WITH a UTC offset, e.g. \"2026-08-07T12:00:00-05:00\" (noon GMT-5). Until it passes the post is withheld from the listing, the homepage slider and the prerendered routes. Absent means always published. See src/lib/publishing.js."
+          },
           "category": { "type": "string" },
           "readTime": { "type": "string" },
           "cover": { "type": "string" },
+          "imageAlt": { "type": "string", "description": "Alt text for the featured image. Falls back to `title`." },
           "featured": { "type": "boolean" },
+          "byline": { "type": "string" },
+          "body": { "type": "string", "description": "Article markdown rendered by SiloBody." },
+          "faq": {
+            "type": "array",
+            "description": "Optional per-post Q&A, rendered with the shared FAQAccordion and emitted as FAQPage JSON-LD.",
+            "items": {
+              "type": "object",
+              "required": ["q", "a"],
+              "properties": {
+                "q": { "type": "string" },
+                "a": { "type": "string" }
+              }
+            }
+          },
           "content": {
             "type": "array",
             "description": "Rich body blocks. Each block is either a paragraph, an h2 heading, or a bulleted list.",

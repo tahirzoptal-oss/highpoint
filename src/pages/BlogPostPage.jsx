@@ -6,8 +6,9 @@ import SEO from '../components/SEO';
 // The exact layout primitives the service detail pages use — same bands, same
 // 67/30 column split, same sticky rail, same copy renderer. Only the content
 // inside the left column differs.
-import { Band, StickyRail, SiloBody } from '../components/SiloSection';
-import { buildArticle, buildBreadcrumb } from '../lib/schema';
+import { Band, StickyRail, SiloBody, SectionHead } from '../components/SiloSection';
+import FAQAccordion from '../components/FAQAccordion';
+import { buildArticle, buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { blogPosts } from './BlogPage';
 import { brandDNA } from '../config/brand-dna';
 import { blogQuoteFormId } from '../config/form-ids';
@@ -56,7 +57,9 @@ export default function BlogPostPage() {
       <SEO
         path={`/blog/${slug}`}
         title={post.metaTitle || `${post.title} | ${brandDNA.company.name}`}
-        description={post.excerpt}
+        // A post may ship its own authored meta description; the excerpt is the
+        // fallback every earlier article still uses.
+        description={post.metaDescription || post.excerpt}
         image={coverOf(post)}
         jsonLd={[
           buildArticle(post),
@@ -65,7 +68,10 @@ export default function BlogPostPage() {
             { name: 'Blog', path: '/blog' },
             { name: post.title, path: `/blog/${slug}` },
           ]),
-        ]}
+          // Only posts that carry an FAQ emit FAQPage markup; buildFAQ returns
+          // null otherwise and SEO drops it.
+          buildFAQ(post.faq),
+        ].filter(Boolean)}
       />
 
       {/* ════ 1. Banner — the post's own cover as the background, the shared
@@ -121,7 +127,7 @@ export default function BlogPostPage() {
             >
               <img
                 src={coverOf(post)}
-                alt={post.title}
+                alt={post.imageAlt || post.title}
                 className="block aspect-[16/9] w-full object-cover"
                 decoding="async"
               />
@@ -144,6 +150,18 @@ export default function BlogPostPage() {
             <div className="mt-8">
               <SiloBody body={markdown} />
             </div>
+
+            {/* ── FAQ — the SAME accordion the service detail pages run, so the
+                two never drift. Rendered only for posts that ship a `faq`
+                array, which leaves every earlier article exactly as it was. ── */}
+            {post.faq && post.faq.length > 0 && (
+              <div className="mt-12">
+                <SectionHead eyebrow={brandDNA.copy.faq.label} title="FREQUENTLY ASKED QUESTIONS" />
+                <div className="mt-8">
+                  <FAQAccordion items={post.faq} />
+                </div>
+              </div>
+            )}
 
             {/* ── Post meta / author ── */}
             <div

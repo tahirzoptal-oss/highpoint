@@ -137,9 +137,11 @@ export function buildArticle(post) {
     '@context': 'https://schema.org',
     '@type': 'Article',
     headline: post.title,
-    description: post.excerpt,
+    description: post.metaDescription || post.excerpt,
     url: base + '/blog/' + post.slug,
-    datePublished: post.date || post.publishedAt,
+    // `publishedAt` is a real ISO-8601 instant, so it wins over the human
+    // `date` string ("August 2026") whenever a post carries one.
+    datePublished: post.publishedAt || post.date,
     image: post.image ? base + post.image : undefined,
     author: { '@type': 'Organization', name: brandDNA.company?.name },
     publisher: { '@type': 'Organization', name: brandDNA.company?.name },

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { Link } from 'react-router-dom';
 import { brandDNA } from '../config/brand-dna';
+import { publishedPosts } from '../lib/publishing';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -184,8 +185,10 @@ export function PostCard({ post, tabbable = true, featured }) {
  */
 export default function Blog() {
   // Latest posts in brand-dna order, with the flagged featured story pulled to
-  // the front so the strip opens on it.
-  const all = brandDNA.blog_posts || [];
+  // the front so the strip opens on it. Scheduled posts (a future
+  // `publishedAt`) are filtered out here exactly as they are on /blog, so the
+  // slider picks a newly published post up on its own with no edit here.
+  const all = publishedPosts(brandDNA.blog_posts);
   const featuredSlug = (all.find((p) => p.featured) || all[0] || {}).slug;
   const posts = all.slice().sort((a, b) => (a.slug === featuredSlug ? -1 : b.slug === featuredSlug ? 1 : 0));
   const count = posts.length;

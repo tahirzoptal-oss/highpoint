@@ -9,9 +9,14 @@ import SEO from '../components/SEO';
 // row, title treatment and "Read More" affordance — so the two never drift.
 import { PostCard } from '../components/Blog';
 import { buildBreadcrumb } from '../lib/schema';
+import { publishedPosts } from '../lib/publishing';
 import { brandDNA } from '../config/brand-dna';
 
-export const blogPosts = brandDNA.blog_posts;
+// Live posts only. A post carrying a future `publishedAt` is scheduled, not
+// published, and stays out of the listing (and out of BlogPostPage, which
+// resolves its slug from this same list) until its time arrives. Posts with no
+// `publishedAt` are always live — see src/lib/publishing.js.
+export const blogPosts = publishedPosts(brandDNA.blog_posts);
 
 const categories = brandDNA.blog_categories;
 
