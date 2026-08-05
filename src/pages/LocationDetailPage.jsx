@@ -105,8 +105,8 @@ export default function LocationDetailPage() {
     <>
       <SEO
         path={`/service-areas/${slug}`}
-        title={`Roofing in ${cityName}, ${state} | ${brandDNA.company.shortName}`}
-        description={page.subheadline || undefined}
+        title={page.metaTitle || `Roofing in ${cityName}, ${state} | ${brandDNA.company.shortName}`}
+        description={page.metaDescription || page.subheadline || undefined}
         jsonLd={jsonLd}
       />
 
