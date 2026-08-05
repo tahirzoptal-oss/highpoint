@@ -54,6 +54,9 @@
     body: string,           // long copy with ## section headings
     faq: Array<{ q: string, a: string }>,
     adjacent_cities: Array<string>,  // slugs of nearby cities
+    // Optional SEO overrides (rendered when present):
+    metaTitle: string,       // optional; REQUIRED when another entry shares the same city, to avoid a duplicate <title>/<description> (seo-qa hard fail)
+    metaDescription: string, // optional; REQUIRED when another entry shares the same city, to avoid a duplicate <title>/<description> (seo-qa hard fail)
   }
   ```
 - **Prerequisite:** The city string must also exist in `brandDNA.serviceAreas` for `getStaticPaths` to prerender the route.
