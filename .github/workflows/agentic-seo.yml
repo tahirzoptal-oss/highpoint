@@ -1,0 +1,122 @@
+name: Agentic SEO (content rail)
+
+# RAIL_VERSION: 2.0.0  (canonical; see seo/RAIL_VERSION on the installed repo)
+# COA-00 v2 canonical template. Installed onto a client repo by the dashboard.
+#
+# DASHBOARD-DISPATCHED ONLY: there is intentionally NO `schedule:` block. The
+# dashboard fires this via workflow_dispatch (staggered, capped, killable). Do not
+# add a schedule; per-repo crons are out of the architecture.
+#
+# The {{PLACEHOLDERS}} are filled by the dashboard installer (Phase 5) from the
+# repo's seo/site-adapter.md (build command, QA command, node version, and the
+# path allowlist of files the agent may write). See CONTRACT.md.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: agentic-seo
+  cancel-in-progress: false
+
+jobs:
+  build-one-page:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - run: npm ci
+
+      - name: Build one briefed page (headless Claude Code)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Model AND the claude-code version are PINNED (filled by the installer)
+          # so runs are reproducible; both float if left unpinned.
+          npx @anthropic-ai/claude-code@latest -p \
+            "You are running one content build for this site. Read seo/site-adapter.md, seo/voice.md, seo/on-page-seo.md, seo/keyword-clusters.md, and seo/worked-log.csv.
+
+            THROTTLE AND ENGINE RULES (hard):
+            - Pick the SINGLE highest-priority row in seo/worked-log.csv with status 'queued' that HAS a matching brief in seo/build-briefs/ (P1 before P2 before P3). If none, exit without changes.
+            - Read that brief. It MUST declare 'engine: rail' and be ADD-ONLY (it appends a NEW instance to an existing content array named in the site-adapter). If the brief is NOT add-only (it edits an existing page/slug, or needs a new route/template/component), do NOT build: write seo-run-summary.md with its FIRST line EXACTLY 'MISROUTED: <one-line reason>' and stop. Edits are the dashboard edit engine's job, never the rail's.
+
+            BUILD:
+            - Build EXACTLY ONE page by editing ONLY the content file(s) named in the site-adapter, appending new slugs only. Never edit an existing slug. Never touch components, routing, or design. Write in the client voice; facts only from seo/voice.md plus the brief's provided numbers; leave any 'verify before merge' flags intact.
+            - Run the site's build and QA exactly as seo/site-adapter.md specifies, and fix anything QA flags until it passes.
+            - Update that row in seo/worked-log.csv to status 'built' with today's date. Write a plain-English summary to seo-run-summary.md at the repo root.
+            - Do NOT git commit or push." \
+            --model claude-sonnet-4-6 \
+            --allowedTools "Read Edit Write Bash" \
+            --permission-mode acceptEdits
+
+      - name: Reject a misrouted (non-add-only) brief - fail loudly
+        run: |
+          if [ -f seo-run-summary.md ] && head -1 seo-run-summary.md | grep -q '^MISROUTED:'; then
+            echo "Brief is not add-only; it must route to the dashboard edit engine, not the rail."
+            cat seo-run-summary.md
+            exit 1
+          fi
+
+      # BUG-63: three explicit gates, per the plan (CI rebuild + SCOPED lint + seo-qa).
+      # The build is unscoped (the agent's page must not break the site). The lint is
+      # scoped to only the files the agent changed this run, so a repo's pre-existing
+      # lint debt in files the agent never touched can't block a clean build.
+      - name: Rebuild (CI confirmation)
+        run: |
+          npm run build
+
+      - name: Scoped lint (agent-changed files only)
+        run: |
+          # The agent's edits are uncommitted at this point (peter-evans commits
+          # after). So the changed set is the working-tree diff vs HEAD plus any new
+          # untracked file, filtered to lintable extensions.
+          CHANGED="$(git diff --name-only --diff-filter=ACMR HEAD -- '*.js' '*.jsx' '*.ts' '*.tsx'; git ls-files --others --exclude-standard -- '*.js' '*.jsx' '*.ts' '*.tsx')"
+          CHANGED="$(printf '%s\n' $CHANGED | sort -u | sed '/^$/d')"
+          if [ -z "$CHANGED" ]; then
+            echo "Scoped lint: no changed JS/TS files to lint."
+          elif [ ! -x node_modules/.bin/eslint ]; then
+            echo "Scoped lint: eslint is not installed in this repo - skipping (build + seo-qa still gate)."
+          else
+            echo "Scoped lint on the files the agent changed:"
+            echo "$CHANGED"
+            npx eslint $CHANGED
+          fi
+
+      - name: SEO QA gate
+        run: |
+          node scripts/seo-qa.mjs
+
+      - name: Run metadata + PR-body fallback
+        id: meta
+        run: |
+          echo "date=$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
+          if [ ! -s seo-run-summary.md ]; then
+            printf 'Agentic SEO run: the agent did not write a summary. Review the diff before merging.\n' > seo-run-summary.md
+          fi
+
+      - name: Open the PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          # The SAME GitHub PAT this client is connected with in the dashboard,
+          # stored here as a repo Actions secret (a workflow cannot read the
+          # dashboard's copy). A real PAT - not the built-in GITHUB_TOKEN - so the
+          # content PR triggers status checks + the Vercel preview.
+          token: ${{ secrets.GH_AGENT_TOKEN }}
+          # Date-suffixed so unmerged weeks never collide.
+          branch: seo/agent-run-${{ steps.meta.outputs.date }}
+          delete-branch: true
+          title: "Agentic SEO: proposed page"
+          body-path: seo-run-summary.md
+          labels: agentic-seo
+          # Path allowlist: the agent may only ever touch these. Filled by the
+          # installer from the site-adapter's content-file path(s).
+          add-paths: |
+            src/config/brand-dna.js
+            seo/worked-log.csv
