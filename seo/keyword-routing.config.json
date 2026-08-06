@@ -1,0 +1,20 @@
+{
+  "primary_city": "Kennewick",
+  "served_cities": [
+    "Kennewick",
+    "Pasco",
+    "Richland",
+    "West Richland",
+    "Walla Walla",
+    "Yakima",
+    "Benton City",
+    "Finley"
+  ],
+  "own_brand": [
+    "high point renovation & roofing",
+    "high point renovation",
+    "high point roofing"
+  ],
+  "competitor_brands": [],
+  "min_volume": 10
+}
