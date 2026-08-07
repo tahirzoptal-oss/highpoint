@@ -12,6 +12,11 @@ name: Agentic SEO (content rail)
 # path allowlist of files the agent may write). See CONTRACT.md.
 on:
   workflow_dispatch:
+    inputs:
+      slug:
+        description: "CHG-67: build THIS queued slug from seo/worked-log.csv (blank = auto, highest priority)"
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -30,21 +35,26 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "24"
+          node-version: "{{NODE_VERSION}}"
 
       - run: npm ci
 
       - name: Build one briefed page (headless Claude Code)
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # CHG-67: the dashboard's chosen slug (blank = auto). Read via $TARGET_SLUG in
+          # the prompt (env, not a ${{ }} interpolation into run:, to avoid injection).
+          TARGET_SLUG: ${{ inputs.slug }}
         run: |
           # Model AND the claude-code version are PINNED (filled by the installer)
           # so runs are reproducible; both float if left unpinned.
-          npx @anthropic-ai/claude-code@latest -p \
+          npx @anthropic-ai/claude-code@{{CLAUDE_CODE_VERSION}} -p \
             "You are running one content build for this site. Read seo/site-adapter.md, seo/voice.md, seo/on-page-seo.md, seo/keyword-clusters.md, and seo/worked-log.csv.
 
+            TARGET (CHG-67): '$TARGET_SLUG' (blank means auto).
+
             THROTTLE AND ENGINE RULES (hard):
-            - Pick the SINGLE highest-priority row in seo/worked-log.csv with status 'queued' that HAS a matching brief in seo/build-briefs/ (P1 before P2 before P3). If none, exit without changes.
+            - PICK THE ROW: if TARGET is non-blank, build THAT slug's row in seo/worked-log.csv - it MUST have status 'queued' AND a matching brief in seo/build-briefs/. If the TARGET row is not 'queued' or has no matching brief, do NOT build: write seo-run-summary.md with its FIRST line EXACTLY 'MISROUTED: requested slug <TARGET> is not a queued row with a brief' and stop. If TARGET is blank, pick the SINGLE highest-priority row in seo/worked-log.csv with status 'queued' that HAS a matching brief in seo/build-briefs/ (P1 before P2 before P3). If none, exit without changes.
             - Read that brief. It MUST declare 'engine: rail' and be ADD-ONLY (it appends a NEW instance to an existing content array named in the site-adapter). If the brief is NOT add-only (it edits an existing page/slug, or needs a new route/template/component), do NOT build: write seo-run-summary.md with its FIRST line EXACTLY 'MISROUTED: <one-line reason>' and stop. Edits are the dashboard edit engine's job, never the rail's.
 
             BUILD:
@@ -52,7 +62,7 @@ jobs:
             - Run the site's build and QA exactly as seo/site-adapter.md specifies, and fix anything QA flags until it passes.
             - Update that row in seo/worked-log.csv to status 'built' with today's date. Write a plain-English summary to seo-run-summary.md at the repo root.
             - Do NOT git commit or push." \
-            --model claude-sonnet-4-6 \
+            --model {{CLAUDE_MODEL}} \
             --allowedTools "Read Edit Write Bash" \
             --permission-mode acceptEdits
 
@@ -70,7 +80,7 @@ jobs:
       # lint debt in files the agent never touched can't block a clean build.
       - name: Rebuild (CI confirmation)
         run: |
-          npm run build
+          {{BUILD_COMMAND}}
 
       - name: Scoped lint (agent-changed files only)
         run: |
@@ -89,9 +99,17 @@ jobs:
             npx eslint $CHANGED
           fi
 
+      - name: Keyword router selftest (COA-07)
+        run: |
+          if [ -f scripts/route-keywords.mjs ]; then
+            node scripts/route-keywords.mjs --selftest
+          else
+            echo "route-keywords.mjs not present - skipping (older install)."
+          fi
+
       - name: SEO QA gate
         run: |
-          node scripts/seo-qa.mjs
+          {{QA_COMMAND}}
 
       - name: Run metadata + PR-body fallback
         id: meta
@@ -118,5 +136,5 @@ jobs:
           # Path allowlist: the agent may only ever touch these. Filled by the
           # installer from the site-adapter's content-file path(s).
           add-paths: |
-            src/config/brand-dna.js
+            {{CONTENT_ALLOWLIST}}
             seo/worked-log.csv
