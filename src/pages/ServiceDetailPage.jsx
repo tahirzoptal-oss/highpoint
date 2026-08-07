@@ -8,7 +8,7 @@ import SEO from '../components/SEO';
 // Shared layout primitives — the same bands, headings, buttons, medallions,
 // body renderer and sticky rail the service-area detail pages use.
 import { Band, SectionHead, CallNow, Medallion, CheckIcon, StickyRail, SiloBody } from '../components/SiloSection';
-import { buildService, buildBreadcrumb } from '../lib/schema';
+import { buildService, buildBreadcrumb, buildFAQ } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 import { serviceQuoteFormId } from '../config/form-ids';
 
@@ -60,7 +60,11 @@ export default function ServiceDetailPage() {
             { name: 'Services', path: '/services' },
             { name: service.title, path: `/services/${slug}` },
           ]),
-        ]}
+          // CHG-71: FAQPage that mirrors the rendered ServiceFaq exactly (same
+          // service.faq items). buildFAQ returns null when the service has no FAQ,
+          // so filter(Boolean) drops it and no empty FAQPage is emitted.
+          buildFAQ(service.faq),
+        ].filter(Boolean)}
       />
 
       {/* ════ 1. Banner — shared InnerBanner component ════ */}
