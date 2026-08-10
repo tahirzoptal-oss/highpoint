@@ -30,7 +30,7 @@ export const SERVICE_PAGES = [
     heroTitle: 'Roof Replacement',
     metaTitle: 'Roof Replacement in Kennewick, WA | High Point',
     description:
-      'High Point Renovation & Roofing provides professional roof replacement in Kennewick, Pasco, Richland, and the Tri-Cities with honest assessments, quality materials, and careful installation.',
+      'High Point replaces roofs across Kennewick, Pasco, and Richland with honest assessments, quality materials, and careful installation. Free estimate.',
     description_short:
       'A complete roof replacement from the deck upward, with a careful inspection first and a straightforward recommendation based on the roof’s condition.',
     body: [
