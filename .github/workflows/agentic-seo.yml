@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "{{NODE_VERSION}}"
+          node-version: "24"
 
       - run: npm ci
 
@@ -48,7 +48,7 @@ jobs:
         run: |
           # Model AND the claude-code version are PINNED (filled by the installer)
           # so runs are reproducible; both float if left unpinned.
-          npx @anthropic-ai/claude-code@{{CLAUDE_CODE_VERSION}} -p \
+          npx @anthropic-ai/claude-code@latest -p \
             "You are running one content build for this site. Read seo/site-adapter.md, seo/voice.md, seo/on-page-seo.md, seo/keyword-clusters.md, and seo/worked-log.csv.
 
             TARGET (CHG-67): '$TARGET_SLUG' (blank means auto).
@@ -62,7 +62,7 @@ jobs:
             - Run the site's build and QA exactly as seo/site-adapter.md specifies, and fix anything QA flags until it passes.
             - Update that row in seo/worked-log.csv to status 'built' with today's date. Write a plain-English summary to seo-run-summary.md at the repo root.
             - Do NOT git commit or push." \
-            --model {{CLAUDE_MODEL}} \
+            --model claude-sonnet-4-6 \
             --allowedTools "Read Edit Write Bash" \
             --permission-mode acceptEdits
 
@@ -80,7 +80,7 @@ jobs:
       # lint debt in files the agent never touched can't block a clean build.
       - name: Rebuild (CI confirmation)
         run: |
-          {{BUILD_COMMAND}}
+          npm run build
 
       - name: Scoped lint (agent-changed files only)
         run: |
@@ -109,7 +109,7 @@ jobs:
 
       - name: SEO QA gate
         run: |
-          {{QA_COMMAND}}
+          node scripts/seo-qa.mjs
 
       - name: Run metadata + PR-body fallback
         id: meta
@@ -136,5 +136,5 @@ jobs:
           # Path allowlist: the agent may only ever touch these. Filled by the
           # installer from the site-adapter's content-file path(s).
           add-paths: |
-            {{CONTENT_ALLOWLIST}}
+            src/config/brand-dna.js
             seo/worked-log.csv
