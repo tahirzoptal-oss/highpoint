@@ -28,9 +28,40 @@
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { execSync } from "node:child_process";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = resolve(ROOT, "dist");
+const WORKED_LOG = resolve(ROOT, "seo/worked-log.csv");
+
+// CHG-76 (ruled option 1): the URL paths of pages CHANGED THIS RUN. Derived the SAME way as the
+// scoped-lint step - from `git diff HEAD` (the agent's edits are uncommitted at QA time). The
+// worked-log rows the agent flipped to 'built' this run name the routes. seo-qa hard-fails ONLY
+// these pages; the full-site scan still runs but pre-existing debt on OTHER pages is a WARNING -
+// the add-only agent can't fix a legacy page, so failing on it would block EVERY build (even a
+// no-op). Empty (no build this run, or git unavailable) -> everything is a warning -> exit GREEN.
+const normUrl = (u) => String(u || "").trim().toLowerCase().replace(/\/+$/, "") || "/";
+// Pure: parse the built-this-run routes from a worked-log `git diff` + its header line. Exported
+// so --selftest can exercise the scoping's new logic without a git repo.
+export function parseBuiltPaths(diff, headerLine) {
+  const header = String(headerLine || "").split(",").map((h) => h.trim().toLowerCase());
+  const ui = header.indexOf("url"), si = header.indexOf("status");
+  const out = new Set();
+  if (ui < 0 || si < 0) return out;
+  for (const line of String(diff || "").split(/\r?\n/)) {
+    if (!line.startsWith("+") || line.startsWith("+++")) continue; // added/updated worked-log rows only
+    const c = line.slice(1).split(",");
+    if (String(c[si]).trim().toLowerCase() === "built" && c[ui]) out.add(normUrl(c[ui]));
+  }
+  return out;
+}
+async function changedThisRunPaths() {
+  let csv;
+  try { csv = await readFile(WORKED_LOG, "utf8"); } catch { return new Set(); }
+  let diff = "";
+  try { diff = execSync("git diff HEAD -- seo/worked-log.csv", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); } catch { return new Set(); }
+  return parseBuiltPaths(diff, csv.split(/\r?\n/)[0] || "");
+}
 
 // ---- shared on-page rules (mirror of src/lib/seo-rules.ts) -----------------
 // Phone: the three-three-four digit pattern with separators, plus the (xxx) xxx-xxxx form.
@@ -182,35 +213,44 @@ async function main() {
   const titles = new Map();
   const descs = new Map();
   const builtPaths = new Set(files.map(toUrlPath));
+  const changedThisRun = await changedThisRunPaths(); // CHG-76: hard-fail is scoped to these routes
 
   for (const f of files) {
     const html = await readFile(join(DIST, f), "utf8");
     if (isNoindex(html)) continue;
     const path = toUrlPath(f);
+    // CHG-76 (ruled option 1): hard-fail is SCOPED to pages changed this run. `fail()` routes a
+    // finding to a hard failure on a changed page, else to a warning (the full-site debt stays
+    // visible in the summary, but the add-only agent's clean run is never blocked by legacy debt).
+    const isChanged = changedThisRun.has(normUrl(path));
+    const fail = (m) => { if (isChanged) hard.push(m); else warn.push(`${m} [pre-existing - not this build]`); };
 
     // ── structural checks (this file only) ──
     const h1s = countH1(html);
-    if (h1s !== 1) hard.push(`${path}: expected exactly one <h1>, found ${h1s}`);
+    if (h1s !== 1) fail(`${path}: expected exactly one <h1>, found ${h1s}`);
 
     const title = getTitle(html);
     if (title) {
-      if (titles.has(title)) hard.push(`${path}: duplicate <title> (also ${titles.get(title)})`);
+      if (titles.has(title)) fail(`${path}: duplicate <title> (also ${titles.get(title)})`);
       else titles.set(title, path);
     }
     const desc = getMetaDesc(html);
     if (desc) {
-      if (descs.has(desc)) hard.push(`${path}: duplicate meta description (also ${descs.get(desc)})`);
+      if (descs.has(desc)) fail(`${path}: duplicate meta description (also ${descs.get(desc)})`);
       else descs.set(desc, path);
     }
     if (!hasCanonical(html)) warn.push(`${path}: missing canonical`);
 
     for (const block of getJsonLd(html)) {
-      if (!jsonLdParses(block)) hard.push(`${path}: invalid JSON-LD`);
+      if (!jsonLdParses(block)) fail(`${path}: invalid JSON-LD`);
     }
 
     for (const link of getInternalLinks(html)) {
-      if (!builtPaths.has(link)) hard.push(`${path}: internal link to unbuilt path ${link}`);
+      if (!builtPaths.has(link)) fail(`${path}: internal link to unbuilt path ${link}`);
     }
+
+    // CHG-74: em-dash ban in the rendered copy (checked on the visible text, tags stripped).
+    if (/—/.test(html.replace(/<[^>]+>/g, " "))) fail(`${path}: em-dash in page copy (banned - use a hyphen or restructure)`);
 
     // ── shared value rules (seo-rules.ts parity) ──
     const kind = pageKindFromUrl(path);
@@ -222,7 +262,17 @@ async function main() {
       kind,
     };
     for (const issue of evaluateFields(fields)) {
-      (issue.severity === "fail" ? hard : warn).push(`${path}: ${issue.message} [${issue.rule}]`);
+      if (issue.severity === "fail") fail(`${path}: ${issue.message} [${issue.rule}]`);
+      else warn.push(`${path}: ${issue.message} [${issue.rule}]`);
+    }
+
+    // CHG-74: 3-5 IN-COPY internal links (Mark's standard). Distinguishing an in-copy link from a
+    // template city/service grid is heuristic, so this WARNS (the drafter prompt + on-page-seo.md
+    // carry the hard requirement): count internal <a href="/..."> that sit inside a <p> prose block.
+    if (kind !== "other") {
+      const proseLinks = (html.match(/<p\b[^>]*>[\s\S]*?<\/p>/gi) || [])
+        .flatMap((p) => p.match(/<a\b[^>]+href=["']\/(?!\/)[^"']*["']/gi) || []).length;
+      if (proseLinks < 3) warn.push(`${path}: only ${proseLinks} in-copy internal link(s) in <p> prose (target 3-5, Mark's standard)`);
     }
   }
 
@@ -263,6 +313,12 @@ function selftest() {
   ok(checkSchemaPresence(["BreadcrumbList"], "blog").length === 1, "blog missing Article");
   // acceptance: the phone-title fixture cannot pass
   ok(failsOnly(evaluateFields({ title: "Roof Repair | Call 612-749-6778", kind: "service", metaDescription: "d".repeat(155) })).length > 0, "acceptance phone-title rejected");
+  // CHG-76: the changed-route parser that scopes the hard-fail (drift here would silently
+  // un-scope the gate, re-blocking every rail build on pre-existing debt).
+  const H = "slug,page_type,url,status,date_worked,notes";
+  ok(parseBuiltPaths("+n,service_area,/service-areas/boxford,built,2026-08-10,x", H).has("/service-areas/boxford"), "CHG-76 parse: built row -> route");
+  ok(parseBuiltPaths("+n,service,/services/x,queued,,y", H).size === 0, "CHG-76 parse: queued row ignored");
+  ok(parseBuiltPaths("+++ b/seo/worked-log.csv\n-o,service,/services/y,queued,,z", H).size === 0, "CHG-76 parse: +++ header and removed lines ignored");
   console.log("selftest OK");
 }
 
