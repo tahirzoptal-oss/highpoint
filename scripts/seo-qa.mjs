@@ -155,6 +155,17 @@ export const toUrlPath = (file) => {
   if (p.length > 1) p = p.replace(/\/$/, "");
   return p || "/";
 };
+// Visible text only: strip HTML comments, script/style CONTENT, then tags. The naive
+// tag-strip alone leaks comment interiors - a comment containing a ">" (example markup
+// like <link> inside factory template commentary) splits mid-comment and its tail counts
+// as page copy. WH proof: 12 em-dashes in index.html's comment blocks flagged 46/48
+// pages and hard-failed both danvers builds while the agent's copy was clean.
+export const visibleText = (html) =>
+  String(html ?? "")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ");
 export const countH1 = (html) => (html.match(/<h1[\s>]/gi) || []).length;
 export const getTitle = (html) => (html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").trim();
 export const getMetaDesc = (html) =>
@@ -249,8 +260,9 @@ async function main() {
       if (!builtPaths.has(link)) fail(`${path}: internal link to unbuilt path ${link}`);
     }
 
-    // CHG-74: em-dash ban in the rendered copy (checked on the visible text, tags stripped).
-    if (/—/.test(html.replace(/<[^>]+>/g, " "))) fail(`${path}: em-dash in page copy (banned - use a hyphen or restructure)`);
+    // CHG-74: em-dash ban in the rendered copy (checked on the VISIBLE text only -
+    // comments and script/style content are not page copy, see visibleText()).
+    if (/—/.test(visibleText(html))) fail(`${path}: em-dash in page copy (banned - use a hyphen or restructure)`);
 
     // ── shared value rules (seo-rules.ts parity) ──
     const kind = pageKindFromUrl(path);
@@ -319,6 +331,11 @@ function selftest() {
   ok(parseBuiltPaths("+n,service_area,/service-areas/boxford,built,2026-08-10,x", H).has("/service-areas/boxford"), "CHG-76 parse: built row -> route");
   ok(parseBuiltPaths("+n,service,/services/x,queued,,y", H).size === 0, "CHG-76 parse: queued row ignored");
   ok(parseBuiltPaths("+++ b/seo/worked-log.csv\n-o,service,/services/y,queued,,z", H).size === 0, "CHG-76 parse: +++ header and removed lines ignored");
+  // visibleText: comment interiors are NOT page copy, even when the comment contains a ">"
+  // (the leak that hard-failed both danvers builds); script/style content is not copy either.
+  ok(!/—/.test(visibleText('<html><!-- preload the hero — see <link rel="preload"> notes — honest --><body>Real copy.</body></html>')), "visibleText: em-dash inside a >-bearing comment ignored");
+  ok(!/—/.test(visibleText('<script>const s = "data — dash";</script><style>/* a — b */</style><p>Clean.</p>')), "visibleText: script/style content ignored");
+  ok(/—/.test(visibleText("<p>Visible — copy.</p>")), "visibleText: em-dash in real copy still caught");
   console.log("selftest OK");
 }
 
