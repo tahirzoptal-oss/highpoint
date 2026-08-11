@@ -18,6 +18,7 @@ ruled hard limits (SEO Agent Enforcement Brief 2.2, locked Mark + Juan 2026-08-0
   BlogPosting). A page of one of these types with zero schema fails.
 - All internal links resolve to a built path (no broken links).
 - All JSON-LD parses.
+- No em-dashes in the page copy (CHG-74; use a hyphen or restructure the sentence).
 
 ## Warnings (allowed, flag in the summary)
 - Meta description under 150 characters (target 150 to 155).
@@ -26,7 +27,8 @@ ruled hard limits (SEO Agent Enforcement Brief 2.2, locked Mark + Juan 2026-08-0
 ## Structure
 - Answer-first opening; primary keyword in the first 100 words.
 - 3-5 H2 sections; a bulleted service/benefit list where it fits.
-- 3-5 internal links to related/adjacent pages that already exist.
+- 3-5 IN-COPY internal links with descriptive anchor text (woven into the body prose,
+  not just a template city/service grid) to related/adjacent pages that already exist.
 - Body length per the brief (typically 400-800 words).
 
 ## Advertise the page you build (BUG-70)

@@ -1,16 +1,17 @@
 #!/usr/bin/env node
 /**
- * VENDORED — do NOT edit here. Source of truth:
- *   King-Contractor-Agency/Content-Agent-Keyword-Router  route-keywords.mjs
- *   base commit 78313f3 + ONE local patch: the run-as-main guard at the bottom of this
- *   file (upstream is view-only for us; Mark to land it upstream, then re-vendor to a
- *   byte-identical merged commit). `npm run test:keyword-router` asserts import-safety
- *   so a re-sync that drops the guard fails CI instead of the feeder at runtime.
+ * VENDORED - do NOT edit here. Source of truth:
+ *   King-Contractor-Agency/Content-Agent-Keyword-Router  route-keywords.mjs (main @ 78313f3).
+ *   This copy is AHEAD of upstream: it carries COA-09 (containment/no-mint/geo, brand-subset
+ *   -> review, generic -> /services hub), COA-10 (ranking-URL awareness + cutoff), the
+ *   `export DEFAULT_CONFIG` shim and the run-as-main guard - NONE of which are on upstream
+ *   yet. This workspace has no write access to that repo, so landing it needs a push by
+ *   someone with write (see COA-09-10-ROUTER-UPSTREAM-HANDOFF.md + coa-09-10-router.patch);
+ *   re-vendor to a byte-identical copy once upstream is updated. `npm run test:keyword-router`
+ *   (the 46-case --selftest + import-safety) is wired into `npm run build` so drift fails CI.
  * COA-07 Phase A: the dashboard feeder imports { classify, route } from this copy so
  * the SAME rules run in the feeder as in each client rail (single source of truth, one
- * copy). To update: re-copy from the router repo and run `npm run test:keyword-router`
- * (the 27-case --selftest) — wired into `npm run build` so drift/breakage fails CI.
- * This file is eslint-ignored (verbatim third-party style); keep it byte-identical.
+ * copy). This file is eslint-ignored (verbatim third-party style); keep it byte-identical.
  *
  * route-keywords.mjs — deterministic keyword → page-type router for the SEO brain.
  *
@@ -95,6 +96,7 @@ export const DEFAULT_CONFIG = {
   own_brand: [],                    // ← client's brand tokens (from brand-dna company.name)
   competitor_brands: [],            // ← seed from SEMrush competitor list, e.g. ["apex roofing","xyz exteriors"]
   min_volume: 10,                   // below this → drop (unless strategic)
+  ranking_url_max_position: 20,     // COA-10: ride an EXISTING ranking page only when it ranks this well or better; a weaker ranking still gets its own page. (Mark's cutoff, 2026-08-10.)
 };
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -130,8 +132,10 @@ export function classify(rawKeyword, cfg = DEFAULT_CONFIG, volume = null) {
   // nouns and generic/service modifiers (so a GENERIC like "brick pavers" is not mistaken
   // for the brand "horizon brick paver"). If the keyword's distinctive tokens — minus the
   // served city, provider nouns, and generics — are non-empty AND every one is a brand
-  // token, drop it. Catches "horizon pavers" (own_brand "horizon brick paver") without
-  // dropping the served city "Horizon West".
+  // token, route it to REVIEW (Mark 2026-08-10: a fuzzy brand-subset is not a certain
+  // brand, so nothing brand-shaped disappears without human eyes; the EXACT-brand rule
+  // above still drops). Catches "horizon pavers" (own_brand "horizon brick paver") without
+  // touching the served city "Horizon West".
   {
     const providerSet = new Set((cfg.provider_nouns || []).map(norm));
     const genericSet = new Set([...GENERIC_LEADERS, ...(cfg.service_modifiers || [])].map(norm));
@@ -139,7 +143,7 @@ export function classify(rawKeyword, cfg = DEFAULT_CONFIG, volume = null) {
     const geoB2 = findCity(kw, cfg.served_cities || []);
     const kwDistinct = kw.replace(geoB2, "").split(" ").filter((t) => t && !STOP.has(t) && !providerSet.has(t) && !genericSet.has(t));
     if (brandTokens.size && kwDistinct.length && kwDistinct.every((t) => brandTokens.has(t)))
-      return { page_type: "drop", reason: "brand token-subset (own/competitor brand) → drop", geo: "" };
+      return { page_type: "review", reason: "brand token-subset (possible own/competitor brand) → review (human decides; Mark B2)", geo: "" };
   }
 
   const geoLc = findCity(kw, cfg.served_cities || []);
@@ -263,6 +267,20 @@ function unknownGeoTokens(kw, cfg) {
   return norm(kw).replace(geoLc, "").split(" ").filter((w) => w && w.length > 2 && !STOP.has(w) && !vocab.has(w) && !gen.has(w));
 }
 
+// COA-10: the path of a ranking URL on the client's own site (the caller only ever passes
+// own-site URLs - GSC page + SEMrush domain_organic Ur are both domain-scoped). Full URL or a
+// bare path both accepted; homepage -> "/"; empty/invalid -> "" (falls back to slug matching).
+const pathFromUrl = (u) => {
+  const s = String(u || "").trim();
+  if (!s) return "";
+  try {
+    const raw = s.includes("://") ? new URL(s).pathname : s;
+    return (raw.replace(/\/+$/, "") || "/").toLowerCase();
+  } catch { return ""; }
+};
+// COA-10: map a ranking path to the router's page_type by prefix ("" -> keep classify's).
+const kindFromPath = (p) => p.startsWith("/service-areas/") ? "service_area" : p.startsWith("/services/") ? "service" : p.startsWith("/blog/") ? "blog" : "";
+
 export function route(rows, cfg, existing) {
   const svc = existing?.service || new Set();
   const city = existing?.service_area || new Set();
@@ -271,13 +289,41 @@ export function route(rows, cfg, existing) {
   const items = rows.map((r) => {
     const c = classify(r.keyword, cfg, r.volume);
     let target = "", action = "", pageType = c.page_type, reason = c.reason;
-    if (c.page_type === "service") {
+    // COA-10: if the client's OWN site already ranks for this keyword (GSC page / SEMrush
+    // Ur), ride the page that ranks - the PRIMARY build-vs-add signal - and never build a
+    // competitor. drop/review (brand, junk, ambiguous) still fall through to classify; slug
+    // matching below is the fallback for a keyword with no ranking URL.
+    const rankPath = (c.page_type !== "drop" && c.page_type !== "review") ? pathFromUrl(r.ranking_url) : "";
+    const rankPos = Number(r.ranking_position);
+    const rankCutoff = cfg.ranking_url_max_position ?? Infinity;
+    // COA-10: ride the ranking page only when the ranking is DECENT (position within the
+    // cutoff); a weak ranking (e.g. 26th via the homepage) still builds its own page. An
+    // unknown position rides (the keyword is already a striking-distance candidate).
+    const rode = !!rankPath && (!Number.isFinite(rankPos) || rankPos <= rankCutoff);
+    if (rode) {
+      target = rankPath; action = "add_to_existing"; pageType = kindFromPath(rankPath) || c.page_type;
+      reason = `ranking URL on own site (pos ${Number.isFinite(rankPos) ? rankPos : "?"}) → ride the page that already ranks (COA-10)`;
+    } else if (c.page_type === "service") {
       const slug = serviceSlug(r.keyword, cfg);
-      const matched = matchExistingService(slug ? slugTokens(slug) : serviceMatchTokens(r.keyword, cfg), svc);
-      if (matched) { target = "/services/" + matched; action = "add_to_existing"; }
-      else if (slug) { target = "/services/" + slug; action = "build_new"; }
-      else if (unknownGeoTokens(r.keyword, cfg).length) { pageType = "drop"; action = "drop"; reason = "out-of-area (unknown geo, not a served city) → drop"; }
-      else { pageType = "review"; action = "review"; reason = "generic service term, no configured service or existing page — human decides (never mint)"; }
+      if (slug) {
+        // Specific service keyword (Mark B1): A1 containment against existing service pages,
+        // else build its own page.
+        const matched = matchExistingService(slugTokens(slug), svc);
+        if (matched) { target = "/services/" + matched; action = "add_to_existing"; }
+        else { target = "/services/" + slug; action = "build_new"; }
+      } else {
+        // Bare GENERIC term (no specific service). B1 (Mark 2026-08-10): ride the /services
+        // HUB - replaces the old closest-specific-page / review behaviour, and never mints. A
+        // purely out-of-area generic (no related service page AND an unserved trailing geo)
+        // still drops (A3, Mark's flag 7). `relates` decides drop-vs-hub; the target is always
+        // the hub, never the matched page.
+        const relates = matchExistingService(serviceMatchTokens(r.keyword, cfg), svc);
+        if (!relates && unknownGeoTokens(r.keyword, cfg).length) {
+          pageType = "drop"; action = "drop"; reason = "out-of-area (unknown geo, no related service) → drop";
+        } else {
+          target = "/services"; action = "add_to_existing"; reason = "bare generic service term → /services hub (Mark B1)";
+        }
+      }
     } else if (c.page_type === "service_area") {
       const cs = kebab(c.geo);
       const matched = matchExistingCity(cs, city);
@@ -290,7 +336,7 @@ export function route(rows, cfg, existing) {
     // COA-09 B3 (cross-type dedupe): a plural-list blog naming a served city whose LOCATION
     // page already exists rides that page instead of building a duplicate blog. (Plural=blog
     // classification otherwise stays per B4 / Mark's default when no page exists.)
-    if (pageType === "blog" && c.geo && PLURAL_LIST.test(norm(r.keyword))) {
+    if (!rode && pageType === "blog" && c.geo && PLURAL_LIST.test(norm(r.keyword))) {
       const cityHit = matchExistingCity(kebab(c.geo), city);
       if (cityHit) { pageType = "service_area"; target = "/service-areas/" + cityHit; action = "add_to_existing"; reason = "cross-type dedupe: plural list for a served city with an existing location page → ride it"; }
     }
@@ -335,8 +381,9 @@ function parseCSV(text) {
   const vi = header.findIndex((h) => ["volume", "search volume", "nq", "vol"].includes(h));
   const kdi = header.findIndex((h) => ["kd", "keyword difficulty", "difficulty"].includes(h));
   const cpi = header.findIndex((h) => ["cpc", "cost per click"].includes(h));
+  const ui = header.findIndex((h) => ["ranking_url", "page", "ur", "url"].includes(h)); // COA-10: the own-site page that ranks
   return rows.filter((r) => r[ki]).map((r) => ({
-    keyword: r[ki], volume: vi >= 0 ? r[vi] : "", kd: kdi >= 0 ? r[kdi] : "", cpc: cpi >= 0 ? r[cpi] : "",
+    keyword: r[ki], volume: vi >= 0 ? r[vi] : "", kd: kdi >= 0 ? r[kdi] : "", cpc: cpi >= 0 ? r[cpi] : "", ranking_url: ui >= 0 ? r[ui] : "",
   }));
 }
 const csvCell = (v) => /[",\n]/.test(String(v ?? "")) ? `"${String(v).replace(/"/g, '""')}"` : String(v ?? "");
@@ -461,20 +508,24 @@ function selftest() {
   const r9 = route([
     { keyword: "roof installation", volume: 300 },        // A1: rides existing new-roof-installation (exact-slug miss)
     { keyword: "grain valley roofing", volume: 90 },      // A1 city: rides state-suffixed grain-valley-mo
-    { keyword: "roofing st louis park mn", volume: 40 },  // A2: rides commercial-roofing, NEVER mints roofing-mn
-    { keyword: "roofer theba", volume: 30 },              // A3: out-of-area drop (Theba not served)
-    { keyword: "exteriors", volume: 20 },                 // A2: generic, no configured/existing page → review (never mint)
+    { keyword: "roofing st louis park mn", volume: 40 },  // A2/B1: bare generic → /services HUB, NEVER mints roofing-mn
+    { keyword: "roofer theba", volume: 30 },              // A3: out-of-area drop (Theba not served, nothing relates)
+    { keyword: "exteriors", volume: 20 },                 // B1: bare generic → /services hub (was review)
+    { keyword: "roofing", volume: 300 },                  // B1 (Mark): bare general term → /services hub
+    { keyword: "roofing company", volume: 100 },          // B1 (Mark): bare general term → /services hub
   ], cfg9, ex9);
   const c9 = (kw, action, target) => { const r = r9.find((x) => x.keyword === kw); if (!r || r.action !== action || (target && r.target_page !== target)) { console.error(`FAIL COA-09: "${kw}" → ${r && r.action}/${r && r.target_page} (${r && r.reason})`); process.exit(1); } };
   c9("roof installation", "add_to_existing", "/services/new-roof-installation");
   c9("grain valley roofing", "add_to_existing", "/service-areas/grain-valley-mo");
-  c9("roofing st louis park mn", "add_to_existing", "/services/commercial-roofing");
+  c9("roofing st louis park mn", "add_to_existing", "/services"); // B1: hub, not a minted or closest page
   c9("roofer theba", "drop");
-  c9("exteriors", "review");
+  c9("exteriors", "add_to_existing", "/services");                // B1: generic → hub (Mark)
+  c9("roofing", "add_to_existing", "/services");                  // B1: bare general term → hub
+  c9("roofing company", "add_to_existing", "/services");          // B1: bare general term → hub
   // ── COA-09 Phase 2: brand token-subset (B2) + cross-type dedupe (B3) ──
   const cfgP = { ...DEFAULT_CONFIG, provider_nouns: ["paver", "pavers", "hardscaping", "hardscape"], service_modifiers: ["brick", "travertine", "concrete", "stone"], own_brand: ["horizon brick paver"], competitor_brands: [], served_cities: ["Orlando", "Horizon West"] };
   const eqP = (kw, type) => { const c = classify(kw, cfgP); if (c.page_type !== type) { console.error(`FAIL B2: "${kw}" → ${c.page_type} (${c.reason}), expected ${type}`); process.exit(1); } };
-  eqP("horizon pavers", "drop");            // B2: {horizon} ⊆ brand tokens → drop
+  eqP("horizon pavers", "review");          // B2 (Mark): {horizon} ⊆ brand tokens → review (not silent drop)
   eqP("horizon brick pavers", "drop");      // B2: exact-ish brand
   eqP("brick pavers", "service");           // GENERIC (brick is a modifier) → NOT the brand
   eqP("horizon west pavers", "service_area"); // Horizon West is a SERVED CITY → not the brand (rides its page)
@@ -492,7 +543,19 @@ function selftest() {
   const cC = (kw, target) => { const r = rC.find((x) => x.keyword === kw); if (!r || r.target_page !== target) { console.error(`FAIL C: "${kw}" → ${r && r.target_page}`); process.exit(1); } };
   cC("roofers in kennewick wa", "/blog/roofers-kennewick");
   cC("best roofer near me", "/blog/roofer");
-  console.log("selftest OK — 40 checks: page-type rules + consolidation + build-vs-add + COA-09 containment/no-mint/geo + brand-subset/cross-type + blog-topic-slug");
+  // ── COA-10: ranking-URL awareness — the page that ALREADY ranks (WITHIN the cutoff) wins ──
+  const r10 = route([
+    { keyword: "roof repair", volume: 200, ranking_url: "https://acme.com/", ranking_position: 6 },              // ranks WELL via HOMEPAGE → ride "/", never build
+    { keyword: "roof installation", volume: 90, ranking_url: "https://acme.com/services/new-roof-installation", ranking_position: 12 }, // slug-mismatch but ranks well → ride the ranking page
+    { keyword: "metal roof", volume: 80, ranking_url: "https://acme.com/", ranking_position: 26 },               // ranks WEAKLY (26 > cutoff 20) via homepage → still BUILDS its own page
+    { keyword: "acme roofing", volume: 50, ranking_url: "https://acme.com/services/roofing", ranking_position: 4 }, // own brand still DROPS despite a good ranking URL
+  ], { ...cfg, own_brand: ["acme roofing"] }, { service: new Set(), service_area: new Set(), blog: new Set() });
+  const c10 = (kw, action, target) => { const r = r10.find((x) => x.keyword === kw); if (!r || r.action !== action || (target !== undefined && r.target_page !== target)) { console.error(`FAIL COA-10: "${kw}" → ${r && r.action}/${r && r.target_page} (${r && r.reason})`); process.exit(1); } };
+  c10("roof repair", "add_to_existing", "/");                                     // good homepage ranking → ride, never build
+  c10("roof installation", "add_to_existing", "/services/new-roof-installation"); // ranking URL wins over slug-mismatch
+  c10("metal roof", "build_new", "/services/metal-roof");                         // weak ranking (> cutoff) → build its own page
+  c10("acme roofing", "drop");                                                    // brand drop NOT overridden by a ranking URL
+  console.log("selftest OK — 46 checks: page-type rules + consolidation + build-vs-add + COA-09 containment/no-mint/geo + brand-subset→review + generic→hub + cross-type + blog-topic-slug + COA-10 ranking-URL+cutoff");
 }
 
 // Run the CLI only when executed directly (node route-keywords.mjs ...), NOT when
