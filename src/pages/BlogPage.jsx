@@ -9,7 +9,7 @@ import SEO from '../components/SEO';
 // row, title treatment and "Read More" affordance — so the two never drift.
 import { PostCard } from '../components/Blog';
 import { buildBreadcrumb } from '../lib/schema';
-import { publishedPosts } from '../lib/publishing';
+import { publishedPosts, sortByNewest } from '../lib/publishing';
 import { brandDNA } from '../config/brand-dna';
 
 // Live posts only. A post carrying a future `publishedAt` is scheduled, not
@@ -18,7 +18,26 @@ import { brandDNA } from '../config/brand-dna';
 // `publishedAt` are always live — see src/lib/publishing.js.
 export const blogPosts = publishedPosts(brandDNA.blog_posts);
 
-const categories = brandDNA.blog_categories;
+// The one ordering the whole page reads from: every live post, newest
+// publication first, through the shared sort the homepage slider also uses. The
+// category tabs filter this list rather than re-sorting, so a tab can never
+// disagree with "All" about which post is more recent.
+const postsNewestFirst = sortByNewest(blogPosts);
+
+// The featured slot follows publication date — it is not authored. Whatever
+// published most recently wears the chip, so the next article to go live takes
+// the slot over on its own and the `featured` flag in brand-dna never has to be
+// moved from one post to the next.
+const featuredSlug = (postsNewestFirst[0] || {}).slug;
+
+// A category with no live post behind it would open onto an empty grid, so the
+// filter row only offers the ones that actually have something to show.
+// Scheduled posts are already out of `blogPosts`, so a category whose only
+// article has not published yet drops out on its own and returns by itself.
+const usedCategories = new Set(blogPosts.map((p) => p.category).filter(Boolean));
+const categories = (brandDNA.blog_categories || []).filter(
+  (cat) => cat === 'All' || usedCategories.has(cat)
+);
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 
@@ -52,15 +71,14 @@ export default function BlogPage() {
   const [page, setPage] = useState(1);
   const gridRef = useRef(null);
 
-  const featuredSlug = (blogPosts.find((p) => p.featured) || {}).slug;
-
-  // Filtered set, featured story first so it opens the grid.
-  const filtered = useMemo(() => {
-    const list = activeCategory === 'All'
-      ? blogPosts
-      : blogPosts.filter((p) => p.category === activeCategory);
-    return list.slice().sort((a, b) => (a.slug === featuredSlug ? -1 : b.slug === featuredSlug ? 1 : 0));
-  }, [activeCategory, featuredSlug]);
+  // Filtered set, newest publication first in every tab — `postsNewestFirst` is
+  // already in that order and filtering preserves it, so the listing always
+  // opens on the most recent article and the featured story leads the grid.
+  const filtered = useMemo(() => (
+    activeCategory === 'All'
+      ? postsNewestFirst
+      : postsNewestFirst.filter((p) => p.category === activeCategory)
+  ), [activeCategory]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE));
   const current = Math.min(page, pageCount);

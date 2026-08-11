@@ -49,3 +49,33 @@ export function isPublished(post, now = BUILD_TIME) {
 export function publishedPosts(posts, now = BUILD_TIME) {
   return (posts || []).filter((p) => isPublished(p, now));
 }
+
+const MONTHS = {
+  january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
+  july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+};
+
+/**
+ * When a post published, as a sortable instant. `publishedAt` (an explicit ISO
+ * instant) is the authority when a post carries one; posts that predate
+ * scheduling ship only the display `date` — "June 2026" — which resolves to the
+ * first of that month. Anything unparseable falls back to 0 so it sorts last
+ * rather than jumping the queue.
+ */
+export function publishedTime(post) {
+  const at = post && post.publishedAt ? Date.parse(post.publishedAt) : NaN;
+  if (!Number.isNaN(at)) return at;
+  const m = /^([A-Za-z]+)\s+(\d{4})$/.exec(((post && post.date) || '').trim());
+  const month = m ? MONTHS[m[1].toLowerCase()] : undefined;
+  return month === undefined ? 0 : Date.UTC(Number(m[2]), month, 1);
+}
+
+/**
+ * `posts`, newest publication first, without mutating the input. The /blog
+ * listing and the homepage slider both order themselves through this, so the
+ * two can never disagree about which post is the latest — and neither has to
+ * name a post to put it in front.
+ */
+export function sortByNewest(posts) {
+  return (posts || []).slice().sort((a, b) => publishedTime(b) - publishedTime(a));
+}

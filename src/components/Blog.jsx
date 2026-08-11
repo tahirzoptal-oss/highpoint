@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { Link } from 'react-router-dom';
 import { brandDNA } from '../config/brand-dna';
-import { publishedPosts } from '../lib/publishing';
+import { publishedPosts, sortByNewest } from '../lib/publishing';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -184,13 +184,13 @@ export function PostCard({ post, tabbable = true, featured }) {
  * breakpoints need no measurement.
  */
 export default function Blog() {
-  // Latest posts in brand-dna order, with the flagged featured story pulled to
-  // the front so the strip opens on it. Scheduled posts (a future
-  // `publishedAt`) are filtered out here exactly as they are on /blog, so the
-  // slider picks a newly published post up on its own with no edit here.
-  const all = publishedPosts(brandDNA.blog_posts);
-  const featuredSlug = (all.find((p) => p.featured) || all[0] || {}).slug;
-  const posts = all.slice().sort((a, b) => (a.slug === featuredSlug ? -1 : b.slug === featuredSlug ? 1 : 0));
+  // Newest publication first, through the same filter and the same sort /blog
+  // runs, so the two always agree on what the latest article is. Scheduled
+  // posts (a future `publishedAt`) drop out here exactly as they do there, and
+  // the strip opens on whichever post published most recently — no post is
+  // named, so a new article takes the lead slot with no edit here.
+  const posts = sortByNewest(publishedPosts(brandDNA.blog_posts));
+  const featuredSlug = (posts[0] || {}).slug;
   const count = posts.length;
 
   const perView = useSyncExternalStore(subscribeResize, getPerView, () => 3);
