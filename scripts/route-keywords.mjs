@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 /**
  * VENDORED - do NOT edit here. Source of truth:
- *   King-Contractor-Agency/Content-Agent-Keyword-Router  route-keywords.mjs (main @ 78313f3).
- *   This copy is AHEAD of upstream: it carries COA-09 (containment/no-mint/geo, brand-subset
- *   -> review, generic -> /services hub), COA-10 (ranking-URL awareness + cutoff), the
- *   `export DEFAULT_CONFIG` shim and the run-as-main guard - NONE of which are on upstream
- *   yet. This workspace has no write access to that repo, so landing it needs a push by
- *   someone with write (see COA-09-10-ROUTER-UPSTREAM-HANDOFF.md + coa-09-10-router.patch);
- *   re-vendor to a byte-identical copy once upstream is updated. `npm run test:keyword-router`
- *   (the 46-case --selftest + import-safety) is wired into `npm run build` so drift fails CI.
+ *   King-Contractor-Agency/Content-Agent-Keyword-Router  route-keywords.mjs (main @ bc67009).
+ *   IN SYNC with upstream as of 2026-08-10: COA-09 (containment/no-mint/geo, brand-subset
+ *   -> review, generic -> /services hub) and COA-10 (ranking-URL awareness + cutoff 1-25)
+ *   are landed there. The ONLY intended difference is this header block; the router body
+ *   is byte-identical. Change the rules UPSTREAM first, then re-vendor.
+ *   `npm run test:keyword-router` (the 47-case --selftest + import-safety) is wired into
+ *   `npm run build` so drift fails CI.
  * COA-07 Phase A: the dashboard feeder imports { classify, route } from this copy so
  * the SAME rules run in the feeder as in each client rail (single source of truth, one
  * copy). This file is eslint-ignored (verbatim third-party style); keep it byte-identical.
@@ -96,7 +95,7 @@ export const DEFAULT_CONFIG = {
   own_brand: [],                    // ← client's brand tokens (from brand-dna company.name)
   competitor_brands: [],            // ← seed from SEMrush competitor list, e.g. ["apex roofing","xyz exteriors"]
   min_volume: 10,                   // below this → drop (unless strategic)
-  ranking_url_max_position: 20,     // COA-10: ride an EXISTING ranking page only when it ranks this well or better; a weaker ranking still gets its own page. (Mark's cutoff, 2026-08-10.)
+  ranking_url_max_position: 25,     // COA-10: ride an EXISTING ranking page only when it ranks this well or better; a weaker ranking still gets its own page. (Mark's ruling 2026-08-10: "only edit if within postion 25-position 1 so its terms that actually have a chance at ranking/improving".)
 };
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -547,15 +546,17 @@ function selftest() {
   const r10 = route([
     { keyword: "roof repair", volume: 200, ranking_url: "https://acme.com/", ranking_position: 6 },              // ranks WELL via HOMEPAGE → ride "/", never build
     { keyword: "roof installation", volume: 90, ranking_url: "https://acme.com/services/new-roof-installation", ranking_position: 12 }, // slug-mismatch but ranks well → ride the ranking page
-    { keyword: "metal roof", volume: 80, ranking_url: "https://acme.com/", ranking_position: 26 },               // ranks WEAKLY (26 > cutoff 20) via homepage → still BUILDS its own page
+    { keyword: "metal roof", volume: 80, ranking_url: "https://acme.com/", ranking_position: 26 },               // ranks WEAKLY (26 > cutoff 25) via homepage → still BUILDS its own page
+    { keyword: "gutter guards", volume: 70, ranking_url: "https://acme.com/services/gutters", ranking_position: 22 }, // INSIDE Mark's 1-25 band (21-25 edge) → ride the ranking page, never build
     { keyword: "acme roofing", volume: 50, ranking_url: "https://acme.com/services/roofing", ranking_position: 4 }, // own brand still DROPS despite a good ranking URL
   ], { ...cfg, own_brand: ["acme roofing"] }, { service: new Set(), service_area: new Set(), blog: new Set() });
   const c10 = (kw, action, target) => { const r = r10.find((x) => x.keyword === kw); if (!r || r.action !== action || (target !== undefined && r.target_page !== target)) { console.error(`FAIL COA-10: "${kw}" → ${r && r.action}/${r && r.target_page} (${r && r.reason})`); process.exit(1); } };
   c10("roof repair", "add_to_existing", "/");                                     // good homepage ranking → ride, never build
   c10("roof installation", "add_to_existing", "/services/new-roof-installation"); // ranking URL wins over slug-mismatch
   c10("metal roof", "build_new", "/services/metal-roof");                         // weak ranking (> cutoff) → build its own page
+  c10("gutter guards", "add_to_existing", "/services/gutters");                   // 22 is INSIDE 1-25 → ride, never build (locks Mark's cutoff against a regression to 20)
   c10("acme roofing", "drop");                                                    // brand drop NOT overridden by a ranking URL
-  console.log("selftest OK — 46 checks: page-type rules + consolidation + build-vs-add + COA-09 containment/no-mint/geo + brand-subset→review + generic→hub + cross-type + blog-topic-slug + COA-10 ranking-URL+cutoff");
+  console.log("selftest OK — 47 checks: page-type rules + consolidation + build-vs-add + COA-09 containment/no-mint/geo + brand-subset→review + generic→hub + cross-type + blog-topic-slug + COA-10 ranking-URL+cutoff(1-25)");
 }
 
 // Run the CLI only when executed directly (node route-keywords.mjs ...), NOT when
