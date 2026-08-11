@@ -19,6 +19,11 @@ ruled hard limits (SEO Agent Enforcement Brief 2.2, locked Mark + Juan 2026-08-0
 - All internal links resolve to a built path (no broken links).
 - All JSON-LD parses.
 - No em-dashes in the page copy (CHG-74; use a hyphen or restructure the sentence).
+  The QA gate HARD-FAILS your build if one appears on a page you wrote - a claim of
+  compliance does not pass the gate, only the absence of the character does. MANDATORY
+  final step before you finish: search every file you created or edited for the
+  character "—" (for example `grep -rn — <your changed files>`) and remove every
+  occurrence. Do not rely on memory or on having "written carefully" - run the search.
 
 ## Warnings (allowed, flag in the summary)
 - Meta description under 150 characters (target 150 to 155).
