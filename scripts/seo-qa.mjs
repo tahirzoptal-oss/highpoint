@@ -33,6 +33,9 @@ import { execSync } from "node:child_process";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const DIST = resolve(ROOT, "dist");
 const WORKED_LOG = resolve(ROOT, "seo/worked-log.csv");
+// BUG-92: optional per-kind component floor. Opt-in - absent file means no floor gate,
+// so rails whose adapters have not declared one are unaffected.
+const COMPONENT_FLOOR = resolve(ROOT, "seo/component-floor.json");
 
 // CHG-76 (ruled option 1): the URL paths of pages CHANGED THIS RUN. Derived the SAME way as the
 // scoped-lint step - from `git diff HEAD` (the agent's edits are uncommitted at QA time). The
@@ -61,6 +64,21 @@ async function changedThisRunPaths() {
   let diff = "";
   try { diff = execSync("git diff HEAD -- seo/worked-log.csv", { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); } catch { return new Set(); }
   return parseBuiltPaths(diff, csv.split(/\r?\n/)[0] || "");
+}
+
+// BUG-92: the per-kind component floor, or null when the repo has not declared one.
+// Absent file -> opt-in no-op (green). Present-but-invalid -> warn + no-op (a broken
+// floor file must not silently look enforced, but must not block a clean build either).
+async function loadComponentFloor() {
+  let raw;
+  try { raw = await readFile(COMPONENT_FLOOR, "utf8"); } catch { return null; }
+  try {
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === "object" ? obj : null;
+  } catch {
+    console.warn("WARN  seo/component-floor.json is present but not valid JSON - floor gate skipped.");
+    return null;
+  }
 }
 
 // ---- shared on-page rules (mirror of src/lib/seo-rules.ts) -----------------
@@ -131,6 +149,10 @@ export const pageKindFromUrl = (url) => {
   if (/\/services\//.test(u)) return "service";
   if (/\/service-areas\/|\/locations\//.test(u)) return "city";
   if (/\/blog\//.test(u)) return "blog";
+  // NEW-31: root-level long-form reviews/articles (e.g. /<tool>-estimator-tool-review) map to
+  // "other" ON PURPOSE - title/meta rules still apply, schema-presence QA is skipped (the
+  // template owns the schema), and BUG-92's design gate guarantees parity with the site's
+  // existing same-type pages while the orphan gate guarantees the listing link.
   return "other";
 };
 
@@ -182,6 +204,89 @@ export const getInternalLinks = (html) =>
     .filter((h) => !h.startsWith("//") && !h.startsWith("/studio") && !/\.[a-z0-9]{2,5}$/i.test(h))
     .map((h) => (h.length > 1 ? h.replace(/\/$/, "") : h));
 
+// BUG-92 orphan gate (pure, --selftest-covered). Build the inbound-link index across every
+// built page: Map<normalized target path -> Set of source paths that link to it>. Self-links
+// (a breadcrumb to itself, or a city listing itself among adjacent cities) are excluded - they
+// do not make a page reachable. `docs` is [{ path, html }]. A page with no entry (or an empty
+// set) has zero inbound internal links, i.e. it is an orphan not wired into nav/footer/index.
+export function buildInboundIndex(docs) {
+  const inbound = new Map();
+  for (const d of docs || []) {
+    const src = normUrl(d.path);
+    for (const link of getInternalLinks(String(d.html ?? ""))) {
+      const tgt = normUrl(link);
+      if (tgt === src) continue;
+      if (!inbound.has(tgt)) inbound.set(tgt, new Set());
+      inbound.get(tgt).add(src);
+    }
+  }
+  return inbound;
+}
+
+// BUG-92 component floor (pure, --selftest-covered). Given a page's HTML, its kind, and the
+// loaded floor object ({ service: ["marker", ...], city: [...], blog: [...] }), return the
+// markers this page is MISSING. Each marker is tried as a case-insensitive regex; if it is not
+// a valid regex it falls back to a case-insensitive substring test. No markers for a kind -> [].
+export function missingFloor(html, kind, floor) {
+  const markers = (floor && Array.isArray(floor[kind])) ? floor[kind] : [];
+  const h = String(html ?? "");
+  const miss = [];
+  for (const m of markers) {
+    let hit;
+    try { hit = new RegExp(m, "i").test(h); }
+    catch { hit = h.toLowerCase().includes(String(m).toLowerCase()); }
+    if (!hit) miss.push(m);
+  }
+  return miss;
+}
+
+// BUG-92 follow-up (design conformance, pure + --selftest-covered). On a rail site every page
+// of a type renders through ONE shared styled template (Horizon: /service-areas/:slug ->
+// LocationDetailPage), so the template owns the styling and a wired page CANNOT be unstyled -
+// unless it did not render through that template at all (the danvers "no service-area styling"
+// case). We detect that WITHOUT per-site config by comparing a built page against the design
+// SIGNATURE its own same-kind siblings share.
+
+/** Every class token on the page (quote-aware, BUG-93). */
+export function classTokens(html) {
+  const out = new Set();
+  for (const m of String(html ?? "").matchAll(/class=(["'])([\s\S]*?)\1/gi)) {
+    for (const tok of m[2].split(/\s+/)) if (tok) out.add(tok);
+  }
+  return out;
+}
+
+/**
+ * The template signature = the INTERSECTION of class tokens across the given same-kind pages.
+ * Content-driven utility classes vary page to page and drop out of the intersection, leaving the
+ * template's structural/design-system tokens (layout, hero, design-system classes) that every
+ * page of that type shares. Needs >=2 references to tell template from content; fewer -> empty
+ * (no signal), which callers treat as "do not check".
+ */
+export function templateSignature(htmls) {
+  const sets = (htmls || []).map(classTokens).filter(s => s.size > 0);
+  if (sets.length < 2) return new Set();
+  let sig = null;
+  for (const s of sets) {
+    if (sig === null) { sig = new Set(s); continue; }
+    for (const t of [...sig]) if (!s.has(t)) sig.delete(t);
+  }
+  return sig ?? new Set();
+}
+
+/**
+ * True if `pageHtml` shares at least `minShare` of the template `signature` its siblings share -
+ * i.e. it rendered through the same styled template. An empty signature (no reference) returns
+ * true (do not fail). A bare/placeholder page shares ~none and fails; a legitimately THIN but
+ * templated page still shares the wrapper tokens and passes (content volume is not the signal).
+ */
+export function conformsToTemplate(pageHtml, signature, minShare = 0.5) {
+  if (!signature || signature.size === 0) return true;
+  const got = classTokens(pageHtml);
+  const shared = [...signature].filter(t => got.has(t)).length;
+  return shared / signature.size >= minShare;
+}
+
 // Collect every @type string across all (parseable) JSON-LD blocks, walking @graph and arrays.
 export const getSchemaTypes = (html) => {
   const out = [];
@@ -226,15 +331,44 @@ async function main() {
   const builtPaths = new Set(files.map(toUrlPath));
   const changedThisRun = await changedThisRunPaths(); // CHG-76: hard-fail is scoped to these routes
 
-  for (const f of files) {
-    const html = await readFile(join(DIST, f), "utf8");
+  // BUG-92: read every built page once, then build the inbound-link index. The orphan check needs
+  // the whole set before the per-page loop, so it is order-independent. Noindex pages are still
+  // valid link SOURCES (the footer/nav render on them too), so they count toward inbound.
+  const docs = [];
+  for (const f of files) docs.push({ path: toUrlPath(f), html: await readFile(join(DIST, f), "utf8") });
+  const inbound = buildInboundIndex(docs);
+  const floor = await loadComponentFloor(); // BUG-92 component floor, or null when not declared
+
+  // BUG-92 follow-up (design conformance): derive a per-kind template signature from the EXISTING
+  // (not-changed-this-run) pages, so a page built this run must render through the same styled
+  // template as its siblings. Tunable: WI_DESIGN_MIN_SHARE (default 0.5), WI_DESIGN_GATE_WARN=1
+  // downgrades the gate to a warning (for a wave or two of threshold tuning).
+  const DESIGN_MIN_SHARE = Math.min(0.95, Math.max(0.1, Number(process.env.WI_DESIGN_MIN_SHARE) || 0.5));
+  const DESIGN_WARN_ONLY = /^(1|true|warn)$/i.test(process.env.WI_DESIGN_GATE_WARN || "");
+  const refHtmlByKind = new Map();
+  for (const d of docs) {
+    if (changedThisRun.has(normUrl(d.path))) continue; // references are the pages NOT built this run
+    const k = pageKindFromUrl(d.path);
+    if (k === "other") continue; // home/about/contact are one-offs, not a templated page family
+    if (!refHtmlByKind.has(k)) refHtmlByKind.set(k, []);
+    refHtmlByKind.get(k).push(d.html);
+  }
+  const signatureByKind = new Map();
+  for (const [k, hs] of refHtmlByKind) signatureByKind.set(k, templateSignature(hs));
+
+  for (const { path, html } of docs) {
     if (isNoindex(html)) continue;
-    const path = toUrlPath(f);
     // CHG-76 (ruled option 1): hard-fail is SCOPED to pages changed this run. `fail()` routes a
     // finding to a hard failure on a changed page, else to a warning (the full-site debt stays
     // visible in the summary, but the add-only agent's clean run is never blocked by legacy debt).
     const isChanged = changedThisRun.has(normUrl(path));
     const fail = (m) => { if (isChanged) hard.push(m); else warn.push(`${m} [pre-existing - not this build]`); };
+
+    // BUG-92 orphan gate: a page built THIS run must be reachable - at least one inbound internal
+    // link from the rest of the built site (navbar / footer / service-areas index). Zero = orphan.
+    if (isChanged && (inbound.get(normUrl(path))?.size ?? 0) === 0) {
+      hard.push(`${path}: orphan page - no inbound internal link (not wired into nav/footer/index). Append it to the nav/index array named in seo/site-adapter.md, then rebuild.`);
+    }
 
     // ── structural checks (this file only) ──
     const h1s = countH1(html);
@@ -266,6 +400,29 @@ async function main() {
 
     // ── shared value rules (seo-rules.ts parity) ──
     const kind = pageKindFromUrl(path);
+
+    // BUG-92 component floor: a page built this run missing a component its kind declares fails.
+    // Opt-in - `floor` is null unless the repo ships seo/component-floor.json.
+    if (isChanged && floor) {
+      for (const m of missingFloor(html, kind, floor)) {
+        hard.push(`${path}: missing required component matching /${m}/ for a ${kind} page (component floor, seo/component-floor.json).`);
+      }
+    }
+
+    // BUG-92 follow-up (design conformance): a page built this run must render through the same
+    // styled template as its same-kind siblings (share the template signature). Needs >=2 refs;
+    // otherwise the signature is empty and this is a no-op warning. This catches the danvers case
+    // (page rendered a bare/placeholder path with none of the service-area styling).
+    if (isChanged && kind !== "other") {
+      const sig = signatureByKind.get(kind);
+      if (!sig || sig.size === 0) {
+        warn.push(`${path}: no design reference (need >=2 existing ${kind} pages) - design conformance not checked`);
+      } else if (!conformsToTemplate(html, sig, DESIGN_MIN_SHARE)) {
+        const msg = `${path}: does not match the ${kind}-page template - shares too little of the design signature its siblings share (likely rendered a bare/placeholder path, not the styled template).`;
+        if (DESIGN_WARN_ONLY) warn.push(msg); else fail(msg);
+      }
+    }
+
     const fields = {
       title,
       metaDescription: desc,
@@ -336,6 +493,40 @@ function selftest() {
   ok(!/—/.test(visibleText('<html><!-- preload the hero — see <link rel="preload"> notes — honest --><body>Real copy.</body></html>')), "visibleText: em-dash inside a >-bearing comment ignored");
   ok(!/—/.test(visibleText('<script>const s = "data — dash";</script><style>/* a — b */</style><p>Clean.</p>')), "visibleText: script/style content ignored");
   ok(/—/.test(visibleText("<p>Visible — copy.</p>")), "visibleText: em-dash in real copy still caught");
+  // BUG-92 orphan gate: the inbound index + the reachability decision it drives.
+  const site = [
+    { path: "/", html: '<a href="/service-areas/danvers">Danvers</a><a href="/services/pavers">Pavers</a>' }, // home footer/nav
+    { path: "/service-areas/danvers", html: '<a href="/service-areas/danvers">self breadcrumb</a><a href="/services/pavers">Pavers</a>' },
+    { path: "/service-areas/salem", html: "<p>No inbound links point here.</p>" }, // orphan fixture
+  ];
+  const idx = buildInboundIndex(site);
+  ok((idx.get("/service-areas/danvers")?.size ?? 0) === 1, "orphan gate: wired page has an inbound link (home -> danvers)");
+  ok(!idx.has("/") || idx.get("/").size === 0, "orphan gate: nothing links to home in this fixture");
+  ok((idx.get("/service-areas/salem")?.size ?? 0) === 0, "orphan gate: a page with zero inbound links is an orphan (FAIL condition)");
+  ok(!(idx.get("/service-areas/danvers")?.has("/service-areas/danvers")), "orphan gate: a self-link does not count as inbound");
+  // BUG-92 component floor: markers (regex, i-flag) missing from the page are reported; opt-in.
+  const floorDecl = { city: ["<h1", "faq", "adjacent-cities"], service: ["<h1"] };
+  ok(missingFloor('<h1>Danvers</h1><section class="faq"></section><nav class="adjacent-cities"></nav>', "city", floorDecl).length === 0, "component floor: a page carrying every declared component passes");
+  ok(missingFloor("<h1>Danvers</h1><p>thin</p>", "city", floorDecl).sort().join() === "adjacent-cities,faq", "component floor: a page missing components reports exactly them");
+  ok(missingFloor("<p>anything</p>", "blog", floorDecl).length === 0, "component floor: a kind with no declared floor is a no-op");
+  ok(missingFloor("<p>anything</p>", "city", null).length === 0, "component floor: null floor (not declared) is a no-op");
+  // BUG-92 follow-up (design conformance). Fixtures use Horizon's REAL design-system tokens
+  // (rounded-ds-md, font-heading, font-body, bg-ink-900, theme-keep-dark, tracking-eyebrow) that
+  // its LocationDetailPage/SiloLayout emit on every service-area page, plus per-page content tokens.
+  const TPL = "rounded-ds-md font-heading font-body bg-ink-900 theme-keep-dark tracking-eyebrow leading-body";
+  const refOrlando = `<main><section class="${TPL} theme-orlando"><h1 class="font-heading">Orlando</h1><div class="rounded-ds-md">copy</div></section></main>`;
+  const refTampa = `<main><section class="${TPL} theme-tampa"><h1 class="font-heading">Tampa</h1><div class="rounded-ds-md">copy</div></section></main>`;
+  const sig = templateSignature([refOrlando, refTampa]);
+  ok(sig.has("rounded-ds-md") && sig.has("font-heading") && sig.has("bg-ink-900"), "design: signature keeps the shared template tokens");
+  ok(!sig.has("theme-orlando") && !sig.has("theme-tampa"), "design: signature drops per-page content tokens (intersection)");
+  // A new page rendered through the SAME template (shares the signature) conforms.
+  ok(conformsToTemplate(`<main><section class="${TPL} theme-danvers"><h1 class="font-heading">Danvers</h1></section></main>`, sig) === true, "design: templated page conforms");
+  // The danvers case: a bare/placeholder page with NONE of the template's styling is refused.
+  ok(conformsToTemplate("<main><h1>Danvers</h1><p>We serve Danvers.</p></main>", sig) === false, "design: bare/unstyled page fails (the danvers case)");
+  // A legitimately THIN but templated page (less content, same wrapper tokens) still conforms.
+  ok(conformsToTemplate(`<main><section class="${TPL}"><h1 class="font-heading">Danvers</h1></section></main>`, sig) === true, "design: thin-but-templated page still conforms (content volume is not the signal)");
+  // Fewer than 2 references -> empty signature -> no-op (never blocks a first-of-its-kind page).
+  ok(templateSignature([refOrlando]).size === 0 && conformsToTemplate("<main>anything</main>", templateSignature([refOrlando])) === true, "design: <2 references is a no-op");
   console.log("selftest OK");
 }
 

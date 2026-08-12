@@ -1,0 +1,6 @@
+{
+  "_comment": "BUG-92 component floor (opt-in). Copy to component-floor.json (drop the .example) to ACTIVATE. Keyed by page kind (service | city | blog), each value a list of markers seo-qa requires on a built page of that kind. Each marker is tried as a case-insensitive regex, falling back to a substring. seo-qa hard-fails a page built THIS run that is missing any marker for its kind. Absent file = no floor gate.",
+  "service": ["<h1", "class=\"?faq", "class=\"?related"],
+  "city": ["<h1", "class=\"?faq", "class=\"?adjacent-cities"],
+  "blog": ["<h1", "<article"]
+}
