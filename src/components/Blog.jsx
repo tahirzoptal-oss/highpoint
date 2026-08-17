@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import { Link } from 'react-router-dom';
 import { brandDNA } from '../config/brand-dna';
-import { publishedPosts, sortByNewest } from '../lib/publishing';
+import { useLivePosts } from '../lib/useLiveClock';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 const JOSEFIN = "'Josefin Sans', system-ui, sans-serif";
@@ -184,12 +184,13 @@ export function PostCard({ post, tabbable = true, featured }) {
  * breakpoints need no measurement.
  */
 export default function Blog() {
-  // Newest publication first, through the same filter and the same sort /blog
-  // runs, so the two always agree on what the latest article is. Scheduled
-  // posts (a future `publishedAt`) drop out here exactly as they do there, and
-  // the strip opens on whichever post published most recently — no post is
-  // named, so a new article takes the lead slot with no edit here.
-  const posts = sortByNewest(publishedPosts(brandDNA.blog_posts));
+  // Newest publication first, through the same runtime clock and the same sort
+  // /blog runs, so the two always agree on what the latest article is.
+  // Scheduled posts (a future `publishedAt`) drop out here exactly as they do
+  // there, and rejoin on their own when their instant passes — no rebuild. The
+  // strip opens on whichever post published most recently; no post is named, so
+  // a new article takes the lead slot with no edit here.
+  const posts = useLivePosts();
   const featuredSlug = (posts[0] || {}).slug;
   const count = posts.length;
 

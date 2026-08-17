@@ -9,7 +9,8 @@ import SEO from '../components/SEO';
 import { Band, StickyRail, SiloBody, SectionHead } from '../components/SiloSection';
 import FAQAccordion from '../components/FAQAccordion';
 import { buildArticle, buildBreadcrumb, buildFAQ } from '../lib/schema';
-import { blogPosts } from './BlogPage';
+import { isPublished } from '../lib/publishing';
+import { useNow } from '../lib/useLiveClock';
 import { brandDNA } from '../config/brand-dna';
 import { blogQuoteFormId } from '../config/form-ids';
 
@@ -40,9 +41,56 @@ const ArrowLeft = (props) => (
 
 export default function BlogPostPage() {
   const { slug } = useParams();
-  const post = blogPosts.find((p) => p.slug === slug);
+  // The visitor's clock, not the build's. A post scheduled for noon today
+  // starts serving its article at noon on this same deployment.
+  const now = useNow();
+
+  // Resolved against EVERY post, not just the live ones: this route is
+  // prerendered for scheduled slugs too (src/App.jsx), so that the URL is ready
+  // to start working the instant its publishedAt passes.
+  const post = brandDNA.blog_posts.find((p) => p.slug === slug);
 
   if (!post) return <Navigate to="/blog" replace />;
+
+  // Scheduled, not live yet. The route answers, but with no article body and a
+  // noindex head, so neither a reader nor a crawler gets the content early.
+  // Both dist/ readers — scripts/seo-audit.mjs and scripts/gen-discovery.mjs —
+  // already skip noindex pages, so a scheduled post stays out of the SEO audit
+  // and out of the static sitemap on its own.
+  if (!isPublished(post, now)) {
+    return (
+      <>
+        <SEO
+          path={`/blog/${slug}`}
+          title={`Coming soon | ${brandDNA.company.name}`}
+          description="This article has not been published yet."
+          noindex
+        />
+        <InnerBanner
+          title="This article isn't published yet"
+          subtitle="It's scheduled to go live shortly. No need to check back manually — the page will start working on its own."
+          breadcrumb={[{ label: 'Blog', to: '/blog' }, { label: 'Coming soon' }]}
+          minHeightClass="min-h-[44vh] lg:min-h-[50vh]"
+        />
+        <LogoSlider />
+        <BeltSlider />
+        <Band tone="white">
+          <p className="text-[15px] leading-[1.72] text-ink/70" style={{ fontFamily: INTER }}>
+            In the meantime, our published articles cover roof repairs, storm damage and
+            replacement costs across the Tri-Cities.
+          </p>
+          <Link
+            to="/blog"
+            className="group mt-6 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] transition-colors duration-300 ease-out hover:text-[rgb(var(--primary))]"
+            style={{ fontFamily: INTER, color: 'rgb(var(--accent))' }}
+          >
+            <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-300 ease-out group-hover:-translate-x-1" />
+            Back to all articles
+          </Link>
+        </Band>
+      </>
+    );
+  }
 
   // Order of preference: the copy-deck body markdown, then structured content
   // blocks folded into markdown, then the excerpt as a last resort.

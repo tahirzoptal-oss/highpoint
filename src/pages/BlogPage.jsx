@@ -9,35 +9,8 @@ import SEO from '../components/SEO';
 // row, title treatment and "Read More" affordance — so the two never drift.
 import { PostCard } from '../components/Blog';
 import { buildBreadcrumb } from '../lib/schema';
-import { publishedPosts, sortByNewest } from '../lib/publishing';
+import { useLivePosts } from '../lib/useLiveClock';
 import { brandDNA } from '../config/brand-dna';
-
-// Live posts only. A post carrying a future `publishedAt` is scheduled, not
-// published, and stays out of the listing (and out of BlogPostPage, which
-// resolves its slug from this same list) until its time arrives. Posts with no
-// `publishedAt` are always live — see src/lib/publishing.js.
-export const blogPosts = publishedPosts(brandDNA.blog_posts);
-
-// The one ordering the whole page reads from: every live post, newest
-// publication first, through the shared sort the homepage slider also uses. The
-// category tabs filter this list rather than re-sorting, so a tab can never
-// disagree with "All" about which post is more recent.
-const postsNewestFirst = sortByNewest(blogPosts);
-
-// The featured slot follows publication date — it is not authored. Whatever
-// published most recently wears the chip, so the next article to go live takes
-// the slot over on its own and the `featured` flag in brand-dna never has to be
-// moved from one post to the next.
-const featuredSlug = (postsNewestFirst[0] || {}).slug;
-
-// A category with no live post behind it would open onto an empty grid, so the
-// filter row only offers the ones that actually have something to show.
-// Scheduled posts are already out of `blogPosts`, so a category whose only
-// article has not published yet drops out on its own and returns by itself.
-const usedCategories = new Set(blogPosts.map((p) => p.category).filter(Boolean));
-const categories = (brandDNA.blog_categories || []).filter(
-  (cat) => cat === 'All' || usedCategories.has(cat)
-);
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
 
@@ -71,6 +44,26 @@ export default function BlogPage() {
   const [page, setPage] = useState(1);
   const gridRef = useRef(null);
 
+  // Live posts as of the visitor's clock, newest publication first. Recomputed
+  // when a scheduled post's time arrives, so the listing picks it up without a
+  // rebuild — everything below derives from this one list.
+  const postsNewestFirst = useLivePosts();
+
+  // The featured slot follows publication date — it is not authored. Whatever
+  // published most recently wears the chip, so the next article to go live takes
+  // the slot over on its own and the `featured` flag in brand-dna never has to be
+  // moved from one post to the next.
+  const featuredSlug = (postsNewestFirst[0] || {}).slug;
+
+  // A category with no live post behind it would open onto an empty grid, so the
+  // filter row only offers the ones that actually have something to show. A
+  // category whose only article has not published yet drops out on its own and
+  // returns by itself the moment that article goes live.
+  const categories = useMemo(() => {
+    const used = new Set(postsNewestFirst.map((p) => p.category).filter(Boolean));
+    return (brandDNA.blog_categories || []).filter((cat) => cat === 'All' || used.has(cat));
+  }, [postsNewestFirst]);
+
   // Filtered set, newest publication first in every tab — `postsNewestFirst` is
   // already in that order and filtering preserves it, so the listing always
   // opens on the most recent article and the featured story leads the grid.
@@ -78,7 +71,7 @@ export default function BlogPage() {
     activeCategory === 'All'
       ? postsNewestFirst
       : postsNewestFirst.filter((p) => p.category === activeCategory)
-  ), [activeCategory]);
+  ), [activeCategory, postsNewestFirst]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE));
   const current = Math.min(page, pageCount);

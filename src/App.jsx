@@ -15,7 +15,6 @@ import TermsConditionsPage from './pages/TermsConditionsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import Layout from './components/Layout'
 import { brandDNA } from './config/brand-dna'
-import { publishedPosts } from './lib/publishing'
 
 // Slugify a service-area city string ("WEST RICHLAND" -> "west-richland") so the
 // dynamic /service-areas/:slug getStaticPaths matches LocationDetailPage's own
@@ -58,10 +57,13 @@ export const routes = [
       {
         path: 'blog/:slug',
         element: <BlogPostPage />,
-        // Published posts only: a scheduled post gets no prerendered page, so
-        // it cannot leak into dist/ or into sitemap-blog.xml before its date.
-        // It prerenders on the first build at or after its publishedAt.
-        getStaticPaths: () => publishedPosts(brandDNA.blog_posts).map((p) => `/blog/${p.slug}`),
+        // EVERY slug, including scheduled ones. Publishing is decided at
+        // runtime now (src/lib/useLiveClock.js), and runtime logic cannot
+        // conjure a route the build never wrote — so the URL a scheduled post
+        // will occupy has to exist on disk from the first deploy. Until its
+        // publishedAt passes, BlogPostPage serves that route a noindex "not
+        // published yet" page instead of the article.
+        getStaticPaths: () => brandDNA.blog_posts.map((p) => `/blog/${p.slug}`),
       },
       { path: 'contact', element: <ContactPage /> },
       { path: 'thank-you', element: <ThankYouPage /> },

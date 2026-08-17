@@ -8,37 +8,48 @@
  * has passed the post is *scheduled*, not live, and is kept out of:
  *   - the /blog listing (src/pages/BlogPage.jsx)
  *   - the homepage blog slider (src/components/Blog.jsx)
- *   - the prerendered /blog/:slug routes (src/App.jsx getStaticPaths), and so
- *     out of dist/, and so out of sitemap-blog.xml as well
+ *   - the article body on /blog/:slug (src/pages/BlogPostPage.jsx, which serves
+ *     a noindex "not published yet" page instead)
+ *   - the blog sitemap (api/sitemap-blog.js, computed per request)
  *
  * A post with no `publishedAt` is always live. Every article that shipped
  * before scheduling existed therefore behaves exactly as it did before.
  *
- * WHY THE BUILD CLOCK, NOT Date.now()
- * The site is statically prerendered by vite-react-ssg and hydrated in the
- * browser. Gating on the visitor's live clock would let the two disagree: the
- * HTML built on the 3rd would show six posts while the client on the 8th
- * computed seven — a hydration mismatch, and a listing card pointing at a
- * /blog/:slug page the build never wrote (a hard 404 on refresh or from
- * search). Freezing "now" to the build clock keeps the listing, the slider,
- * the detail routes and the sitemap in permanent agreement.
+ * THE CLOCK IS THE VISITOR'S, NOT THE BUILD'S
+ * Every function here is pure and takes `now` explicitly, defaulting to
+ * Date.now(). Publishing therefore happens on the wall clock: once the instant
+ * passes, the very next page view shows the post. No rebuild, no redeploy.
  *
- * The practical consequence: a scheduled post publishes on the first BUILD at
- * or after its publishedAt instant. Deploy (or trigger a Vercel deploy hook /
- * daily cron rebuild) on or after the scheduled time and it goes live.
+ * That is only possible because the deployed artifact now carries EVERY post:
+ * `blog_posts` is bundled whole, and src/App.jsx prerenders a route for every
+ * slug (not just the live ones), so the URL a scheduled post will occupy
+ * already exists on disk the moment its time arrives.
+ *
+ * Hydration is kept safe not by freezing the clock but by React: the consumers
+ * read `now` through useSyncExternalStore (src/lib/useLiveClock.js), whose
+ * getServerSnapshot returns BUILD_TIME. The first client render therefore
+ * reproduces the prerendered HTML exactly, and React swaps in the live clock
+ * immediately afterwards. Same guarantee as before, without the deploy.
  */
 
 // Replaced at build time by the `define` in vite.config.js. The typeof guard
-// keeps this module importable from plain Node (audit scripts, tests), where
-// the constant was never substituted.
-const BUILD_TIME =
+// keeps this module importable from plain Node (the sitemap function, audit
+// scripts, tests), where the constant was never substituted.
+//
+// This is no longer the publishing authority — only the hydration snapshot, so
+// that the first client render matches the HTML the build wrote.
+export const BUILD_TIME =
   typeof __BUILD_TIME__ === 'string' ? Date.parse(__BUILD_TIME__) : Date.now();
 
 /**
  * Is this post live as of `now`? Posts without a `publishedAt`, and posts with
  * an unparseable one, are treated as live — a typo hides nothing.
+ *
+ * Date.parse honours the explicit offset in the stored string, so
+ * "2026-08-21T12:00:00-05:00" compares as 2026-08-21T17:00:00Z regardless of
+ * where the visitor (or the server) happens to be.
  */
-export function isPublished(post, now = BUILD_TIME) {
+export function isPublished(post, now = Date.now()) {
   const at = post && post.publishedAt;
   if (!at) return true;
   const t = Date.parse(at);
@@ -46,8 +57,23 @@ export function isPublished(post, now = BUILD_TIME) {
 }
 
 /** The live subset of `posts`, in the order they were authored. */
-export function publishedPosts(posts, now = BUILD_TIME) {
+export function publishedPosts(posts, now = Date.now()) {
   return (posts || []).filter((p) => isPublished(p, now));
+}
+
+/**
+ * The next instant at which some post in `posts` flips from scheduled to live,
+ * or null if none remain. useLiveClock arms a timer on this so a tab left open
+ * across a publish time updates itself instead of waiting for a reload.
+ */
+export function nextPublishTime(posts, now = Date.now()) {
+  let soonest = null;
+  for (const p of posts || []) {
+    const at = p && p.publishedAt ? Date.parse(p.publishedAt) : NaN;
+    if (Number.isNaN(at) || at <= now) continue;
+    if (soonest === null || at < soonest) soonest = at;
+  }
+  return soonest;
 }
 
 const MONTHS = {

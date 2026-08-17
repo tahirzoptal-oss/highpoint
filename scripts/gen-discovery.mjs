@@ -83,10 +83,23 @@ const urlsetXml = (list) =>
   list.map((u) => `  <url><loc>${xmlEscape(base + u)}</loc><lastmod>${today}</lastmod></url>`).join("\n") +
   `\n</urlset>\n`;
 
+// The blog sub-sitemap is the one set that changes without a deploy: a
+// scheduled post goes live on the wall clock, so a file written here would keep
+// advertising the pre-publish set for the life of the deployment. It is served
+// per request by api/sitemap-blog.js instead, via the /sitemap-blog.xml rewrite
+// in vercel.json. Deliberately NOT written to dist/ — Vercel checks the
+// filesystem before applying rewrites, so a static file of that name would
+// shadow the function. It is still listed in the index below.
+const DYNAMIC_SITEMAPS = new Set(["blog"]);
+
 const subSitemaps = [];
 for (const [name, list] of Object.entries(groups)) {
-  if (!list.length) continue;
   const fname = `sitemap-${name}.xml`;
+  if (DYNAMIC_SITEMAPS.has(name)) {
+    subSitemaps.push(fname);
+    continue;
+  }
+  if (!list.length) continue;
   await writeFile(join(DIST, fname), urlsetXml(list));
   subSitemaps.push(fname);
 }
