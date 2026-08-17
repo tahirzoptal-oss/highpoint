@@ -1,0 +1,61 @@
+name: Scheduled rebuild (publish matured posts)
+
+# WHY THIS EXISTS
+# src/lib/publishing.js gates a post's `publishedAt` against the BUILD clock
+# (__BUILD_TIME__), not the visitor's clock — deliberately, so the prerendered
+# HTML, the hydrating client, the /blog/:slug routes and sitemap-blog.xml can
+# never disagree. The documented consequence is that "a scheduled post
+# publishes on the first BUILD at or after its publishedAt instant."
+#
+# Nothing in this repo was producing that build. The only other workflow
+# (agentic-seo.yml) is dashboard-dispatched content authoring, and Vercel only
+# builds on push — so a post whose date matured on a quiet week simply stayed
+# scheduled. That is what happened to the 2026-08-14 post: the last push was
+# 2026-08-12, so no build ever ran with a clock past 2026-08-14T17:00:00Z.
+#
+# This job pings a Vercel Deploy Hook once a day, which rebuilds with a current
+# clock and lets any matured publishedAt go live. It changes no content and no
+# scheduling logic.
+#
+# NOTE on agentic-seo.yml's "per-repo crons are out of the architecture": that
+# rule is about the dashboard owning *content-authoring* dispatch (staggered,
+# capped, killable). This cron authors nothing — it only redeploys what is
+# already committed. If the dashboard is extended to fire a daily deploy
+# itself, delete this file.
+#
+# SETUP (one time): create a Deploy Hook in the Vercel project
+# (Settings → Git → Deploy Hooks, branch `main`) and store its URL as the repo
+# Actions secret VERCEL_DEPLOY_HOOK_URL. Without the secret this job is inert.
+
+on:
+  schedule:
+    # 17:05 UTC daily — just past 12:00 at -05:00, the offset every scheduled
+    # post in brand-dna.js uses. Cron here is UTC and has no DST, which is the
+    # right call: the posts carry an explicit offset, so their instants are
+    # absolute and need no local-time tracking.
+    - cron: "5 17 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: scheduled-rebuild
+  cancel-in-progress: false
+
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger a Vercel rebuild
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "VERCEL_DEPLOY_HOOK_URL is not set — nothing to trigger."
+            echo "Add it under Settings → Secrets and variables → Actions to"
+            echo "enable the daily rebuild that publishes matured blog posts."
+            exit 0
+          fi
+          # --fail so a rejected hook surfaces as a red run rather than a silent
+          # no-op that looks like scheduling broke again.
+          curl --fail --silent --show-error -X POST "$HOOK" -o /dev/null
+          echo "Deploy hook fired; scheduled posts at or past their publishedAt will go live."
