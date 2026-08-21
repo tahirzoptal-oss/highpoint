@@ -1,0 +1,6 @@
+{
+  "_comment": "BUG-97 nav/index surfaces. A page built this run must be linked FROM one of these routes (the navbar dropdown / footer / the index that renders the nav array), not merely from a sibling content page. See seo/site-adapter.md.",
+  "city": [
+    "/service-areas"
+  ]
+}

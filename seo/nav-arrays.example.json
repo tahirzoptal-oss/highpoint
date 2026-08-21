@@ -1,0 +1,4 @@
+{
+  "_comment": "BUG-97 nav/index arrays (opt-in, render-INDEPENDENT). Copy to nav-arrays.json to make the gate verify the CONTRACT append against the source diff (complements nav-surfaces.json, which verifies reachability in the built output). Keyed by page kind (service | city | blog). For each kind: `file` is the content data file, `arrays` are the nav/index array name(s) the agent MUST append to when it builds a page of that kind. seo-qa compares each array's text at HEAD vs the working tree; if a page of that kind was built this run but the array was not appended, it hard-fails - regardless of how any component renders (the exact Winter Hill case: danvers added to location_pages, serviceAreas untouched). Absent file or absent kind = the check is skipped.",
+  "city": { "file": "src/config/brand-dna.js", "arrays": ["serviceAreas"] }
+}

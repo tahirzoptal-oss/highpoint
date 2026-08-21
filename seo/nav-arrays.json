@@ -1,0 +1,9 @@
+{
+  "_comment": "BUG-97 nav/index arrays. When a page of this kind is built this run, the agent MUST append to these array(s) in `file`; seo-qa diffs the array (HEAD vs the working tree) and hard-fails if it was not - render-independent. See seo/site-adapter.md.",
+  "city": {
+    "file": "src/config/brand-dna.js",
+    "arrays": [
+      "serviceAreas"
+    ]
+  }
+}

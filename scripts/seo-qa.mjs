@@ -27,7 +27,7 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { execSync } from "node:child_process";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -36,6 +36,14 @@ const WORKED_LOG = resolve(ROOT, "seo/worked-log.csv");
 // BUG-92: optional per-kind component floor. Opt-in - absent file means no floor gate,
 // so rails whose adapters have not declared one are unaffected.
 const COMPONENT_FLOOR = resolve(ROOT, "seo/component-floor.json");
+// BUG-97: optional per-kind nav/index SURFACE routes. Opt-in - absent file means the plain
+// zero-inbound orphan check, so rails that have not declared surfaces are unaffected.
+const NAV_SURFACES = resolve(ROOT, "seo/nav-surfaces.json");
+// BUG-97 (render-INDEPENDENT half): optional per-kind nav/index ARRAY(s) + the data file they live
+// in. When a page of that kind is built this run, the agent's diff MUST have appended to those
+// array(s) - a source-diff check that does not depend on how any component renders (the surface
+// check above verifies actual reachability; this one verifies the contract append). Opt-in.
+const NAV_ARRAYS = resolve(ROOT, "seo/nav-arrays.json");
 
 // CHG-76 (ruled option 1): the URL paths of pages CHANGED THIS RUN. Derived the SAME way as the
 // scoped-lint step - from `git diff HEAD` (the agent's edits are uncommitted at QA time). The
@@ -77,6 +85,35 @@ async function loadComponentFloor() {
     return obj && typeof obj === "object" ? obj : null;
   } catch {
     console.warn("WARN  seo/component-floor.json is present but not valid JSON - floor gate skipped.");
+    return null;
+  }
+}
+
+// BUG-97: the per-kind nav/index surface routes, or null when the repo has not declared them.
+// Absent -> opt-in no-op (the plain zero-inbound orphan check runs). Present-but-invalid -> warn +
+// no-op (a broken surface file must not silently look enforced, nor block a clean build).
+async function loadNavSurfaces() {
+  let raw;
+  try { raw = await readFile(NAV_SURFACES, "utf8"); } catch { return null; }
+  try {
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === "object" ? obj : null;
+  } catch {
+    console.warn("WARN  seo/nav-surfaces.json is present but not valid JSON - surface-scoped orphan check skipped.");
+    return null;
+  }
+}
+
+// BUG-97: the per-kind nav/index ARRAY declaration ({ kind: { file, arrays: [] } }), or null when
+// not declared. Absent -> opt-in no-op. Present-but-invalid -> warn + no-op.
+async function loadNavArrays() {
+  let raw;
+  try { raw = await readFile(NAV_ARRAYS, "utf8"); } catch { return null; }
+  try {
+    const obj = JSON.parse(raw);
+    return obj && typeof obj === "object" ? obj : null;
+  } catch {
+    console.warn("WARN  seo/nav-arrays.json is present but not valid JSON - nav-array append check skipped.");
     return null;
   }
 }
@@ -223,6 +260,61 @@ export function buildInboundIndex(docs) {
   return inbound;
 }
 
+// BUG-97 adapter-driven reachability (pure, --selftest-covered). The plain "any inbound link =
+// wired" rule is fooled on sites where a mid-page component renders the CONTENT array (e.g. Winter
+// Hill's ServiceAreas.jsx iterates location_pages): a content-only append manufactures inbound
+// links from sibling pages, so the page reads as connected while still absent from the navbar
+// dropdown, the footer, and the /service-areas index. When the repo declares the nav/index SURFACE
+// routes for a kind (seo/nav-surfaces.json, e.g. { "city": ["/service-areas"] }), a page of that
+// kind must be linked FROM one of those surfaces, not merely from a sibling. `inboundSet` is the
+// Set of source paths that link to the page (from buildInboundIndex). Returns true = reachable.
+//   - zero inbound                          -> orphan (false), always.
+//   - no surfaces declared for the kind     -> any inbound counts (true) - unchanged, opt-in.
+//   - surfaces declared for the kind        -> at least one inbound source must be a surface route.
+export function reachableFromSurface(inboundSet, kind, navSurfaces) {
+  const sources = inboundSet ? [...inboundSet] : [];
+  if (sources.length === 0) return false;
+  const declared = navSurfaces && Array.isArray(navSurfaces[kind]) ? navSurfaces[kind] : null;
+  if (!declared || declared.length === 0) return true;
+  const surfaceSet = new Set(declared.map(normUrl));
+  return sources.some((s) => surfaceSet.has(normUrl(s)));
+}
+
+// BUG-97 nav-array append check (pure, --selftest-covered). The surface check above verifies a page
+// is reachable in the BUILT output; this verifies, render-independently, that the agent actually
+// APPENDED to the nav/index array in the SOURCE (the contract), by comparing that array's text
+// before (HEAD) vs after (the agent's uncommitted edit). Bracket-depth extraction so a nested array
+// inside an entry does not truncate the block; a `[` inside a string is a rare miscount we accept.
+export function extractArrayBlock(fileText, arrayName) {
+  const text = String(fileText ?? "");
+  // CHG-80: (1) escape the name so a metachar in it can't break the pattern; (2) anchor it as a
+  // WHOLE identifier so a short declared name ("Areas") can't bind to a longer key ("serviceAreas");
+  // (3) match BOTH the object-key form (`name: [` / `"name": [`) AND the module-export / assignment
+  // form (`export const name = [` / `name = [`) - camelback declares `export const navLocations = [`,
+  // which the old key-only regex could never locate (so its gate could only ever warn).
+  const name = String(arrayName ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = new RegExp(`(?:["']${name}["']|(?<![\\w$])${name}(?![\\w$]))\\s*[:=]\\s*\\[`).exec(text);
+  if (!m) return null;
+  let depth = 0;
+  for (let i = m.index + m[0].length - 1; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "[") depth++;
+    else if (ch === "]") { depth--; if (depth === 0) return text.slice(m.index, i + 1); }
+  }
+  return null; // unbalanced - treated as "unknown" by the caller
+}
+
+// Tri-state so the caller never hard-fails on a parse miss: "touched" (appended / newly added),
+// "untouched" (present in both, byte-identical -> the omission BUG-97 is about), "unknown" (could
+// not locate the array in the post-edit file -> warn, do not fail).
+export function navArrayTouched(beforeFile, afterFile, arrayName) {
+  const after = extractArrayBlock(afterFile, arrayName);
+  if (after == null) return "unknown";
+  const before = extractArrayBlock(beforeFile, arrayName);
+  if (before == null) return "touched"; // array did not exist before, does now
+  return after === before ? "untouched" : "touched";
+}
+
 // BUG-92 component floor (pure, --selftest-covered). Given a page's HTML, its kind, and the
 // loaded floor object ({ service: ["marker", ...], city: [...], blog: [...] }), return the
 // markers this page is MISSING. Each marker is tried as a case-insensitive regex; if it is not
@@ -338,6 +430,35 @@ async function main() {
   for (const f of files) docs.push({ path: toUrlPath(f), html: await readFile(join(DIST, f), "utf8") });
   const inbound = buildInboundIndex(docs);
   const floor = await loadComponentFloor(); // BUG-92 component floor, or null when not declared
+  const navSurfaces = await loadNavSurfaces(); // BUG-97 nav/index surfaces, or null when not declared
+  const navArrays = await loadNavArrays(); // BUG-97 nav/index arrays, or null when not declared
+
+  // BUG-97 nav-array append check (render-INDEPENDENT). For every KIND built this run whose adapter
+  // declares nav/index array(s) in seo/nav-arrays.json, the agent must have appended to those
+  // array(s) in the SOURCE. We compare each array's text at HEAD vs the working tree (the agent's
+  // edit is uncommitted at QA time, like changedThisRunPaths). This fires on the exact Winter Hill
+  // case (danvers added to location_pages, serviceAreas untouched) regardless of how components
+  // render. Run-scoped: only checked when a page of that kind was actually built this run.
+  if (navArrays) {
+    const builtKinds = new Set([...changedThisRun].map(pageKindFromUrl));
+    for (const kind of builtKinds) {
+      const decl = navArrays[kind];
+      if (!decl || !decl.file || !Array.isArray(decl.arrays)) continue;
+      let before = "";
+      try { before = execSync(`git show HEAD:${decl.file}`, { cwd: ROOT, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }); } catch { before = ""; }
+      let after = "";
+      try { after = await readFile(resolve(ROOT, decl.file), "utf8"); } catch { after = ""; }
+      if (!after) { warn.push(`nav-array check: could not read ${decl.file} - skipped for ${kind} pages`); continue; }
+      for (const arr of decl.arrays) {
+        const status = navArrayTouched(before, after, arr);
+        if (status === "untouched") {
+          hard.push(`${kind} page built this run but the nav/index array '${arr}' in ${decl.file} was NOT appended - the page is not wired (append it to '${arr}', then rebuild). (BUG-97)`);
+        } else if (status === "unknown") {
+          warn.push(`nav-array check: could not locate the '${arr}' array in ${decl.file} - append not verified for ${kind} pages`);
+        }
+      }
+    }
+  }
 
   // BUG-92 follow-up (design conformance): derive a per-kind template signature from the EXISTING
   // (not-changed-this-run) pages, so a page built this run must render through the same styled
@@ -364,10 +485,23 @@ async function main() {
     const isChanged = changedThisRun.has(normUrl(path));
     const fail = (m) => { if (isChanged) hard.push(m); else warn.push(`${m} [pre-existing - not this build]`); };
 
-    // BUG-92 orphan gate: a page built THIS run must be reachable - at least one inbound internal
-    // link from the rest of the built site (navbar / footer / service-areas index). Zero = orphan.
-    if (isChanged && (inbound.get(normUrl(path))?.size ?? 0) === 0) {
-      hard.push(`${path}: orphan page - no inbound internal link (not wired into nav/footer/index). Append it to the nav/index array named in seo/site-adapter.md, then rebuild.`);
+    // BUG-92/97 orphan gate: a page built THIS run must be reachable from the site's nav/index
+    // chrome. Plain reachability = at least one inbound internal link. When the repo declares the
+    // nav/index surface routes for this kind (seo/nav-surfaces.json), the inbound link must come
+    // FROM one of those surfaces - not from a sibling content page that a component auto-links
+    // (BUG-97 Winter Hill: ServiceAreas.jsx renders location_pages, so a content-only append earns
+    // sibling inbound links yet stays absent from the /service-areas index and footer).
+    if (isChanged) {
+      const orphanKind = pageKindFromUrl(path);
+      if (!reachableFromSurface(inbound.get(normUrl(path)), orphanKind, navSurfaces)) {
+        const hasSibling = (inbound.get(normUrl(path))?.size ?? 0) > 0;
+        const surfaces = (navSurfaces && navSurfaces[orphanKind]) ? navSurfaces[orphanKind].join(", ") : "navbar/footer/index";
+        hard.push(
+          hasSibling
+            ? `${path}: orphan page - linked only from sibling pages, not from a nav/index surface (${surfaces}). Append it to the nav/index array named in seo/site-adapter.md (e.g. serviceAreas), then rebuild.`
+            : `${path}: orphan page - no inbound internal link (not wired into nav/footer/index). Append it to the nav/index array named in seo/site-adapter.md, then rebuild.`,
+        );
+      }
     }
 
     // ── structural checks (this file only) ──
@@ -504,6 +638,48 @@ function selftest() {
   ok(!idx.has("/") || idx.get("/").size === 0, "orphan gate: nothing links to home in this fixture");
   ok((idx.get("/service-areas/salem")?.size ?? 0) === 0, "orphan gate: a page with zero inbound links is an orphan (FAIL condition)");
   ok(!(idx.get("/service-areas/danvers")?.has("/service-areas/danvers")), "orphan gate: a self-link does not count as inbound");
+  // BUG-97: a component that renders the CONTENT array (WH ServiceAreas.jsx over location_pages)
+  // manufactures inbound links from siblings on a content-only append, so the plain zero-inbound
+  // check passes it. The surface-scoped check requires an inbound link FROM the declared
+  // /service-areas index and fails a page that only has sibling links (the reproduced failure).
+  const whSite = [
+    { path: "/service-areas", html: '<a href="/service-areas/salem">Salem</a>' }, // index renders the serviceAreas array (salem only)
+    { path: "/service-areas/salem", html: '<a href="/service-areas/danvers">Danvers</a>' }, // sibling ServiceAreas.jsx over location_pages
+    { path: "/service-areas/lynn", html: '<a href="/service-areas/danvers">Danvers</a>' },
+    { path: "/service-areas/danvers", html: "<h1>Danvers</h1>" }, // content-only append: on location_pages, NOT serviceAreas
+  ];
+  const whIdx = buildInboundIndex(whSite);
+  const navSurf = { city: ["/service-areas"] };
+  ok((whIdx.get("/service-areas/danvers")?.size ?? 0) === 2, "BUG-97: content-only append still earns 2 sibling inbound links (why the plain check is fooled)");
+  ok(reachableFromSurface(whIdx.get("/service-areas/danvers"), "city", navSurf) === false, "BUG-97: a page linked only by siblings is NOT reachable from the /service-areas surface (orphan FAIL)");
+  ok(reachableFromSurface(whIdx.get("/service-areas/salem"), "city", navSurf) === true, "BUG-97: a page listed on the /service-areas index IS reachable");
+  ok(reachableFromSurface(whIdx.get("/service-areas/danvers"), "city", null) === true, "BUG-97: no declared surfaces -> any inbound counts (opt-in, unchanged fleet behavior)");
+  ok(reachableFromSurface(whIdx.get("/service-areas/danvers"), "blog", navSurf) === true, "BUG-97: a kind with no declared surface falls back to any-inbound");
+  ok(reachableFromSurface(new Set(), "city", navSurf) === false, "BUG-97: zero inbound is always an orphan");
+  // BUG-97 nav-array append check (render-INDEPENDENT). The exact Winter Hill case: danvers added to
+  // location_pages, serviceAreas UNTOUCHED -> "untouched" -> hard fail, no matter how components render.
+  const before = `export const brandDNA = {\n  "serviceAreas": [ "SALEM", "LYNN" ],\n  "location_pages": [ { "slug": "salem" } ]\n};`;
+  const afterContentOnly = `export const brandDNA = {\n  "serviceAreas": [ "SALEM", "LYNN" ],\n  "location_pages": [ { "slug": "salem" }, { "slug": "danvers" } ]\n};`;
+  const afterWired = `export const brandDNA = {\n  "serviceAreas": [ "SALEM", "LYNN", "DANVERS" ],\n  "location_pages": [ { "slug": "salem" }, { "slug": "danvers" } ]\n};`;
+  ok(extractArrayBlock(before, "serviceAreas") === '"serviceAreas": [ "SALEM", "LYNN" ]', "BUG-97 nav-array: extractArrayBlock pulls the named array");
+  ok(extractArrayBlock(before, "nope") === null, "BUG-97 nav-array: a missing array -> null");
+  ok(navArrayTouched(before, afterContentOnly, "serviceAreas") === "untouched", "BUG-97 nav-array: content-only append leaves serviceAreas untouched -> FAIL (the WH case)");
+  ok(navArrayTouched(before, afterWired, "serviceAreas") === "touched", "BUG-97 nav-array: appending to serviceAreas -> touched -> pass");
+  ok(navArrayTouched(before, afterContentOnly, "location_pages") === "touched", "BUG-97 nav-array: location_pages WAS appended -> touched");
+  ok(navArrayTouched("no array here", afterWired, "serviceAreas") === "touched", "BUG-97 nav-array: array new in after (absent before) -> touched");
+  ok(navArrayTouched(before, "cannot parse", "serviceAreas") === "unknown", "BUG-97 nav-array: unlocatable in after -> unknown (warn, never a false fail)");
+  // Bracket-depth: a nested array inside an entry must not truncate the block.
+  const nested = `x = { "serviceAreas": [ { "slug": "a", "zips": [1,2] }, { "slug": "b" } ] };`;
+  ok(extractArrayBlock(nested, "serviceAreas")?.endsWith('{ "slug": "b" } ]'), "BUG-97 nav-array: bracket-depth extraction survives a nested array");
+  // CHG-80: the module-export / assignment form (camelback's `export const navLocations = [`) must locate.
+  const exportForm = `export const navLocations = [\n  { "city": "Phoenix" }\n];`;
+  ok(extractArrayBlock(exportForm, "navLocations")?.startsWith("navLocations = ["), "CHG-80 nav-array: `export const name = [` form is located");
+  ok(navArrayTouched(exportForm, `export const navLocations = [\n  { "city": "Phoenix" },\n  { "city": "Mesa" }\n];`, "navLocations") === "touched", "CHG-80 nav-array: appending to an export-const array -> touched");
+  ok(navArrayTouched(exportForm, exportForm, "navLocations") === "untouched", "CHG-80 nav-array: an untouched export-const array -> untouched -> FAIL on a content-only orphan");
+  // CHG-80: a short declared name must NOT bind to a longer key (asking for "Areas" must not match "serviceAreas").
+  ok(extractArrayBlock(before, "Areas") === null, "CHG-80 nav-array: a short name does not bind to a longer key (Areas !~ serviceAreas)");
+  // CHG-80: the array name is escaped before interpolation (a metachar name cannot corrupt the pattern).
+  ok(extractArrayBlock(`x = { "a.b": [ 1 ] };`, "a.b") === '"a.b": [ 1 ]', "CHG-80 nav-array: a name with a regex metachar is escaped and matched literally");
   // BUG-92 component floor: markers (regex, i-flag) missing from the page are reported; opt-in.
   const floorDecl = { city: ["<h1", "faq", "adjacent-cities"], service: ["<h1"] };
   ok(missingFloor('<h1>Danvers</h1><section class="faq"></section><nav class="adjacent-cities"></nav>', "city", floorDecl).length === 0, "component floor: a page carrying every declared component passes");
@@ -530,5 +706,11 @@ function selftest() {
   console.log("selftest OK");
 }
 
-if (process.argv.includes("--selftest")) selftest();
-else main();
+// CHG-80 run-as-main guard: execute the CLI only when this file is invoked directly
+// (node seo-qa.mjs [--selftest]), so importers (the completeness wave's locatability
+// check) can reuse extractArrayBlock without triggering a full gate run. pathToFileURL
+// resolves a relative argv[1] to an absolute file URL, so a relative invocation still runs.
+if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {
+  if (process.argv.includes("--selftest")) selftest();
+  else main();
+}

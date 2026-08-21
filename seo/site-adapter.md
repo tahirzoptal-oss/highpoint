@@ -123,3 +123,13 @@ node scripts/seo-qa.mjs
 8. **No Capstone/template data:** The `brand-dna.example-capstone.js` file is a smoke-test fixture only. Never copy its content into `brand-dna.js`.
 9. **`service-pages.js` is hand-authored:** Do not overwrite `SERVICE_PAGES` in `src/config/service-pages.js`. New service entries go into `brandDNA.services` in `src/config/brand-dna.js`.
 10. **Written estimate is the price:** Copy must not promise a price range as a quote; use "general market range" framing consistent with existing location page copy.
+
+## Completeness contract (BUG-92/97) - REQUIRED, both edits
+A location page is DONE only when BOTH arrays are appended:
+1. The content array (the page body) - as named above for the location page type.
+2. The nav/index array `serviceAreas` - REQUIRED. This is what the navbar dropdown, the footer,
+   and the `/service-areas` surface render from. Appending the content entry WITHOUT this leaves the
+   page an orphan: reachable only by URL, or linked only by sibling pages (a component that renders
+   the content array manufactures sibling links that LOOK wired). The QA gate reads
+   `seo/nav-surfaces.json` and hard-fails a page not linked FROM the `/service-areas` surface. Append
+   to `serviceAreas` too, then rebuild.
