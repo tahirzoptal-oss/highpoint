@@ -1,0 +1,5 @@
+{
+  "_comment": "BUG-97 nav/index surfaces (opt-in). Copy to nav-surfaces.json (drop the .example) to make the orphan gate surface-aware. Keyed by page kind (service | city | blog). Each value is the route(s) that render from the nav/index array for that kind - the navbar dropdown / footer / index page (e.g. /service-areas renders brandDNA.serviceAreas). A page built this run of that kind must be linked FROM one of these routes, not merely from a sibling content page. This defeats the false pass where a component that renders the CONTENT array (e.g. ServiceAreas.jsx over location_pages) manufactures inbound links on a content-only append. Absent file or absent kind = the plain zero-inbound orphan check.",
+  "city": ["/service-areas"],
+  "service": ["/services"]
+}

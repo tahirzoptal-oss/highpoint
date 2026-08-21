@@ -59,6 +59,7 @@ jobs:
 
             BUILD:
             - Build EXACTLY ONE page by editing ONLY the content file(s) named in the site-adapter, appending new slugs only. Never edit an existing slug. Never touch components, routing, or design. Write in the client voice; facts only from seo/voice.md plus the brief's provided numbers; leave any 'verify before merge' flags intact.
+            - COMPLETENESS (BUG-92/97, non-optional - a page that is not wired is not done): the site-adapter names EVERY array a page type must reach. Append the new page to the nav/index array(s) it names (e.g. serviceAreas), NOT only the content array, so it appears in the navbar dropdown, the footer, AND the index. A content-only append is an orphan even when a sibling component links it - seo-qa checks the page is linked FROM the nav/index surface in seo/nav-surfaces.json, not merely from a sibling. Fix any orphan/floor failure QA reports and rebuild; do NOT mark the row built until QA exits 0.
             - Run the site's build and QA exactly as seo/site-adapter.md specifies, and fix anything QA flags until it passes.
             - Update that row in seo/worked-log.csv to status 'built' with today's date. Write a plain-English summary to seo-run-summary.md at the repo root.
             - Do NOT git commit or push." \
