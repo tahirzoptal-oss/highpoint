@@ -1,0 +1,17 @@
+name: WI Verify
+# BUG-91/100: gate WI fix branches on a green build AND a real rendered-output change before merge.
+on:
+  push:
+    branches: ["seo-fix/**"]
+jobs:
+  wi-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci || npm install
+      - run: npm run build
+      - name: WI output check (BUG-100)
+        run: node .github/wi-verify-output.mjs
