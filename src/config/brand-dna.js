@@ -1012,7 +1012,7 @@ export const brandDNA = {
       "slug": "wildfire-ash-roof-damage-in-yakima",
       "title": "5 Key Tips for Wildfire Ash Roof Damage in Yakima Homeowners Need",
       "metaTitle": "Wildfire Ash and Your Roof: A Yakima Homeowner's Guide",
-      "metaDescription": "Wildfire ash roof damage in Yakima builds up fast each smoke season. Here are 5 key tips to protect your roof and gutters before fall rain.",
+      "metaDescription": "Wildfire ash is acidic and degrades asphalt shingles faster than most homeowners expect. Learn how High Point inspects and repairs ash-damaged roofs in Yakima.",
       "excerpt": "Wildfire ash roof damage in Yakima builds up fast each smoke season. Here are 5 key tips to protect your roof and gutters before fall rain.",
       "date": "August 2026",
       "publishedAt": "2026-08-21T12:00:00-05:00",
