@@ -162,7 +162,7 @@ export const SERVICE_PAGES = [
     heroTitle: 'Insurance Claims',
     metaTitle: 'Roofing Insurance Claims in the Tri-Cities',
     description:
-      'High Point guides Tri-Cities homeowners through every roofing insurance claim: storm-damage photos, repair estimates, and clear answers from inspection',
+      'High Point guides Tri-Cities homeowners through every roofing insurance claim: storm-damage photos, repair estimates, and clear answers at every step.',
     description_short:
       'Roof inspections, damage documentation, and detailed estimates to support your claim. Coverage decisions stay between you and your carrier.',
     body: [
