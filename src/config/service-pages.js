@@ -162,7 +162,7 @@ export const SERVICE_PAGES = [
     heroTitle: 'Insurance Claims',
     metaTitle: 'Roofing Insurance Claims in the Tri-Cities',
     description:
-      'High Point Renovation & Roofing helps Tri-Cities property owners with roof inspections, storm-damage photos, repair estimates, and clear roofing information during an insurance claim.',
+      'High Point guides Tri-Cities homeowners through every roofing insurance claim: storm-damage photos, repair estimates, and clear answers at every step.',
     description_short:
       'Roof inspections, damage documentation, and detailed estimates to support your claim. Coverage decisions stay between you and your carrier.',
     body: [
