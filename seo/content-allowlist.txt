@@ -1,0 +1,4 @@
+# Files the rail may commit (the peter-evans add-paths allowlist). One path/glob per line.
+# rail-diff-check.mjs FAILS the run if the agent edits a file not covered here (BUG-152).
+src/config/brand-dna.js
+seo/worked-log.csv
