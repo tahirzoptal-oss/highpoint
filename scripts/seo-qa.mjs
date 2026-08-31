@@ -231,6 +231,34 @@ export const getMetaDesc = (html) =>
   (html.match(/<meta[^>]+name="description"[^>]+content="([^"]*)"/i)?.[1] || "").trim();
 export const getH1 = (html) =>
   (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i)?.[1] || "").replace(/<[^>]+>/g, "").trim();
+
+// BUG-152: a page built THIS run must carry a meta description UNIQUE among all built pages. The old
+// per-page check was order-dependent: whichever member of a duplicate pair was walked FIRST owned the
+// description, so a new page that duped the homepage passed whenever index.html was walked after it
+// (the homepage, being legacy, only warned). On stacks where the page template does not pass its own
+// description (SEO.jsx: `description || routeMetas[path] || brandDNA.meta?.description`), a new route
+// with no central meta entry falls through to the HOMEPAGE description and ships a duplicate green.
+// Order-independent: index every built page's description, then report any page whose description is
+// shared. `changed` routes the finding to a hard failure (built this run) or a warning (legacy debt).
+// Pure + --selftest-covered. pages: [{ path, desc }]; changedThisRun: Set of normUrl'd paths.
+export function descriptionDuplicateFindings(pages, changedThisRun) {
+  const byDesc = new Map();
+  for (const p of pages) {
+    const key = String(p.desc || "").trim();
+    if (!key) continue;
+    if (!byDesc.has(key)) byDesc.set(key, []);
+    byDesc.get(key).push(p.path);
+  }
+  const findings = [];
+  for (const p of pages) {
+    const key = String(p.desc || "").trim();
+    if (!key) continue;
+    const dupOf = byDesc.get(key).filter((x) => x !== p.path);
+    if (dupOf.length === 0) continue;
+    findings.push({ path: p.path, dupOf, changed: changedThisRun.has(normUrl(p.path)) });
+  }
+  return findings;
+}
 export const hasCanonical = (html) => /<link[^>]+rel="canonical"/i.test(html);
 export const isNoindex = (html) => /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(html);
 export const getJsonLd = (html) =>
@@ -419,7 +447,6 @@ async function main() {
   const hard = [];
   const warn = [];
   const titles = new Map();
-  const descs = new Map();
   const builtPaths = new Set(files.map(toUrlPath));
   const changedThisRun = await changedThisRunPaths(); // CHG-76: hard-fail is scoped to these routes
 
@@ -514,10 +541,9 @@ async function main() {
       else titles.set(title, path);
     }
     const desc = getMetaDesc(html);
-    if (desc) {
-      if (descs.has(desc)) fail(`${path}: duplicate meta description (also ${descs.get(desc)})`);
-      else descs.set(desc, path);
-    }
+    // BUG-152: meta-description uniqueness is checked order-independently AFTER this loop (see
+    // descriptionDuplicateFindings); a per-page first-come check here would miss a new page that
+    // dupes the homepage when index.html is walked after it.
     if (!hasCanonical(html)) warn.push(`${path}: missing canonical`);
 
     for (const block of getJsonLd(html)) {
@@ -579,6 +605,20 @@ async function main() {
     }
   }
 
+  // BUG-152: meta-description uniqueness across ALL built pages (order-independent). A page built
+  // this run whose rendered description is shared with any other built page (in particular the
+  // homepage/brandDNA fallback) hard-fails; a legacy-only duplicate stays a warning.
+  const pagesWithDesc = docs
+    .filter((d) => !isNoindex(d.html))
+    .map((d) => ({ path: d.path, desc: getMetaDesc(d.html) }));
+  for (const f of descriptionDuplicateFindings(pagesWithDesc, changedThisRun)) {
+    if (f.changed) {
+      hard.push(`${f.path}: meta description is not unique - identical to ${f.dupOf.join(", ")}. On this stack the page template can fall through to the homepage/brandDNA description; give the page its own meta entry (e.g. route-metas.js) and rebuild.`);
+    } else {
+      warn.push(`${f.path}: duplicate meta description (shared with ${f.dupOf.join(", ")}) [pre-existing - not this build]`);
+    }
+  }
+
   for (const w of warn) console.warn("WARN  " + w);
   for (const h of hard) console.error("FAIL  " + h);
   console.log(`\nseo-qa: ${builtPaths.size} pages checked, ${warn.length} warning(s), ${hard.length} failure(s).`);
@@ -610,6 +650,28 @@ function selftest() {
   ok(checkNearMe("Roof Repair Near Me", "service").length === 1, "near me service");
   ok(checkNearMe("Best Roofer Near Me", "blog").length === 0, "near me blog ok");
   ok(checkH1TitleRatio("Roof Repair Orlando FL", "Roof Repair Orlando FL").length === 1, "h1 dup");
+  // BUG-152: description uniqueness (order-independent, changed page hard-fails vs the homepage).
+  {
+    const HOME = "Owner-led, bilingual roofing crew serving Killeen and Central Texas.";
+    const pages = [
+      { path: "/services/metal-roofing", desc: HOME }, // NEW page fell through to the homepage desc
+      { path: "/", desc: HOME },                         // homepage (legacy)
+      { path: "/services/roof-repair", desc: "Fast leak repair and full replacements in Killeen, TX." },
+    ];
+    const changed = new Set(["/services/metal-roofing"]); // only the new page was built this run
+    const f = descriptionDuplicateFindings(pages, changed);
+    const metal = f.find((x) => x.path === "/services/metal-roofing");
+    ok(metal && metal.changed && metal.dupOf.includes("/"), "BUG-152: new page duping the homepage is flagged as a changed-page (hard) finding");
+    const home = f.find((x) => x.path === "/");
+    ok(home && home.changed === false, "BUG-152: the legacy homepage side of the dup is a warning (not changed)");
+    ok(descriptionDuplicateFindings(pages, changed).every((x) => x.dupOf.length > 0), "BUG-152: only shared descriptions are reported");
+    // Order independence: reversing the page order must not change the verdict for the changed page.
+    const rev = descriptionDuplicateFindings([...pages].reverse(), changed).find((x) => x.path === "/services/metal-roofing");
+    ok(rev && rev.changed, "BUG-152: verdict is order-independent (walk order does not decide the owner)");
+    // A unique description on the changed page produces no finding for it.
+    const unique = descriptionDuplicateFindings([{ path: "/services/metal-roofing", desc: "Metal roofing built to last in Killeen." }, { path: "/", desc: HOME }], changed);
+    ok(!unique.some((x) => x.path === "/services/metal-roofing"), "BUG-152: a unique description clears the changed page");
+  }
   ok(checkH1TitleRatio("Fast Reliable Storm Damage Help", "Roof Repair Orlando FL").length === 0, "h1 distinct ok");
   ok(checkSchemaPresence(["Service"], "service").length === 1, "service missing breadcrumb");
   ok(checkSchemaPresence(["Service", "BreadcrumbList"], "service").length === 0, "service schema ok");
