@@ -110,7 +110,31 @@ const indexXml =
 await writeFile(join(DIST, "sitemap.xml"), indexXml);
 
 // ----- robots.txt ---------------------------------------------------------
-await writeFile(join(DIST, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${base}/sitemap.xml\n`);
+// Bulk harvesters that take the whole site for datasets or resale without ever
+// sending a visitor back. They have to be named one by one because the default
+// rule below is a blanket Allow: search engines and AI answer engines stay
+// allowed by that default and are deliberately absent from this list.
+const BULK_HARVESTERS = [
+  "Bytespider",
+  "img2dataset",
+  "LAIONDownloader",
+  "Scrapy",
+  "ImagesiftBot",
+  "omgili",
+  "omgilibot",
+];
+
+const robots = [
+  "# Bulk crawlers and low-value harvesters",
+  "",
+  ...BULK_HARVESTERS.flatMap((ua) => [`User-agent: ${ua}`, "Disallow: /", ""]),
+  "# Default rules",
+  "User-agent: *",
+  "Allow: /",
+  "",
+  `Sitemap: ${base}/sitemap.xml`,
+];
+await writeFile(join(DIST, "robots.txt"), robots.join("\n") + "\n");
 
 // ----- llms.txt (crawl guidance, llmstxt.org) -----------------------------
 const services = brandDNA.services || [];
@@ -152,6 +176,7 @@ if (about.length) llms.push("## About", ...about, "");
 const contact = [];
 if (brandDNA.contact?.phone) contact.push(`- Phone: ${brandDNA.contact.phone}`);
 if (brandDNA.contact?.email) contact.push(`- Email: ${brandDNA.contact.email}`);
+if (brandDNA.address?.full) contact.push(`- Address: ${brandDNA.address.full}`);
 if (urlSet.has("/contact")) contact.push(`- [Contact / Free Quote](${base}/contact)`);
 if (contact.length) llms.push("## Contact", ...contact, "");
 llms.push(`<!-- last-updated: ${today} -->`);
