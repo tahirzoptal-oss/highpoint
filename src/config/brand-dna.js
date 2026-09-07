@@ -99,9 +99,9 @@ export const brandDNA = {
   },
   "reviews": {
     "rating": 5,
-    "googleCount": 10,
+    "googleCount": 0,
     "facebookCount": 0,
-    "totalReviewCount": 10,
+    "totalReviewCount": 0,
     "googleLabel": "Google Reviews",
     "facebookLabel": "Facebook Reviews",
     "googleStat": "Google 5.0 ★ (10)",
