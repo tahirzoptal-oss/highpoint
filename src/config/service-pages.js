@@ -228,7 +228,7 @@ export const SERVICE_PAGES = [
     heroTitle: 'Storm Damage Repair',
     metaTitle: 'Storm Damage Roof Repair | Tri-Cities, WA',
     description:
-      'High Point Renovation & Roofing inspects and repairs roof damage caused by wind, hail, rain, and debris throughout Kennewick, Pasco, Richland, and the greater Tri-Cities.',
+      'High Point inspects and repairs wind, hail, and debris damage across Kennewick, Pasco, Richland, and the Tri-Cities. Free estimate available.',
     description_short:
       'Inspection, documentation, and repair of wind, hail, rain, and impact damage, with an honest call on whether a repair or a replacement is the dependable fix.',
     body: [
