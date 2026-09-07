@@ -15,3 +15,8 @@ jobs:
       - run: npm run build
       - name: WI output check (BUG-100)
         run: node .github/wi-verify-output.mjs
+        env:
+          # BUG-143: the check reads this branch's OWN per-branch claim file
+          # (.github/wi-verify-claims/<branch>.json), not a shared fixed path a merge from main
+          # could union-corrupt into invalid JSON.
+          WI_CLAIM_BRANCH: ${{ github.ref_name }}
