@@ -96,7 +96,7 @@ export const SERVICE_PAGES = [
     heroTitle: 'Emergency Roofing',
     metaTitle: 'Emergency Roofing in Kennewick, WA | High Point',
     description:
-      'High Point Renovation & Roofing responds to urgent roof leaks and storm damage across Kennewick, Pasco, Richland, and the Tri-Cities with inspections, temporary protection, and repair planning.',
+      'High Point handles urgent roof leaks and storm damage across the Tri-Cities with same-day inspections, temporary protection, and a clear repair plan. Call now.',
     description_short:
       'Urgent help for active leaks, lifted shingles, and exposed roof sections: assessment, temporary protection where appropriate, then a permanent repair plan.',
     body: [
