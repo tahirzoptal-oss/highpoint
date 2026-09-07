@@ -228,7 +228,7 @@ export const brandDNA = {
           "date": "2024-06-27"
         }
       ],
-      "description": "Full roof installs from tear-off to final shingle, built as a complete system with premium underlayment, metal flashings, and heavy-duty ice-and-water shield where it counts.",
+      "description": "Full roof installs from tear-off to final shingle, built as a complete system with premium underlayment, metal flashings, and ice-and-water shield. Free quote.",
       "body": "When a roof is past repairing, a new one is one of the biggest jobs your house will ever get. It is also the one place a shortcut hides easiest, because most of what protects your home sits under the shingles where nobody looks. High Point installs a roof as a complete system: trusted subcontractor crews complete the installation, and Terry Preston personally manages and oversees the job to make sure the parts you cannot see are the parts we get right.",
       "faq": [
         {
