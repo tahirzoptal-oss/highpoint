@@ -756,7 +756,7 @@ export const brandDNA = {
     },
     "services": {
       "label": "WHAT WE DO",
-      "heading": "ROOFING AND FULL HOME RENOVATION, UNDER ONE ROOF",
+      "heading": "Roofing and Home Renovation Services in the Tri-Cities, WA",
       "body": "Most roofers stop at the roof. Terry manages the whole house, from a tear-off re-roof to a new kitchen, with trusted subcontractors for specialty work. One contractor you trust, start to signed-off."
     },
     "whyChoose": {
