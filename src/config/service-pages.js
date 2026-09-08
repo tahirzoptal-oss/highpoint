@@ -11,7 +11,18 @@
  * name/slug, and the template degrades gracefully when one is missing):
  *   name, slug                 identity + route
  *   heroTitle                  <h1> in the banner (frontmatter hero.title)
- *   metaTitle, description     <title> and meta description (frontmatter seo.*)
+ *   metaTitle                  <title> override (frontmatter seo.title)
+ *   description                the visible hero subtitle + overview paragraph,
+ *                              and the meta description fallback
+ *   metaDescription            OPTIONAL search-result copy. When present it is
+ *                              the ONLY thing it changes: ServiceDetailPage
+ *                              feeds it to <SEO description>, so the meta tag
+ *                              can be written for the SERP while `description`
+ *                              keeps owning the on-page copy. Omit it and the
+ *                              meta description falls back to `description`,
+ *                              exactly as before. Mirrors the
+ *                              metaDescription / subheadline split the
+ *                              location pages already use.
  *   description_short          one-line summary for the services index card
  *   body                       INTRODUCTION, as the copy-deck markdown the
  *                              shared SiloBody renderer understands (## + - )

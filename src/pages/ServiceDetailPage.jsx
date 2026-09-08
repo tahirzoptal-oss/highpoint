@@ -44,6 +44,11 @@ export default function ServiceDetailPage() {
     // the closing Where We Work band. Absent on the generated services, which
     // keep the derived title and the shared service-area copy.
     metaTitle: found.metaTitle || '',
+    // Search-result copy, kept separate from the visible `description` the same
+    // way the location pages keep metaDescription separate from subheadline.
+    // Optional: falls back to `description` below, so services without one are
+    // unchanged.
+    metaDescription: found.metaDescription || '',
     whereWeWork: found.whereWeWork || '',
   };
 
@@ -52,7 +57,7 @@ export default function ServiceDetailPage() {
       <SEO
         path={`/services/${slug}`}
         title={service.metaTitle || `${service.title} | ${brandDNA.company.name}`}
-        description={service.description}
+        description={service.metaDescription || service.description}
         jsonLd={[
           buildService(found),
           buildBreadcrumb([
