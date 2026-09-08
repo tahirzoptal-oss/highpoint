@@ -315,7 +315,10 @@ export function assessRobotsRoute(handlerSource, agents) {
 }
 
 // --- CI runner ------------------------------------------------------------------------------------
-const OUTPUT_DIRS = ["dist", "build", "out"]
+// BUG-174: the static output root, first that exists. `.next/server/app` is Next.js App Router's
+// prerender dir (route /services -> .next/server/app/services.html); without it an App Router rail
+// (Camelback) found no dir, skipped every claim, and greened - shipping BUG-173's doubled title.
+export const OUTPUT_DIRS = ["dist", "build", "out", ".next/server/app"]
 async function exists(p) { try { await stat(p); return true } catch { return false } }
 
 // BUG-162: the Next route handler that GENERATES a served path in this repo (fs check), or null. The
@@ -332,13 +335,17 @@ async function findStaticDir() {
   for (const d of OUTPUT_DIRS) if (await exists(d)) return d
   return null
 }
-// Map a URL path to the built HTML file within the static output dir.
-async function htmlForPath(dir, urlPath) {
+// BUG-174: the candidate built-HTML files for a URL path within an output dir, in priority order. Pure
+// (no fs) so the App Router mapping is unit-testable: `.next/server/app` + /services -> .next/server/app/
+// services.html (candidate #1), matching how Next writes a prerendered route.
+export function htmlCandidatesForPath(dir, urlPath) {
   const p = String(urlPath || "/").split("?")[0].replace(/\/+$/, "") || "/"
-  const candidates = p === "/"
-    ? [join(dir, "index.html")]
-    : [join(dir, `${p}.html`), join(dir, p, "index.html")]
-  for (const c of candidates) if (await exists(c)) return c
+  const rel = p.replace(/^\/+/, "")
+  return p === "/" ? [join(dir, "index.html")] : [join(dir, `${rel}.html`), join(dir, rel, "index.html")]
+}
+// Map a URL path to the built HTML file within the static output dir (dist/build/out/.next/server/app).
+async function htmlForPath(dir, urlPath) {
+  for (const c of htmlCandidatesForPath(dir, urlPath)) if (await exists(c)) return c
   return null
 }
 // Locate a served static file: the built output copy (dist/build/out) first, then the repo's public/.
@@ -372,12 +379,15 @@ export function wiClaimReadPaths(branch) {
   return out
 }
 
-// BUG-136: verdict tally -> exit code + a summary that never lets "I could not check" read as "I
-// checked and it is fine". Fails on any DEAD fix or MALFORMED claim entry (our output); a run that only
-// SKIPPED (pure-SSR pages / kinds the gate cannot verify) stays green but is reported distinctly.
+// BUG-136/174: verdict tally -> exit code + a summary that never lets "I could not check" read as "I
+// checked and it is fine". Fails on any DEAD fix or MALFORMED claim entry (our output). BUG-174: a run
+// that verified NOTHING but skipped something also fails - a gate that checked nothing must not look like
+// a gate that passed (Camelback #43 skipped its only claim on an App Router output the gate could not read
+// and greened, shipping a doubled title). A truly empty run (no claims at all) still passes.
 export function summarizeVerification({ verified, dead, skipped, invalid }) {
-  const line = `verified: ${verified}, skipped: ${skipped}, dead: ${dead}${invalid ? `, malformed: ${invalid}` : ""}.`
-  const code = dead > 0 || invalid > 0 ? 1 : 0
+  const allSkipped = verified === 0 && skipped > 0
+  const line = `verified: ${verified}, skipped: ${skipped}, dead: ${dead}${invalid ? `, malformed: ${invalid}` : ""}${allSkipped ? " - checked nothing (nothing could be read)" : ""}.`
+  const code = dead > 0 || invalid > 0 || allSkipped ? 1 : 0
   return { line, code }
 }
 
@@ -439,7 +449,9 @@ async function main() {
 
   const dir = await findStaticDir()
   if (!dir) {
-    if (rest.length) { skipped += rest.length; console.log(`wi-verify-output: no static output dir (dist/build/out) - pure-SSR app; ${rest.length} claim(s) covered by the preview crawl. SKIPPED.`) }
+    // BUG-174: no dist/build/out AND no .next/server/app prerenders. This is a real "could not read the
+    // built output", not a clean pass - the all-skipped tally below now fails rather than greens.
+    if (rest.length) { skipped += rest.length; console.log(`::warning::wi-verify-output: no static output dir (dist/build/out/.next/server/app) - could not read the built HTML for ${rest.length} claim(s). SKIPPED (BUG-174).`) }
     const { line, code } = summarizeVerification({ verified, dead, skipped, invalid })
     if (code === 0) console.log(`\nwi-verify-output: ${line} No dead fixes.`)
     else console.error(`\n::error::wi-verify-output: ${line} Failing the build.`)
@@ -581,12 +593,18 @@ function selftest() {
   ok(schemaVerdict('<script type="application/ld+json">{"@type":"RoofingContractor","name":"Altus",}</script>', '{"@type":"RoofingContractor"}', [], []) === "verified", "schema field-level: non-JSON block with @type -> verified (fallback)")
   ok(assess("<html></html>", "body_keyword", "x") === "skip", "body_keyword -> skip")
   ok(extractCanonical('<link rel="canonical" href="https://x.com/p">') === "https://x.com/p", "canonical extracted")
-  // BUG-136: exit-code logic - our own bad output fails; a skip-only run stays green but reads distinctly.
+  // BUG-136/174: exit-code logic - our own bad output fails; a run that verified NOTHING but skipped
+  // something also fails (a gate that checked nothing is not a pass); a truly empty run still passes.
   ok(summarizeVerification({ verified: 2, dead: 0, skipped: 0, invalid: 0 }).code === 0, "verified>0, no dead -> pass")
   ok(summarizeVerification({ verified: 0, dead: 1, skipped: 0, invalid: 0 }).code === 1, "a dead fix -> fail")
-  ok(summarizeVerification({ verified: 0, dead: 0, skipped: 3, invalid: 0 }).code === 0, "all-skipped stays green")
+  ok(summarizeVerification({ verified: 0, dead: 0, skipped: 3, invalid: 0 }).code === 1, "BUG-174: all-skipped FAILS (checked nothing)")
+  ok(summarizeVerification({ verified: 1, dead: 0, skipped: 2, invalid: 0 }).code === 0, "verified>0 with some skips still passes")
+  ok(summarizeVerification({ verified: 0, dead: 0, skipped: 0, invalid: 0 }).code === 0, "a truly empty run passes")
   ok(/verified: 0, skipped: 3/.test(summarizeVerification({ verified: 0, dead: 0, skipped: 3, invalid: 0 }).line), "all-skipped reports distinctly (not 'all checked')")
   ok(summarizeVerification({ verified: 1, dead: 0, skipped: 0, invalid: 2 }).code === 1, "a malformed claim entry -> fail")
+  // BUG-174: App Router output resolution.
+  ok(OUTPUT_DIRS.join(",") === "dist,build,out,.next/server/app", "output dirs include .next/server/app after dist/build/out")
+  ok(htmlCandidatesForPath(".next/server/app", "/services")[0] === ".next/server/app/services.html", "App Router /services -> .next/server/app/services.html")
   ok(parseClaims('[{"path":"/","kind":"meta_description","proposed":"x"}]').ok === true, "valid claim parses")
   ok(parseClaims('[{"path":"/llms.txt","proposed":"a" "path":"/"').ok === false, "the #34 malformed claim -> not ok")
   // BUG-143: per-branch claim path resolution (this branch's file first, legacy shared path as fallback).
