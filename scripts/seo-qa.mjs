@@ -26,12 +26,18 @@
  * the helpers without a build.
  */
 import { readdir, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execSync } from "node:child_process";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DIST = resolve(ROOT, "dist");
+// BUG-174: the built output root, first that exists. `.next/server/app` is Next.js App Router's
+// prerender dir (Camelback); without it seo-qa errored "no dist/" on App Router rails and the gate was
+// re-pointed by hand each install, only to be clobbered by the next rail wave. Resolve at the template
+// so App Router rails read their build output with no per-repo edit. `walk()` already filters to .html.
+const OUTPUT_DIRS = ["dist", "build", "out", ".next/server/app"];
+const DIST = OUTPUT_DIRS.map((d) => resolve(ROOT, d)).find((p) => existsSync(p)) ?? resolve(ROOT, "dist");
 const WORKED_LOG = resolve(ROOT, "seo/worked-log.csv");
 // BUG-92: optional per-kind component floor. Opt-in - absent file means no floor gate,
 // so rails whose adapters have not declared one are unaffected.
@@ -440,7 +446,7 @@ async function main() {
   try {
     files = await walk(DIST);
   } catch {
-    console.error(`seo-qa: no dist/ at ${DIST}. Run \`npm run build\` first.`);
+    console.error(`seo-qa: no built output at ${DIST} (looked for dist/build/out/.next/server/app). Run \`npm run build\` first.`);
     process.exit(1);
   }
 
@@ -630,6 +636,10 @@ function selftest() {
   // extractors
   ok(toUrlPath("index.html") === "/", "root");
   ok(toUrlPath("services/driveway-pavers/index.html") === "/services/driveway-pavers", "nested");
+  // BUG-174: the output-dir resolution includes the Next.js App Router prerender dir, after dist/build/out.
+  ok(JSON.stringify(OUTPUT_DIRS) === JSON.stringify(["dist", "build", "out", ".next/server/app"]), "output dirs incl .next/server/app");
+  // An App Router prerender walked from .next/server/app maps to its route the same way as dist/.
+  ok(toUrlPath("services.html") === "/services", "App Router services.html -> /services");
   ok(countH1("<h1>a</h1><h1 class=x>b</h1>") === 2, "h1 count");
   ok(getTitle("<title> Hi </title>") === "Hi", "title trim");
   ok(getMetaDesc('<meta name="description" content="d">') === "d", "desc");

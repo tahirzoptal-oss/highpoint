@@ -1,0 +1,2 @@
+# Paths the BUILD regenerates in the source tree - never an agent edit (BUG-171). One path/glob per line.
+# Derived from the prebuild chain; rail-diff-check excludes these on TOP of index.html + src/index.css.
