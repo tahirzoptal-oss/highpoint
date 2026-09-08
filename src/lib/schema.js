@@ -30,6 +30,8 @@ export function buildLocalBusiness() {
   ].filter(Boolean);
 
   const ld = {
+    geo: {"@type":"GeoCoordinates","latitude":46.2112,"longitude":-119.1372},
+    sameAs: ["https://www.facebook.com/highpointrenovation"],
     '@context': 'https://schema.org',
     '@type': company.schemaType || 'RoofingContractor',
     name: company.name,

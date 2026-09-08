@@ -1,0 +1,22 @@
+[
+  {
+    "path": "/",
+    "kind": "schema",
+    "proposed": "{\"@context\":\"https://schema.org\",\"@type\":\"RoofingContractor\",\"name\":\"High Point Renovation & Roofing\",\"url\":\"https://www.highpointrenovation.com/\",\"telephone\":\"+15095180747\",\"email\":\"terry@highpointrenovation.com\",\"address\":{\"@type\":\"PostalAddress\",\"streetAddress\":\"Kennewick\",\"addressLocality\":\"Kennewick\",\"addressRegion\":\"WA\",\"postalCode\":\"99336\",\"addressCountry\":\"US\"},\"openingHoursSpecification\":[{\"@type\":\"OpeningHoursSpecification\",\"dayOfWeek\":[\"Monday\",\"Tuesday\",\"Wednesday\",\"Thursday\",\"Friday\"],\"opens\":\"07:00\",\"closes\":\"17:00\"}],\"description\":\"High Point Renovation & Roofing is Terry Preston's owner-operated roofing and renovation company in Kennewick, WA. Terry personally manages and oversees every project, and trusted subcontractor crews complete the installation and specialty work. High Point is an IKO ROOFPRO Select Contractor and installs Owens Corning shingles. Honest written estimates that hold, premium materials where they count, roofing plus full home renovation, and payment plans when you need them. Rated a perfect 5.0 on Google.\",\"areaServed\":\"the Tri-Cities, Washington\",\"priceRange\":\"$\",\"founder\":[{\"@type\":\"Person\",\"name\":\"Terry Preston\"}],\"geo\":{\"@type\":\"GeoCoordinates\",\"latitude\":46.2112,\"longitude\":-119.1372},\"sameAs\":[\"https://www.facebook.com/highpointrenovation\"]}",
+    "removals": [],
+    "previousKeys": [
+      "@context",
+      "@type",
+      "name",
+      "url",
+      "telephone",
+      "email",
+      "address",
+      "openingHoursSpecification",
+      "description",
+      "areaServed",
+      "priceRange",
+      "founder"
+    ]
+  }
+]
