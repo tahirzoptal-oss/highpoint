@@ -144,7 +144,8 @@ function gitChangedFiles() {
 async function main() {
   const patterns = parseAllowlist(await readFile(ALLOWLIST_FILE, "utf8").catch(() => ""))
   if (patterns.length === 0) {
-    console.error(`rail-diff-check: ${ALLOWLIST_FILE} is missing or empty; cannot verify the diff against the commit allowlist.`)
+    // CHG-109: FAIL-prefixed so CHG-104's outcome notification extracts this line, not a bare exit code.
+    console.error(`FAIL rail-diff-check: ${ALLOWLIST_FILE} is missing or empty; cannot verify the diff against the commit allowlist.`)
     process.exit(1)
   }
   // BUG-171: exclude files the build regenerates in-tree (default + the rail's declared list) so a
@@ -153,6 +154,9 @@ async function main() {
   const { committed, dropped } = partitionChanges(gitChangedFiles(), patterns, generated)
 
   if (dropped.length > 0) {
+    // CHG-109: a FAIL-prefixed verdict line FIRST, so CHG-104's outcome notification names the silent drop
+    // (the guard's whole purpose) instead of reporting a bare "Process completed with exit code 1.".
+    console.error("FAIL rail-diff-check: DROPPED " + dropped.join(", ") + " (outside the commit allowlist)")
     console.error("rail-diff-check: the agent changed file(s) OUTSIDE the commit allowlist. peter-evans/create-pull-request")
     console.error("commits only the allowlisted paths, so these edits would be SILENTLY DROPPED while the PR body claims them:")
     for (const f of dropped) console.error("  DROPPED  " + f)

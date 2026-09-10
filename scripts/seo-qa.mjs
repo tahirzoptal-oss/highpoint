@@ -326,14 +326,20 @@ export function extractArrayBlock(fileText, arrayName) {
   // (3) match BOTH the object-key form (`name: [` / `"name": [`) AND the module-export / assignment
   // form (`export const name = [` / `name = [`) - camelback declares `export const navLocations = [`,
   // which the old key-only regex could never locate (so its gate could only ever warn).
+  // CHG-108: also match the OBJECT-REGISTRY form (`name = {` / `name: {`). A tool-review index
+  // (src/data/reviews/index.js) is a slug-keyed OBJECT, not an array literal, so the array-only
+  // matcher returned null -> the append gate could only ever warn, never verify a review page was
+  // wired (the "a guard that only refuses is half a job" rule). Depth-match whichever bracket
+  // opens the collection; a bracket inside a string is the same rare miscount we already accept.
   const name = String(arrayName ?? "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const m = new RegExp(`(?:["']${name}["']|(?<![\\w$])${name}(?![\\w$]))\\s*[:=]\\s*\\[`).exec(text);
+  const m = new RegExp(`(?:["']${name}["']|(?<![\\w$])${name}(?![\\w$]))\\s*[:=]\\s*([\\[{])`).exec(text);
   if (!m) return null;
+  const open = m[1], close = open === "[" ? "]" : "}";
   let depth = 0;
   for (let i = m.index + m[0].length - 1; i < text.length; i++) {
     const ch = text[i];
-    if (ch === "[") depth++;
-    else if (ch === "]") { depth--; if (depth === 0) return text.slice(m.index, i + 1); }
+    if (ch === open) depth++;
+    else if (ch === close) { depth--; if (depth === 0) return text.slice(m.index, i + 1); }
   }
   return null; // unbalanced - treated as "unknown" by the caller
 }
@@ -752,6 +758,16 @@ function selftest() {
   ok(extractArrayBlock(before, "Areas") === null, "CHG-80 nav-array: a short name does not bind to a longer key (Areas !~ serviceAreas)");
   // CHG-80: the array name is escaped before interpolation (a metachar name cannot corrupt the pattern).
   ok(extractArrayBlock(`x = { "a.b": [ 1 ] };`, "a.b") === '"a.b": [ 1 ]', "CHG-80 nav-array: a name with a regex metachar is escaped and matched literally");
+  // CHG-108: an OBJECT-registry (src/data/reviews style, slug-keyed object, not an array literal)
+  // is located and depth-matched, so adding a tool-review page to it is actually VERIFIED wired.
+  const revBefore = `export const reviews = {\n  "roofr-estimator-tool-review": { title: "Roofr" }\n};`;
+  const revAfter = `export const reviews = {\n  "roofr-estimator-tool-review": { title: "Roofr" },\n  "jobber-review": { title: "Jobber" }\n};`;
+  ok(extractArrayBlock(revBefore, "reviews")?.startsWith("reviews = {") && extractArrayBlock(revBefore, "reviews").endsWith("}"), "CHG-108 nav-array: an object registry (`name = {`) is located, not just array literals");
+  ok(navArrayTouched(revBefore, revAfter, "reviews") === "touched", "CHG-108 nav-array: appending a tool-review page to the object registry -> touched -> pass");
+  ok(navArrayTouched(revBefore, revBefore, "reviews") === "untouched", "CHG-108 nav-array: an untouched review registry -> untouched -> FAIL on an unwired review page (the gate now VERIFIES, no longer only warns)");
+  // Depth-match survives a nested array inside an object-registry entry (brace-depth, arrays ignored).
+  const revNested = `x = { reviews: { "a": { zips: [1,2], meta: { k: "v" } }, "b": { t: "x" } } };`;
+  ok(extractArrayBlock(revNested, "reviews")?.endsWith('{ t: "x" } }'), "CHG-108 nav-array: brace-depth extraction survives nested arrays/objects in a registry entry");
   // BUG-92 component floor: markers (regex, i-flag) missing from the page are reported; opt-in.
   const floorDecl = { city: ["<h1", "faq", "adjacent-cities"], service: ["<h1"] };
   ok(missingFloor('<h1>Danvers</h1><section class="faq"></section><nav class="adjacent-cities"></nav>', "city", floorDecl).length === 0, "component floor: a page carrying every declared component passes");

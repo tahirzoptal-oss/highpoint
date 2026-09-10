@@ -75,6 +75,29 @@ jobs:
             exit 1
           fi
 
+      # CHG-109: the seo-qa em-dash ban (CHG-74) is not CI-gated, so the agent's own "seo-qa 0 failures"
+      # self-check is not reliable for it (Altus failed twice while claiming clean). Deterministically
+      # normalise em/en dashes in the lines the AGENT ADDED this run - the added hunks of the tracked diff
+      # plus new untracked files - BEFORE the CI rebuild + the seo-qa gate. Em dash -> spaced hyphen, en
+      # dash -> hyphen. ADDED lines only, so a PR never carries a dash edit outside the agent's own copy.
+      - name: Normalise dashes in agent-changed files (CHG-74)
+        run: |
+          EXT_RE='\.(js|jsx|ts|tsx|md|mdx|json|csv|html)$'
+          norm_added() { ADDED="$2" perl -CSD -i -pe 'BEGIN{%A=map{$_=>1}split " ",($ENV{ADDED}||"")} if($A{$.}){s/[ \t]*\x{2014}[ \t]*/ - /g; s/\x{2013}/-/g}' "$1"; }
+          norm_all()   { perl -CSD -i -pe 's/[ \t]*\x{2014}[ \t]*/ - /g; s/\x{2013}/-/g' "$1"; }
+          added_lines() { git diff -U0 HEAD -- "$1" | perl -ne 'if(/^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@/){$s=$1;$n=defined $2?$2:1;print $s+$_," " for 0..$n-1}'; }
+          touched=''
+          for f in $(git diff --name-only --diff-filter=ACMR HEAD | grep -E "$EXT_RE" || true); do
+            [ -f "$f" ] || continue
+            L=$(added_lines "$f"); [ -n "$L" ] || continue
+            b=$(cksum "$f"); norm_added "$f" "$L"; [ "$(cksum "$f")" != "$b" ] && touched="$touched $f"
+          done
+          for f in $(git ls-files --others --exclude-standard | grep -E "$EXT_RE" || true); do
+            [ -f "$f" ] || continue
+            b=$(cksum "$f"); norm_all "$f"; [ "$(cksum "$f")" != "$b" ] && touched="$touched $f"
+          done
+          if [ -n "$touched" ]; then echo "CHG-109: normalised dashes in:$touched"; else echo "CHG-109: no em/en dashes in agent-added lines."; fi
+
       # BUG-63: three explicit gates, per the plan (CI rebuild + SCOPED lint + seo-qa).
       # The build is unscoped (the agent's page must not break the site). The lint is
       # scoped to only the files the agent changed this run, so a repo's pre-existing
