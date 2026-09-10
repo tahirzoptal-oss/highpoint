@@ -1,0 +1,11 @@
+[
+  {
+    "path": "/service-areas",
+    "kind": "schema",
+    "proposed": "{\"@type\":\"RoofingContractor\"}",
+    "removals": [],
+    "previousKeys": [],
+    "add": true,
+    "typePresenceOnly": true
+  }
+]
