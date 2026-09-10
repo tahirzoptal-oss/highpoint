@@ -9,7 +9,7 @@ import SEO from '../components/SEO';
 // Same layout primitives as the service-area detail pages, so the index and
 // the pages it links to read as one family.
 import { Band, SectionHead, CallNow, Medallion, Prose } from '../components/SiloSection';
-import { buildBreadcrumb } from '../lib/schema';
+import { buildLocalBusiness, buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 
 const INTER = "'Inter', system-ui, -apple-system, sans-serif";
@@ -77,7 +77,7 @@ export default function ServiceAreasPage() {
         path="/service-areas"
         title={`Service Areas | ${brandDNA.company.name}`}
         description="High Point Renovation & Roofing serves Kennewick, Pasco, Richland, West Richland, and the greater Tri-Cities, WA. Find owner-led roofing near you."
-        jsonLd={buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Service Areas', path: '/service-areas' }])}
+        jsonLd={[buildLocalBusiness(), buildBreadcrumb([{ name: 'Home', path: '/' }, { name: 'Service Areas', path: '/service-areas' }])]}
       />
 
       {/* ════ 1. Banner — shared InnerBanner component ════ */}
