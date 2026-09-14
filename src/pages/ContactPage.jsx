@@ -4,6 +4,7 @@ import LogoSlider from '../components/LogoSlider';
 import BeltSlider from '../components/BeltSlider';
 import SEO from '../components/SEO';
 import FadeOnEnter from '../components/FadeOnEnter';
+import FAQ from '../components/FAQ';
 import { buildBreadcrumb } from '../lib/schema';
 import { brandDNA } from '../config/brand-dna';
 import { useLeadForm } from '../lib/leadForm';
@@ -577,6 +578,9 @@ export default function ContactPage() {
           </div>
         </div>
       </section>
+
+      {/* Common questions - renders brandDNA.faq (the site's own Q&A) */}
+      <FAQ />
     </>
   );
 }
