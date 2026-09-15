@@ -131,9 +131,49 @@ jobs:
             echo "route-keywords.mjs not present - skipping (older install)."
           fi
 
-      - name: SEO QA gate
+      # BUG-191: "build + seo-qa until green", bounded. A single MECHANICAL FAIL (title too long, meta
+      # length, em-dash, double H1) used to fail the whole run after a full agent build - Camelback 09-14
+      # burned 14 minutes on a 6-character title and opened no PR. Now, when seo-qa reports ONLY mechanical
+      # classes, feed the FAIL lines back to the agent for a corrective pass, rebuild, and re-run seo-qa -
+      # up to 2 retries (3 attempts). A NON-mechanical FAIL (orphan, template-schema, ...) still fails on the
+      # first pass. The mechanical/hard split comes from seo-qa's own `SEO-QA-STATUS:` line, not from parsing
+      # FAIL text (the free-text orphan/em-dash/h1 FAILs carry no [rule] tag). The corrective pass does not
+      # re-run the CHG-109 dash-normaliser (that step ran before this gate): if the corrective agent slips an
+      # em-dash, em_dash is itself a mechanical class, so the bounded loop simply re-corrects it.
+      - name: SEO QA gate (build + fix-until-green, bounded)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          node scripts/seo-qa.mjs
+          MAX_ATTEMPTS=3   # 1 initial pass + 2 corrective retries (BUG-191 bound)
+          attempt=1
+          while : ; do
+            echo "== QA attempt $attempt of $MAX_ATTEMPTS =="
+            set +e
+            node scripts/seo-qa.mjs 2>&1 | tee qa-out.txt
+            set -e
+            status="$(grep -oE 'SEO-QA-STATUS: [a-z:]+' qa-out.txt | tail -1 | cut -d' ' -f2 || true)"
+            if [ "$status" = "pass" ]; then
+              echo "seo-qa green on attempt $attempt of $MAX_ATTEMPTS."
+              break
+            fi
+            if [ "$status" != "fail:mechanical" ]; then
+              echo "seo-qa reported a non-mechanical failure (SEO-QA-STATUS: ${status:-unknown}) - failing on the first pass (orphan / template-schema / etc. are not auto-corrected)."
+              exit 1
+            fi
+            if [ "$attempt" -ge "$MAX_ATTEMPTS" ]; then
+              echo "seo-qa still failing after $MAX_ATTEMPTS attempts - failing loud (BUG-191 bound reached)."
+              exit 1
+            fi
+            echo "seo-qa: mechanical failures only - running corrective pass $((attempt + 1)) of $MAX_ATTEMPTS."
+            npx @anthropic-ai/claude-code@latest -p \
+              "A content page you just built passed every check EXCEPT some MECHANICAL seo-qa failures. Read qa-out.txt at the repo root: the lines beginning 'FAIL' are the failures and 'SEO-QA-STATUS: fail:mechanical' confirms they are all mechanical. Fix ONLY those failures, on the exact pages named, by editing that page's OWN title, meta description, heading, or copy in the same content surface you built. Rules: page <title> must be 60 characters or fewer; the <meta name=description> must be 150-160 characters and a complete sentence ending in terminal punctuation; exactly one <h1> per page; NO em-dashes in copy (use a hyphen or restructure). Do NOT add or remove pages, do NOT touch routes, templates, components, or any other page, do NOT edit seo/worked-log.csv, and do NOT git commit. Then stop." \
+              --model claude-sonnet-4-6 \
+              --allowedTools "Read Edit Write Bash" \
+              --permission-mode acceptEdits
+            echo "Rebuilding after the corrective pass..."
+            npm run build
+            attempt=$((attempt + 1))
+          done
 
       - name: Run metadata + PR-body fallback
         id: meta
