@@ -199,6 +199,92 @@ export const pageKindFromUrl = (url) => {
   return "other";
 };
 
+// ---- BUG-192: schedule-aware blog QA -----------------------------------------------------------
+// Winter Hill (and Camelback) blog posts are on a WEEKLY publish schedule: an entry carries a future
+// `publishAt` and BlogPostPage returns <Navigate to="/blog"> until that instant passes, so the page
+// PRERENDERS EMPTY (no h1/title/meta/Article) and is hidden from the /blog index (orphan). The rail
+// builds the post's DATA now, but it goes live later. Asserting the rendered HTML NOW reads a scheduled
+// absence as five structural failures. So for a blog page built this run whose entry is scheduled ahead,
+// we validate the SOURCE ENTRY (which drives the h1/title/meta/Article once live) instead of the empty
+// prerender. Opt-in: only when seo/nav-arrays.json declares the blog data array; a rail that does not
+// schedule has no future publishAt and is unaffected (normal HTML checks run).
+
+/** The last path segment (the slug) of a URL, lower-cased, no trailing slash. "/blog/foo/" -> "foo". */
+export const slugFromUrl = (url) => normUrl(url).split("/").filter(Boolean).pop() || "";
+
+/** Forward-match the bracket at openIdx (`[` or `{`) to its partner; string/escape aware. -1 if unbalanced. */
+const matchBracket = (src, openIdx) => {
+  const open = src[openIdx], close = open === "[" ? "]" : "}";
+  let depth = 0, str = null;
+  for (let i = openIdx; i < src.length; i++) {
+    const c = src[i];
+    if (str) { if (c === "\\") { i++; continue; } if (c === str) str = null; continue; }
+    if (c === '"' || c === "'" || c === "`") { str = c; continue; }
+    if (c === open) depth++;
+    else if (c === close) { depth--; if (depth === 0) return i; }
+  }
+  return -1;
+};
+
+const reEsc = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * The entry of `arrayName` whose `slug` equals `slug`, as { publishAt, title, metaTitle, metaDescription,
+ * excerpt } (double-quoted string fields; missing -> undefined), or null when the array/entry is not found.
+ * A pure TEXT parse of a JS/JSON data module (no eval), scoped to the named array so a same-named slug
+ * elsewhere in the file cannot match. Exported for --selftest.
+ */
+export function blogEntryFields(source, arrayName, slug) {
+  const src = String(source ?? "");
+  const s = String(slug ?? "").trim();
+  if (!s) return null;
+  const am = new RegExp(`["']?${reEsc(arrayName)}["']?\\s*:\\s*\\[`).exec(src);
+  if (!am) return null;
+  const arrOpen = src.indexOf("[", am.index + am[0].length - 1);
+  const arrClose = matchBracket(src, arrOpen);
+  if (arrClose === -1) return null;
+  const region = src.slice(arrOpen, arrClose + 1);
+  const sm = new RegExp(`["']slug["']\\s*:\\s*["']${reEsc(s)}["']`).exec(region);
+  if (!sm) return null;
+  const open = region.lastIndexOf("{", sm.index);
+  if (open === -1) return null;
+  const close = matchBracket(region, open);
+  if (close === -1) return null;
+  const obj = region.slice(open, close + 1);
+  const field = (name) => {
+    const m = new RegExp(`["']${reEsc(name)}["']\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`).exec(obj);
+    return m ? m[1] : undefined;
+  };
+  return {
+    publishAt: field("publishAt"),
+    title: field("title"),
+    metaTitle: field("metaTitle"),
+    metaDescription: field("metaDescription"),
+    excerpt: field("excerpt"),
+  };
+}
+
+/** True when publishAt is a valid instant strictly AFTER nowMs (a scheduled, not-yet-live post). A missing
+ *  or unparseable publishAt is NOT future (legacy/live -> the normal HTML checks run). Pure. */
+export function isFuturePublish(publishAt, nowMs) {
+  if (!publishAt) return false;
+  const t = new Date(publishAt).getTime();
+  if (Number.isNaN(t)) return false;
+  return t > (typeof nowMs === "number" ? nowMs : Date.now());
+}
+
+/** Source-level validation for a SCHEDULED blog post, mirroring what BlogPostPage renders from the entry:
+ *  H1 + Article headline = title; <title> = metaTitle||title; meta description = metaDescription||excerpt.
+ *  Returns a hard-fail reason for each missing piece, else []. Pure. */
+export function scheduledBlogFindings(entry) {
+  const e = entry || {};
+  const out = [];
+  if (!String(e.title ?? "").trim()) out.push("no `title` (renders the H1 and the Article headline once live)");
+  if (!String(e.metaTitle ?? e.title ?? "").trim()) out.push("no `metaTitle`/`title` (renders the <title> once live)");
+  if (!String(e.metaDescription ?? e.excerpt ?? "").trim()) out.push("no `metaDescription`/`excerpt` (renders the meta description once live)");
+  return out;
+}
+
 /** Full-page validation — the shape seo-rules.ts validatePageFields must agree with (CHG-68 sync). */
 export const evaluateFields = (f) => {
   const kind = f.kind ?? "other";
@@ -548,6 +634,31 @@ async function main() {
     // (not-this-build) finding stays a warning and is not classified.
     const fail = (m, rule = "structural") => { if (isChanged) { hard.push(m); hardRules.add(rule); } else warn.push(`${m} [pre-existing - not this build]`); };
 
+    // BUG-192: a blog post scheduled for a FUTURE publishAt prerenders EMPTY (BlogPostPage returns
+    // <Navigate to="/blog"> until it goes live) and is hidden from the /blog index. Asserting its empty
+    // HTML would read a scheduled absence as five structural failures (0 h1, no title/meta/Article,
+    // orphan). When the repo declares the blog data array (seo/nav-arrays.json) and this changed page's
+    // entry is scheduled ahead, validate the SOURCE entry (which drives the h1/title/meta/Article once
+    // live) and skip the HTML-based checks for it. The nav-array APPEND check above still ran, so a post
+    // missing from blog_posts entirely is caught there.
+    if (isChanged && pageKindFromUrl(path) === "blog" && navArrays && navArrays.blog && navArrays.blog.file) {
+      const decl = navArrays.blog;
+      const arrayName = (Array.isArray(decl.arrays) && decl.arrays[0]) || "blog_posts";
+      let srcText = "";
+      try { srcText = await readFile(resolve(ROOT, decl.file), "utf8"); } catch { srcText = ""; }
+      const entry = srcText ? blogEntryFields(srcText, arrayName, slugFromUrl(path)) : null;
+      if (entry && isFuturePublish(entry.publishAt, Date.now())) {
+        const missing = scheduledBlogFindings(entry);
+        if (missing.length > 0) {
+          hard.push(`${path}: scheduled blog post (publishAt ${entry.publishAt}) but its ${arrayName} entry is incomplete - ${missing.join("; ")}. Fill the entry so it renders correctly when it goes live.`);
+          hardRules.add("blog_scheduled_incomplete"); // non-mechanical: a data gap, not a one-pass trim
+        } else {
+          warn.push(`${path}: scheduled blog post (publishAt ${entry.publishAt}) - source entry validated; the empty prerender and orphan/structural checks are deferred until it goes live (BUG-192).`);
+        }
+        continue; // never assert the intentionally-empty prerender of a not-yet-live post
+      }
+    }
+
     // BUG-92/97 orphan gate: a page built THIS run must be reachable from the site's nav/index
     // chrome. Plain reachability = at least one inbound internal link. When the repo declares the
     // nav/index surface routes for this kind (seo/nav-surfaces.json), the inbound link must come
@@ -724,6 +835,31 @@ function selftest() {
   ok(checkSchemaPresence(["Service"], "service").length === 1, "service missing breadcrumb");
   ok(checkSchemaPresence(["Service", "BreadcrumbList"], "service").length === 0, "service schema ok");
   ok(checkSchemaPresence(["BreadcrumbList"], "blog").length === 1, "blog missing Article");
+  // BUG-192: schedule-aware blog QA (pure parts). A future-publishAt post prerenders empty by design;
+  // validate its source entry instead of asserting the empty HTML.
+  {
+    const NOW = Date.parse("2026-09-14T00:00:00-05:00");
+    const SRC = `export const brandDNA = {
+      "blog_posts": [
+        { "slug": "old-live-post", "title": "Old", "metaTitle": "Old MT", "metaDescription": "Old MD", "excerpt": "x", "publishAt": "2026-08-01T12:00:00-05:00" },
+        { "slug": "commercial-flat-roofing-north-shore", "title": "Commercial Flat Roofing on the North Shore",
+          "metaTitle": "WH: Commercial Flat Roofing", "metaDescription": "EPDM and TPO flat roofing for North Shore commercial buildings.",
+          "excerpt": "e", "focusKeywords": ["flat roofing", "epdm"], "publishAt": "2026-09-18T12:00:00-05:00" },
+        { "slug": "bad-scheduled", "title": "", "excerpt": "", "publishAt": "2026-09-25T12:00:00-05:00" }
+      ],
+      "serviceAreas": [ { "slug": "andover" } ]
+    };`;
+    ok(slugFromUrl("/blog/commercial-flat-roofing-north-shore/") === "commercial-flat-roofing-north-shore", "BUG-192: slug from url");
+    const e = blogEntryFields(SRC, "blog_posts", "commercial-flat-roofing-north-shore");
+    ok(e && e.publishAt === "2026-09-18T12:00:00-05:00" && e.title.startsWith("Commercial Flat"), "BUG-192: blogEntryFields extracts the scheduled entry (multi-line, nested array)");
+    ok(blogEntryFields(SRC, "blog_posts", "no-such-slug") === null, "BUG-192: null for an unknown slug");
+    ok(blogEntryFields(SRC, "blog_posts", "andover") === null, "BUG-192: scoped to the named array (a serviceAreas slug is not a blog post)");
+    ok(isFuturePublish(e.publishAt, NOW) === true, "BUG-192: a future publishAt is detected");
+    ok(isFuturePublish("2026-08-01T12:00:00-05:00", NOW) === false, "BUG-192: a past publishAt is not future");
+    ok(isFuturePublish(undefined, NOW) === false, "BUG-192: a missing publishAt is not future (legacy/live)");
+    ok(scheduledBlogFindings(e).length === 0, "BUG-192: a complete scheduled entry passes source validation");
+    ok(scheduledBlogFindings(blogEntryFields(SRC, "blog_posts", "bad-scheduled")).length >= 2, "BUG-192: an incomplete scheduled entry fails (no title, no meta)");
+  }
   // acceptance: the phone-title fixture cannot pass
   ok(failsOnly(evaluateFields({ title: "Roof Repair | Call 612-749-6778", kind: "service", metaDescription: "d".repeat(155) })).length > 0, "acceptance phone-title rejected");
   // CHG-76: the changed-route parser that scopes the hard-fail (drift here would silently
