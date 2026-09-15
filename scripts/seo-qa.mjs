@@ -213,6 +213,26 @@ export const evaluateFields = (f) => {
 
 const failsOnly = (issues) => issues.filter((i) => i.severity === "fail");
 
+// BUG-191: the MECHANICAL failure classes - deterministic, self-correctable in a bounded rebuild loop
+// (the agent trims a title, tightens a meta description, drops an em-dash, splits a double H1). Everything
+// else (orphan, template-schema, phone-in-title, near-me, H1/title dupe, internal-link-to-unbuilt, invalid
+// JSON-LD, meta-description duplicate, design conformance, component floor) is NOT self-correctable in one
+// pass and keeps failing on the first pass with its existing message. desc_length_min is included for
+// completeness though it is currently only a warning (it never reaches the hard set).
+export const MECHANICAL_RULES = new Set(["title_length", "desc_length_max", "desc_length_min", "em_dash", "h1_count"]);
+
+// BUG-191: classify a run so the workflow can decide whether to run a bounded corrective pass. Takes the
+// hard-FAILURE COUNT and the set of tagged rule-ids. "pass" = zero hard failures; "fail:mechanical" = there
+// ARE hard failures and every tagged rule is mechanical (safe to feed back to the agent and rebuild);
+// "fail:hard" = otherwise. FAIL-SAFE: if there are hard failures but no/unknown rule-ids (a site that was
+// not tagged), it returns "fail:hard" - never "pass" - so a real failure can never be read as green (the
+// tee pipe in the workflow masks the exit code, so the status line is the sole signal). Pure + selftested.
+export const classifyFailure = (hardCount, rules) => {
+  if (hardCount === 0) return "pass";
+  const list = [...rules];
+  return list.length > 0 && list.every((r) => MECHANICAL_RULES.has(r)) ? "fail:mechanical" : "fail:hard";
+};
+
 // ---- HTML extractors (covered by --selftest) -------------------------------
 export const toUrlPath = (file) => {
   let p = "/" + file.replace(/\\/g, "/");
@@ -457,6 +477,7 @@ async function main() {
   }
 
   const hard = [];
+  const hardRules = new Set(); // BUG-191: rule-ids of the hard failures, for mechanical/hard classification
   const warn = [];
   const titles = new Map();
   const builtPaths = new Set(files.map(toUrlPath));
@@ -492,6 +513,7 @@ async function main() {
         const status = navArrayTouched(before, after, arr);
         if (status === "untouched") {
           hard.push(`${kind} page built this run but the nav/index array '${arr}' in ${decl.file} was NOT appended - the page is not wired (append it to '${arr}', then rebuild). (BUG-97)`);
+          hardRules.add("nav_array"); // BUG-191: non-mechanical (a missing wiring append, not a one-pass trim)
         } else if (status === "unknown") {
           warn.push(`nav-array check: could not locate the '${arr}' array in ${decl.file} - append not verified for ${kind} pages`);
         }
@@ -522,7 +544,9 @@ async function main() {
     // finding to a hard failure on a changed page, else to a warning (the full-site debt stays
     // visible in the summary, but the add-only agent's clean run is never blocked by legacy debt).
     const isChanged = changedThisRun.has(normUrl(path));
-    const fail = (m) => { if (isChanged) hard.push(m); else warn.push(`${m} [pre-existing - not this build]`); };
+    // BUG-191: `rule` tags the failure class so the run can be classified mechanical vs hard. A pre-existing
+    // (not-this-build) finding stays a warning and is not classified.
+    const fail = (m, rule = "structural") => { if (isChanged) { hard.push(m); hardRules.add(rule); } else warn.push(`${m} [pre-existing - not this build]`); };
 
     // BUG-92/97 orphan gate: a page built THIS run must be reachable from the site's nav/index
     // chrome. Plain reachability = at least one inbound internal link. When the repo declares the
@@ -540,16 +564,17 @@ async function main() {
             ? `${path}: orphan page - linked only from sibling pages, not from a nav/index surface (${surfaces}). Append it to the nav/index array named in seo/site-adapter.md (e.g. serviceAreas), then rebuild.`
             : `${path}: orphan page - no inbound internal link (not wired into nav/footer/index). Append it to the nav/index array named in seo/site-adapter.md, then rebuild.`,
         );
+        hardRules.add("orphan"); // BUG-191: non-mechanical - fails on the first pass, never auto-retried
       }
     }
 
     // ── structural checks (this file only) ──
     const h1s = countH1(html);
-    if (h1s !== 1) fail(`${path}: expected exactly one <h1>, found ${h1s}`);
+    if (h1s !== 1) fail(`${path}: expected exactly one <h1>, found ${h1s}`, "h1_count");
 
     const title = getTitle(html);
     if (title) {
-      if (titles.has(title)) fail(`${path}: duplicate <title> (also ${titles.get(title)})`);
+      if (titles.has(title)) fail(`${path}: duplicate <title> (also ${titles.get(title)})`, "title_duplicate");
       else titles.set(title, path);
     }
     const desc = getMetaDesc(html);
@@ -559,16 +584,16 @@ async function main() {
     if (!hasCanonical(html)) warn.push(`${path}: missing canonical`);
 
     for (const block of getJsonLd(html)) {
-      if (!jsonLdParses(block)) fail(`${path}: invalid JSON-LD`);
+      if (!jsonLdParses(block)) fail(`${path}: invalid JSON-LD`, "jsonld_invalid");
     }
 
     for (const link of getInternalLinks(html)) {
-      if (!builtPaths.has(link)) fail(`${path}: internal link to unbuilt path ${link}`);
+      if (!builtPaths.has(link)) fail(`${path}: internal link to unbuilt path ${link}`, "internal_link");
     }
 
     // CHG-74: em-dash ban in the rendered copy (checked on the VISIBLE text only -
     // comments and script/style content are not page copy, see visibleText()).
-    if (/—/.test(visibleText(html))) fail(`${path}: em-dash in page copy (banned - use a hyphen or restructure)`);
+    if (/—/.test(visibleText(html))) fail(`${path}: em-dash in page copy (banned - use a hyphen or restructure)`, "em_dash");
 
     // ── shared value rules (seo-rules.ts parity) ──
     const kind = pageKindFromUrl(path);
@@ -578,6 +603,7 @@ async function main() {
     if (isChanged && floor) {
       for (const m of missingFloor(html, kind, floor)) {
         hard.push(`${path}: missing required component matching /${m}/ for a ${kind} page (component floor, seo/component-floor.json).`);
+        hardRules.add("floor"); // BUG-191: non-mechanical
       }
     }
 
@@ -591,7 +617,7 @@ async function main() {
         warn.push(`${path}: no design reference (need >=2 existing ${kind} pages) - design conformance not checked`);
       } else if (!conformsToTemplate(html, sig, DESIGN_MIN_SHARE)) {
         const msg = `${path}: does not match the ${kind}-page template - shares too little of the design signature its siblings share (likely rendered a bare/placeholder path, not the styled template).`;
-        if (DESIGN_WARN_ONLY) warn.push(msg); else fail(msg);
+        if (DESIGN_WARN_ONLY) warn.push(msg); else fail(msg, "design");
       }
     }
 
@@ -603,7 +629,7 @@ async function main() {
       kind,
     };
     for (const issue of evaluateFields(fields)) {
-      if (issue.severity === "fail") fail(`${path}: ${issue.message} [${issue.rule}]`);
+      if (issue.severity === "fail") fail(`${path}: ${issue.message} [${issue.rule}]`, issue.rule);
       else warn.push(`${path}: ${issue.message} [${issue.rule}]`);
     }
 
@@ -626,6 +652,7 @@ async function main() {
   for (const f of descriptionDuplicateFindings(pagesWithDesc, changedThisRun)) {
     if (f.changed) {
       hard.push(`${f.path}: meta description is not unique - identical to ${f.dupOf.join(", ")}. On this stack the page template can fall through to the homepage/brandDNA description; give the page its own meta entry (e.g. route-metas.js) and rebuild.`);
+      hardRules.add("meta_duplicate"); // BUG-191: non-mechanical (needs a new meta entry, not a one-pass trim)
     } else {
       warn.push(`${f.path}: duplicate meta description (shared with ${f.dupOf.join(", ")}) [pre-existing - not this build]`);
     }
@@ -634,6 +661,11 @@ async function main() {
   for (const w of warn) console.warn("WARN  " + w);
   for (const h of hard) console.error("FAIL  " + h);
   console.log(`\nseo-qa: ${builtPaths.size} pages checked, ${warn.length} warning(s), ${hard.length} failure(s).`);
+  // BUG-191: a machine-readable classification the workflow reads to decide a bounded corrective pass.
+  // "fail:mechanical" -> every hard failure is self-correctable (title/desc length, em-dash, H1 count) ->
+  // feed the FAILs back to the agent + rebuild (bounded). "fail:hard" -> a non-mechanical failure (orphan,
+  // template-schema, ...) -> fail on the first pass. Exit code is unchanged (1 on any failure).
+  console.log(`SEO-QA-STATUS: ${classifyFailure(hard.length, hardRules)}`);
   process.exit(hard.length ? 1 : 0);
 }
 
@@ -791,6 +823,21 @@ function selftest() {
   ok(conformsToTemplate(`<main><section class="${TPL}"><h1 class="font-heading">Danvers</h1></section></main>`, sig) === true, "design: thin-but-templated page still conforms (content volume is not the signal)");
   // Fewer than 2 references -> empty signature -> no-op (never blocks a first-of-its-kind page).
   ok(templateSignature([refOrlando]).size === 0 && conformsToTemplate("<main>anything</main>", templateSignature([refOrlando])) === true, "design: <2 references is a no-op");
+
+  // BUG-191: mechanical/hard classification the workflow reads for the bounded corrective loop.
+  ok(classifyFailure(0, new Set()) === "pass", "classify: no failures -> pass");
+  ok(classifyFailure(1, new Set(["title_length"])) === "fail:mechanical", "classify: the Camelback case (title_length only) -> mechanical");
+  ok(classifyFailure(4, new Set(["title_length", "desc_length_max", "em_dash", "h1_count"])) === "fail:mechanical", "classify: all-mechanical set -> mechanical");
+  ok(classifyFailure(1, new Set(["orphan"])) === "fail:hard", "classify: orphan -> hard (never auto-retried)");
+  ok(classifyFailure(1, new Set(["schema_missing"])) === "fail:hard", "classify: template-schema missing -> hard");
+  ok(classifyFailure(2, new Set(["title_length", "orphan"])) === "fail:hard", "classify: any non-mechanical makes the whole run hard");
+  ok(classifyFailure(1, new Set(["title_phone"])) === "fail:hard", "classify: title_phone is NOT mechanical (not in the small set)");
+  ok(classifyFailure(1, new Set(["nav_array"])) === "fail:hard", "classify: nav-array wiring miss -> hard");
+  // FAIL-SAFE: a hard failure with no/unknown tagged rule must be hard, NEVER pass (would open a bad PR).
+  ok(classifyFailure(1, new Set()) === "fail:hard", "classify: hard failure but no tagged rule -> fail:hard (fail-safe, never pass)");
+  ok(classifyFailure(1, new Set(["some_future_rule"])) === "fail:hard", "classify: an unknown rule -> fail:hard (fail-safe)");
+  ok(!MECHANICAL_RULES.has("orphan") && !MECHANICAL_RULES.has("schema_missing") && !MECHANICAL_RULES.has("nav_array"), "classify: orphan + schema_missing + nav_array are excluded from the mechanical set");
+
   console.log("selftest OK");
 }
 
